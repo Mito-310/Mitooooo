@@ -6,5 +6,7 @@ st.write('日田高１年の学年カラーは？')
 
 if st.button('青'):
     st.write('正解！')
-st.button('赤')
-st.button('緑')
+if st.button('赤'):
+    st.write('残念...')
+if st.button('緑'):
+    st.write('残念...')
