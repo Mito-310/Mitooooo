@@ -24,7 +24,7 @@ def generate_background():
 background = generate_background()
 
 # 描画キャンバス
-background_image_url = st_image.image_to_url(
+canvas_result = st_canvas(
     fill_color="rgba(255, 165, 0, 0.3)",  # 線の色
     stroke_width=5,
     stroke_color="#0000FF",
