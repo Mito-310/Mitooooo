@@ -120,3 +120,26 @@ if points_data:
 
     except Exception as e:
         st.error(f"解析エラー: {e}")
+
+def recognize_order(points):
+    detected_order = []
+    used_symbols = set()
+    threshold = 30  # 記号の半径程度
+
+    # 線ごとに評価
+    for stroke in points:
+        last_symbol = None
+        for x, y in stroke:
+            for name, data in symbols.items():
+                if name in used_symbols:
+                    continue
+                sx, sy = data["position"]
+                dist = ((x - sx)**2 + (y - sy)**2)**0.5
+                if dist < threshold:
+                    if name != last_symbol:
+                        detected_order.append(name)
+                        used_symbols.add(name)
+                        last_symbol = name
+                    break  # 1点で複数検出しない
+    return detected_order
+
