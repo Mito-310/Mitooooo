@@ -8,8 +8,8 @@ import numpy as np
 # --- 記号の座標と正しい順序 ---
 symbols = {
     "circle": {"position": (100, 100), "file": "circle.png"},
-    "triangle": {"position": (300, 100), "file": ".png"},
-    "square": {"position": (200, 300), "file": "square.png"},
+    "triangle": {"position": (300, 100), "file": "circle copy.png"},
+    "square": {"position": (200, 300), "file": "circle copy2.png"},
 }
 correct_order = ["circle", "triangle", "square"]
 
