@@ -39,22 +39,26 @@ class FactorGame:
         st.write(f"レベル: {self.level}")
         st.write(f"残り時間: {max(0, self.time_limit - (time.time() - self.start_time)):.2f}秒")
 
-        # 新しい問題を生成
-        number, correct_factors = self.generate_problem()
+        # 数字ボタンを表示して選択
+        number = st.selectbox("素因数分解したい数字を選んでください:", list(range(2, 101)))
 
-        # ユーザー入力
-        st.write(f"素因数分解してください: {number}")
-        user_input = st.text_input("素因数をカンマで区切って入力してください（例: 2, 3, 5）")
+        # ボタンが押された時に素因数分解を表示
+        if st.button(f"{number} の素因数分解を表示"):
+            factors = prime_factors(number)
+            st.write(f"{number} の素因数分解: {factors}")
 
-        # 結果チェック
-        if user_input:
+        # ユーザー入力（素因数の予測）
+        st.write(f"{number} の素因数をカンマで区切って入力してください（例: 2, 3, 5）")
+        user_input = st.text_input("あなたの予想:")
+        
+        if st.button("予想をチェック"):
             user_factors = [int(x.strip()) for x in user_input.split(',')]
-            if sorted(user_factors) == sorted(correct_factors):
+            if sorted(user_factors) == sorted(factors):
                 self.score += 10
                 self.level += 1
-                st.success(f"正解！素因数分解: {correct_factors}")
+                st.success(f"正解！素因数分解: {factors}")
             else:
-                st.error(f"不正解。正しい答えは: {correct_factors}")
+                st.error(f"不正解。正しい答えは: {factors}")
             # 次の問題へ
             self.start_time = time.time()
 
