@@ -1,14 +1,24 @@
 import streamlit as st
 import random
 
-# レベルごとの単語リスト（例）
-levels = [
-    ['cat', 'act', 'at', 'ta'],
-    ['dog', 'god', 'do', 'go'],
-    ['read', 'dear', 'dare', 'red', 'ear', 'are']
+# 英検2級頻出単語リスト（例）
+words = [
+    'admit', 'adventure', 'afford', 'appreciate', 'medicine', 'population', 'rely', 'conversation',
+    'exactly', 'spirit', 'treat', 'anxious', 'unless', 'frankly', 'whisper', 'appointment',
+    'decoration', 'decrease', 'despite', 'explanation', 'explorer', 'furniture', 'further',
+    'charity', 'spare', 'forecast', 'audience', 'impress', 'apply', 'instruction', 'award',
+    'destroy', 'generally', 'contain', 'sweep', 'ideal', 'chew', 'modern', 'author', 'nation',
+    'ceremony', 'direction', 'issue', 'silly', 'eventually', 'ancestor', 'memorize', 'corporation',
+    'product', 'citizen', 'prove', 'commercial', 'disappoint', 'journey', 'originally', 'soil',
+    'fantastic', 'attractive', 'prevent', 'examination', 'role', 'courage', 'silence', 'confident',
+    'emotion', 'nod', 'recommend', 'surround', 'hire', 'chemistry', 'require', 'forgive', 'stare',
+    'exhibit', 'suggestion', 'constant', 'exhibition', 'operation', 'receipt', 'survive', 'otherwise',
+    'suitable', 'avenue', 'earn', 'enemy', 'achieve', 'advertisement', 'instrument', 'organize',
+    'unfortunately', 'describe', 'employ', 'examine', 'harmful', 'importance', 'region', 'relation',
+    'rough', 'remind', 'surface'
 ]
 
-# 初期化
+# ゲームの状態を保存
 if 'level' not in st.session_state:
     st.session_state.level = 0
 if 'score' not in st.session_state:
@@ -19,10 +29,10 @@ if 'current_selection' not in st.session_state:
     st.session_state.current_selection = []
 
 # 現在の単語リストと文字セット
-word_list = levels[st.session_state.level]
+word_list = words[st.session_state.level:st.session_state.level + 3]  # 各レベルで3単語を出題
 letters = list(set(''.join(word_list)))  # 重複文字は一度だけ
 
-st.title("🔤 Word Connect風ゲーム")
+st.title("🧩 英検2級 単語並び替えパズル")
 
 st.write(f"レベル: {st.session_state.level + 1}")
 st.write(f"スコア: {st.session_state.score}")
@@ -68,6 +78,6 @@ if set(st.session_state.found_words) == set(word_list):
         st.experimental_rerun()
 
 # レベルが最後まで到達したらメッセージ
-if st.session_state.level >= len(levels):
+if st.session_state.level >= len(words) // 3:
     st.balloons()
     st.write("すべてのレベルをクリアしました！おめでとうございます！")
