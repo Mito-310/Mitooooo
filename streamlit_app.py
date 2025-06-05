@@ -1,7 +1,7 @@
 import streamlit as st
 import random
 
-# 英検2級頻出単語リスト
+# 単語リスト
 words = [
     'admit', 'adventure', 'afford', 'appreciate', 'medicine', 'population', 'rely', 'conversation',
     'exactly', 'spirit', 'treat', 'anxious', 'unless', 'frankly', 'whisper', 'appointment',
