@@ -1,69 +1,51 @@
 import streamlit as st
+import random
 
-def start_screen():
-    st.title("ゲーム - スタート画面")
-    st.write("このゲームでは、素因数分解を学びながら遊べます。")
-    if st.button("ゲーム開始"):
-        st.session_state['game_started'] = True
-        st.experimental_rerun()  # 画面を更新してホーム画面へ移動
+# 英検2級頻出単語リスト（例）
+words = [
+    'agree', 'allow', 'attach', 'avoid', 'book', 'cause', 'contact', 'contain',
+    'continue', 'cost', 'cover', 'create', 'damage', 'develop', 'form', 'increase',
+    'land', 'last', 'lead', 'leave', 'let', 'long', 'meet', 'offer', 'own', 'pay',
+    'point', 'prevent', 'produce', 'protect', 'provide', 'recognize', 'recommend',
+    'reduce', 'remove', 'run', 'ship', 'spread', 'treat'
+]
 
-def home_screen():
-    st.title("ゲーム - ホーム画面")
-    st.write("ここがゲームのホーム画面です。")
-    if st.button("スタート画面に戻る"):
-        st.session_state['game_started'] = False
-        st.experimental_rerun()
+# ゲームの状態を保存
+if 'score' not in st.session_state:
+    st.session_state.score = 0
+if 'target_word' not in st.session_state:
+    st.session_state.target_word = random.choice(words)
+    st.session_state.shuffled = list(st.session_state.target_word)
+    random.shuffle(st.session_state.shuffled)
+    st.session_state.answered = False  # 回答済みフラグ
 
-def main():
-    if 'game_started' not in st.session_state:
-        st.session_state['game_started'] = False
+st.title("🧩 英検2級 単語並び替えパズル")
 
-    if not st.session_state['game_started']:
-        start_screen()
+st.markdown("バラバラの文字を並び替えて正しい英単語を当ててください！")
+
+# 現在のスコア表示
+st.subheader(f"🎯 スコア: {st.session_state.score}")
+
+# シャッフルされた文字の表示
+st.write("🔤 シャッフルされた文字:")
+st.write(" ".join(st.session_state.shuffled))
+
+# ユーザー入力
+user_input = st.text_input("正しい単語を入力してください（小文字）:")
+
+# 判定ボタン
+if st.button("判定！") and not st.session_state.answered:
+    if user_input == st.session_state.target_word:
+        st.success("🎉 正解です！")
+        st.session_state.score += 1
     else:
-        home_screen()
+        st.error("❌ 不正解です。もう一度試してみてください。")
+    st.session_state.answered = True
 
-if __name__ == "__main__":
-    main()
-
-# 背景色を変えるCSS
-def set_background_color(color: str):
-    st.markdown(
-        f"""
-        <style>
-        .stApp {{
-            background-color: {color};
-        }}
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-
-def start_screen():
-    st.title("素因数分解ゲーム - スタート画面")
-    st.write("このゲームでは、素因数分解を学びながら遊べます。")
-    if st.button("ゲーム開始"):
-        st.session_state['game_started'] = True
-        st.experimental_rerun()  # 画面更新
-
-def home_screen():
-    st.title("素因数分解ゲーム - ホーム画面")
-    st.write("ここがゲームのホーム画面です。")
-    if st.button("スタート画面に戻る"):
-        st.session_state['game_started'] = False
-        st.experimental_rerun()
-
-def main():
-    # 背景色を設定（例：薄い青）
-    set_background_color("#d0f0ff") 
-
-    if 'game_started' not in st.session_state:
-        st.session_state['game_started'] = False
-
-    if not st.session_state['game_started']:
-        start_screen()
-    else:
-        home_screen()
-
-if __name__ == "__main__":
-    main()
+# 次の問題ボタン
+if st.button("次の問題へ"):
+    st.session_state.target_word = random.choice(words)
+    st.session_state.shuffled = list(st.session_state.target_word)
+    random.shuffle(st.session_state.shuffled)
+    st.session_state.answered = False
+    st.experimental_rerun()
