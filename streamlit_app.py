@@ -1,7 +1,7 @@
 import streamlit as st
 import random
 
-# 英検2級頻出単語リスト（例）
+# 英検2級頻出単語リスト
 words = [
     'admit', 'adventure', 'afford', 'appreciate', 'medicine', 'population', 'rely', 'conversation',
     'exactly', 'spirit', 'treat', 'anxious', 'unless', 'frankly', 'whisper', 'appointment',
@@ -18,8 +18,7 @@ words = [
     'rough', 'remind', 'surface'
 ]
 
-# 簡易英単語辞書(正解とする短い単語の例)
-# ※実際はもっと多くの単語を用意するのが望ましいです
+# 簡易英単語辞書
 dictionary = set([
     'ad', 'it', 'admit', 'venture', 'afford', 'appreciate', 'med', 'medicine', 'pop', 'population',
     'rely', 'con', 'conversation', 'exact', 'exactly', 'spirit', 'treat', 'anxious', 'unless',
@@ -57,7 +56,7 @@ word_list = words[st.session_state.level * words_per_level:(st.session_state.lev
 # 使える文字は出題単語に含まれる文字の集合
 letters = list(set(''.join(word_list)))
 
-st.title("🧩 英検2級 Word Connect風ゲーム（短い単語もOK）")
+st.title("Word Connect")
 
 st.write(f"レベル: {st.session_state.level + 1}")
 st.write(f"スコア: {st.session_state.score}")
