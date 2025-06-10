@@ -101,7 +101,7 @@ def can_form_word(word, letters_available):
     return True
 
 # 提出処理
-if st.button("単語を提出する"):
+if st.button("提出"):
     if current_word in dictionary and can_form_word(current_word, letters) and current_word not in st.session_state.found_words:
         st.success(f"正解！『{current_word}』を見つけました。")
         st.session_state.found_words.append(current_word)
@@ -111,11 +111,11 @@ if st.button("単語を提出する"):
     st.session_state.current_selection = []
 
 # リセットボタン
-if st.button("選択をリセット"):
+if st.button("リセット"):
     st.session_state.current_selection = []
 
 # 発見済み単語
-st.write("## 見つけた単語")
+st.write("## My辞書")
 if st.session_state.found_words:
     st.write(", ".join(st.session_state.found_words))
 else:
