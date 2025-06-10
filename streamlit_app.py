@@ -1,7 +1,7 @@
 import streamlit as st
 import random
 
-# 英検2級頻出単語リスト（例）
+# 単語リスト
 words = [
     'admit', 'adventure', 'afford', 'appreciate', 'medicine', 'population', 'rely', 'conversation',
     'exactly', 'spirit', 'treat', 'anxious', 'unless', 'frankly', 'whisper', 'appointment',
@@ -18,8 +18,7 @@ words = [
     'rough', 'remind', 'surface'
 ]
 
-# 簡易英単語辞書(正解とする短い単語の例)
-# ※実際はもっと多くの単語を用意するのが望ましいです
+# 単語辞書
 dictionary = set([
     'ad', 'it', 'admit', 'venture', 'afford', 'appreciate', 'med', 'medicine', 'pop', 'population',
     'rely', 'con', 'conversation', 'exact', 'exactly', 'spirit', 'treat', 'anxious', 'unless',
@@ -38,10 +37,8 @@ dictionary = set([
     'relation', 'rough', 'remind', 'surface', 'am', 'me', 'in', 'on', 'no', 'or', 'an'
 ])
 
-# レベルごとに3単語出題
+# レベル管理
 words_per_level = 3
-
-# ゲームの状態を保存
 if 'level' not in st.session_state:
     st.session_state.level = 0
 if 'score' not in st.session_state:
@@ -51,29 +48,50 @@ if 'found_words' not in st.session_state:
 if 'current_selection' not in st.session_state:
     st.session_state.current_selection = []
 
-# 出題単語
+# 現在の単語セット
 word_list = words[st.session_state.level * words_per_level:(st.session_state.level + 1) * words_per_level]
-
-# 使える文字は出題単語に含まれる文字の集合
 letters = list(set(''.join(word_list)))
 
+# タイトルと情報表示
 st.title("Word Connect")
-
 st.write(f"レベル: {st.session_state.level + 1}")
 st.write(f"スコア: {st.session_state.score}")
 
+# CSS: 丸いボタンスタイル
+st.markdown("""
+    <style>
+    div.stButton > button {
+        border-radius: 50%;
+        height: 60px;
+        width: 60px;
+        margin: 4px;
+        font-weight: bold;
+        font-size: 20px;
+        background-color: #f2f2f2;
+        color: #333;
+        border: 2px solid #999;
+        transition: all 0.2s ease-in-out;
+    }
+    div.stButton > button:hover {
+        background-color: #ddd;
+        border-color: #666;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+# アルファベットボタンを表示
 st.write("## 使える文字")
 cols = st.columns(len(letters))
 for i, letter in enumerate(letters):
-    if cols[i].button(letter):
+    if cols[i].button(letter, key=f"letter_{i}"):
         st.session_state.current_selection.append(letter)
 
-# 現在の選択単語
+# 選択中の単語表示
 current_word = ''.join(st.session_state.current_selection)
 st.write(f"### 選択中の単語: **{current_word}**")
 
+# 単語が作れるかの判定関数
 def can_form_word(word, letters_available):
-    # 入力単語の各文字がletters_availableに十分あるかチェック
     letters_copy = list(letters_available)
     for c in word:
         if c in letters_copy:
@@ -82,9 +100,8 @@ def can_form_word(word, letters_available):
             return False
     return True
 
-# 提出ボタン
+# 提出処理
 if st.button("単語を提出する"):
-    # 入力単語がdictionaryにあるか、かつ使える文字の範囲内か、かつ未発見かを判定
     if current_word in dictionary and can_form_word(current_word, letters) and current_word not in st.session_state.found_words:
         st.success(f"正解！『{current_word}』を見つけました。")
         st.session_state.found_words.append(current_word)
@@ -93,18 +110,18 @@ if st.button("単語を提出する"):
         st.error("不正解か既に見つけた単語です。")
     st.session_state.current_selection = []
 
-# 選択リセット
+# リセットボタン
 if st.button("選択をリセット"):
     st.session_state.current_selection = []
 
-# 見つけた単語一覧
+# 発見済み単語
 st.write("## 見つけた単語")
 if st.session_state.found_words:
     st.write(", ".join(st.session_state.found_words))
 else:
     st.write("まだ単語は見つかっていません。")
 
-# レベルクリア判定（word_listに含まれる単語は必須、部分単語はボーナス扱い）
+# レベルクリア判定
 required_words_found = all(word in st.session_state.found_words for word in word_list)
 if required_words_found:
     st.success("🎉 レベルクリア！次のレベルへ進みます。")
@@ -114,7 +131,7 @@ if required_words_found:
         st.session_state.current_selection = []
         st.experimental_rerun()
 
-# レベルが最後まで到達したらメッセージ
+# 全レベル終了メッセージ
 if st.session_state.level >= len(words) // words_per_level:
     st.balloons()
     st.write("すべてのレベルをクリアしました！おめでとうございます！")
