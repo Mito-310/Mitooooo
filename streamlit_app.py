@@ -57,7 +57,7 @@ word_list = words[st.session_state.level * words_per_level:(st.session_state.lev
 # 使える文字は出題単語に含まれる文字の集合
 letters = list(set(''.join(word_list)))
 
-st.title("🧩 英検2級 Word Connect風ゲーム（短い単語もOK）")
+st.title("Word Connect")
 
 st.write(f"レベル: {st.session_state.level + 1}")
 st.write(f"スコア: {st.session_state.score}")
