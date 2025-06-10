@@ -111,7 +111,7 @@ if st.button("提出"):
     st.session_state.current_selection = []
 
 # リセットボタン
-if st.button("リセット"):
+if st.button("reset"):
     st.session_state.current_selection = []
 
 # 発見済み単語
