@@ -42,7 +42,7 @@ full_html = f"""
         width: 60px;
         height: 60px;
         border-radius: 50%;
-        background-color: white; /* 初期色を白に */
+        background-color: white; /* 初期は白 */
         color: black;
         font-size: 20px;
         font-weight: bold;
@@ -52,13 +52,15 @@ full_html = f"""
         justify-content: center;
         align-items: center;
         transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+        user-select: none;
     }}
     .circle-button.selected {{
         background-color: #FF5722; /* 選択時はオレンジ */
         border-color: #FF5722;
+        color: white;
     }}
     .circle-button:hover {{
-        background-color: #388E3C;
+        background-color: #f0f0f0;
     }}
     canvas {{
         position: absolute;
@@ -83,24 +85,27 @@ full_html = f"""
     document.querySelectorAll('.circle-button').forEach(button => {{
         button.addEventListener('mousedown', function(event) {{
             isMouseDown = true;
-            event.target.classList.add('selected');  // 選択されたボタンにオレンジ色
-            selectedLetters.push(event.target.dataset.letter);
-            points.push({{ x: event.clientX, y: event.clientY }});
-            drawLine();
+            if (!event.target.classList.contains('selected')) {{
+                event.target.classList.add('selected');
+                selectedLetters.push(event.target.dataset.letter);
+                points.push({{ x: event.target.offsetLeft + 30, y: event.target.offsetTop + 30 }});
+                drawLine();
+            }}
+            event.preventDefault();
         }});
 
         button.addEventListener('mouseenter', function(event) {{
             if (isMouseDown) {{
-                event.target.classList.add('selected');  // ドラッグ中にボタンが選択状態に
-                if (!selectedLetters.includes(event.target.dataset.letter)) {{
+                if (!event.target.classList.contains('selected')) {{
+                    event.target.classList.add('selected');
                     selectedLetters.push(event.target.dataset.letter);
-                    points.push({{ x: event.clientX, y: event.clientY }});
+                    points.push({{ x: event.target.offsetLeft + 30, y: event.target.offsetTop + 30 }});
                     drawLine();
                 }}
             }}
         }});
 
-        button.addEventListener('mouseup', function() {{
+        button.addEventListener('mouseup', function(event) {{
             isMouseDown = false;
             const queryString = selectedLetters.join(',');
             window.parent.postMessage({{type: 'letters', data: queryString}}, '*');
@@ -110,25 +115,34 @@ full_html = f"""
     function drawLine() {{
         const canvas = document.getElementById('lineCanvas');
         const ctx = canvas.getContext('2d');
-        ctx.clearRect(0, 0, canvas.width, canvas.height); // 既存の線をクリア
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        if(points.length === 0) return;
 
         ctx.beginPath();
         ctx.moveTo(points[0].x, points[0].y);
         points.forEach(point => {{
             ctx.lineTo(point.x, point.y);
         }});
-        ctx.strokeStyle = '#FF5722'; // オレンジ色
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#FF5722';
+        ctx.lineWidth = 3;
         ctx.stroke();
     }}
+
+    // マウスアップを画面全体で監視（ドラッグ途中に外に出た場合）
+    document.addEventListener('mouseup', function() {{
+        if(isMouseDown) {{
+            isMouseDown = false;
+            const queryString = selectedLetters.join(',');
+            window.parent.postMessage({{type: 'letters', data: queryString}}, '*');
+        }}
+    }});
 </script>
 </body>
 </html>
 """
 
-# タイトルと説明
 st.title("🕒 時計型ボタン配置（Word Connect）")
 st.write("マウスを押しながらドラッグするとボタンが順に選ばれます。")
 
-# HTML を iframe で描画
 components.html(full_html, height=400)
