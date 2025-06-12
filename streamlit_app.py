@@ -68,40 +68,40 @@ st.markdown("""
 </div>
 
 <script>
-let isMouseDown = false;
-let selectedLetters = [];
+document.addEventListener('DOMContentLoaded', function () {
+    let isMouseDown = false;
+    let selectedLetters = [];
 
-document.querySelectorAll('.circle-button').forEach(button => {
-    button.addEventListener('mousedown', function(event) {
-        isMouseDown = true;
-        event.target.style.backgroundColor = '#388E3C';
-        selectedLetters.push(event.target.dataset.letter);
-    });
-
-    button.addEventListener('mouseenter', function(event) {
-        if (isMouseDown) {
+    document.querySelectorAll('.circle-button').forEach(button => {
+        button.addEventListener('mousedown', function(event) {
+            isMouseDown = true;
             event.target.style.backgroundColor = '#388E3C';
-            if (!selectedLetters.includes(event.target.dataset.letter)) {
-                selectedLetters.push(event.target.dataset.letter);
-            }
-        }
-    });
+            selectedLetters.push(event.target.dataset.letter);
+        });
 
-    button.addEventListener('mouseup', function() {
-        isMouseDown = false;
-        const queryString = selectedLetters.join(',');
-        window.location.search = '?letters=' + queryString;
+        button.addEventListener('mouseenter', function(event) {
+            if (isMouseDown) {
+                event.target.style.backgroundColor = '#388E3C';
+                if (!selectedLetters.includes(event.target.dataset.letter)) {
+                    selectedLetters.push(event.target.dataset.letter);
+                }
+            }
+        });
+
+        button.addEventListener('mouseup', function() {
+            isMouseDown = false;
+            const queryString = selectedLetters.join(',');
+            window.history.pushState({}, '', '?letters=' + queryString); // ページ遷移せずにURLを更新
+        });
     });
 });
 </script>
 """, unsafe_allow_html=True)
 
 # 文字選択をキャッチ
-# st.experimental_get_query_params() → st.query_params に変更
 letters_clicked = st.query_params.get("letters", [])
 if letters_clicked:
     st.session_state.current_selection = letters_clicked[0].split(',')
-    st.experimental_set_query_params()  # クエリをクリア
 
 # 現在の選択
 current_word = ''.join(st.session_state.current_selection)
