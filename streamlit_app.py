@@ -42,16 +42,20 @@ full_html = f"""
         width: 60px;
         height: 60px;
         border-radius: 50%;
-        background-color: #4CAF50;
-        color: white;
+        background-color: white; /* 初期色を白に */
+        color: black;
         font-size: 20px;
         font-weight: bold;
-        border: none;
+        border: 2px solid #4CAF50;
         cursor: pointer;
         display: flex;
         justify-content: center;
         align-items: center;
-        transition: background-color 0.2s ease-in-out;
+        transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+    }}
+    .circle-button.selected {{
+        background-color: #FF5722; /* 選択時はオレンジ */
+        border-color: #FF5722;
     }}
     .circle-button:hover {{
         background-color: #388E3C;
@@ -70,13 +74,13 @@ full_html = f"""
     document.querySelectorAll('.circle-button').forEach(button => {{
         button.addEventListener('mousedown', function(event) {{
             isMouseDown = true;
-            event.target.style.backgroundColor = '#388E3C';
+            event.target.classList.add('selected');  // 選択されたボタンにオレンジ色
             selectedLetters.push(event.target.dataset.letter);
         }});
 
         button.addEventListener('mouseenter', function(event) {{
             if (isMouseDown) {{
-                event.target.style.backgroundColor = '#388E3C';
+                event.target.classList.add('selected');  // ドラッグ中にボタンが選択状態に
                 if (!selectedLetters.includes(event.target.dataset.letter)) {{
                     selectedLetters.push(event.target.dataset.letter);
                 }}
