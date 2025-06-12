@@ -29,11 +29,16 @@ full_html = f"""
 <html>
 <head>
     <style>
+    body {{
+        margin: 0;
+        font-family: Arial, sans-serif;
+        user-select: none;
+    }}
     .circle-container {{
         position: relative;
         width: 300px;
         height: 300px;
-        margin: 40px auto;
+        margin: 60px auto 40px auto;
         border: 2px solid #ccc;
         border-radius: 50%;
     }}
@@ -42,7 +47,7 @@ full_html = f"""
         width: 60px;
         height: 60px;
         border-radius: 50%;
-        background-color: white; /* 初期は白 */
+        background-color: white;
         color: black;
         font-size: 20px;
         font-weight: bold;
@@ -52,25 +57,37 @@ full_html = f"""
         justify-content: center;
         align-items: center;
         transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
-        user-select: none;
     }}
     .circle-button.selected {{
-        background-color: #FF5722; /* 選択時はオレンジ */
+        background-color: #FF5722;
         border-color: #FF5722;
         color: white;
     }}
     .circle-button:hover {{
         background-color: #f0f0f0;
     }}
+    #selected-word {{
+        width: 100%;
+        text-align: center;
+        font-size: 28px;
+        font-weight: bold;
+        padding-top: 10px;
+        user-select: none;
+        letter-spacing: 4px;
+        min-height: 40px;
+        color: #FF5722;
+    }}
     canvas {{
         position: absolute;
-        top: 40px;
+        top: 60px;
         left: 40px;
         z-index: -1;
     }}
     </style>
 </head>
 <body>
+<div id="selected-word"></div>
+
 <div class="circle-container" id="circle-container">
     {button_html}
 </div>
@@ -82,6 +99,12 @@ full_html = f"""
     let selectedLetters = [];
     let points = [];
 
+    const selectedWordDiv = document.getElementById('selected-word');
+
+    function updateSelectedWord() {{
+        selectedWordDiv.textContent = selectedLetters.join('');
+    }}
+
     document.querySelectorAll('.circle-button').forEach(button => {{
         button.addEventListener('mousedown', function(event) {{
             isMouseDown = true;
@@ -90,6 +113,7 @@ full_html = f"""
                 selectedLetters.push(event.target.dataset.letter);
                 points.push({{ x: event.target.offsetLeft + 30, y: event.target.offsetTop + 30 }});
                 drawLine();
+                updateSelectedWord();
             }}
             event.preventDefault();
         }});
@@ -101,6 +125,7 @@ full_html = f"""
                     selectedLetters.push(event.target.dataset.letter);
                     points.push({{ x: event.target.offsetLeft + 30, y: event.target.offsetTop + 30 }});
                     drawLine();
+                    updateSelectedWord();
                 }}
             }}
         }});
@@ -129,7 +154,7 @@ full_html = f"""
         ctx.stroke();
     }}
 
-    // マウスアップを画面全体で監視（ドラッグ途中に外に出た場合）
+    // 画面全体でマウスアップ監視
     document.addEventListener('mouseup', function() {{
         if(isMouseDown) {{
             isMouseDown = false;
@@ -145,4 +170,4 @@ full_html = f"""
 st.title("🕒 時計型ボタン配置（Word Connect）")
 st.write("マウスを押しながらドラッグするとボタンが順に選ばれます。")
 
-components.html(full_html, height=400)
+components.html(full_html, height=450)
