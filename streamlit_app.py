@@ -48,20 +48,23 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# 円形配置用 HTML + JavaScript
-st.markdown(f"""
+# 円形配置ボタンのHTMLを生成
+button_html = ''.join([
+    f'''
+    <button class="circle-button" id="button_{i}" 
+            data-letter="{letter}" 
+            style="
+            left: {150 + 120 * math.cos(2 * math.pi * i / 12 - math.pi/2) - 30}px;
+            top: {150 + 120 * math.sin(2 * math.pi * i / 12 - math.pi/2) - 30}px;">
+            {letter}
+    </button>
+    ''' for i, letter in enumerate(letters)
+])
+
+# HTML + JavaScript をマークダウンで描画
+st.markdown("""
 <div class="circle-container" id="circle-container">
-    {''.join([
-        f'''
-        <button class="circle-button" id="button_{i}" 
-                data-letter="{letter}" 
-                style="
-                left: {150 + 120 * math.cos(2 * math.pi * i / 12 - math.pi/2) - 30}px;
-                top: {150 + 120 * math.sin(2 * math.pi * i / 12 - math.pi/2) - 30}px;">
-                {letter}
-        </button>
-        ''' for i, letter in enumerate(letters)
-    ])}
+""" + button_html + """
 </div>
 
 <script>
@@ -70,7 +73,7 @@ let selectedLetters = [];
 
 document.querySelectorAll('.circle-button').forEach(button => {
     button.addEventListener('mousedown', function(event) {
-        isMouseDown == true;  // ← 修正済み（代入）
+        isMouseDown = true;
         event.target.style.backgroundColor = '#388E3C';
         selectedLetters.push(event.target.dataset.letter);
     });
