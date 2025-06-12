@@ -70,7 +70,7 @@ let selectedLetters = [];
 
 document.querySelectorAll('.circle-button').forEach(button => {
     button.addEventListener('mousedown', function(event) {
-        isMouseDown = true;  // ← 修正済み（代入）
+        isMouseDown == true;  // ← 修正済み（代入）
         event.target.style.backgroundColor = '#388E3C';
         selectedLetters.push(event.target.dataset.letter);
     });
