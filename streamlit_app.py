@@ -68,16 +68,14 @@ st.markdown(f"""
 let isMouseDown = false;
 let selectedLetters = [];
 
-// ボタンのmousedownイベントを検知
 document.querySelectorAll('.circle-button').forEach(button => {
-    button.addEventListener('mousedown', (event) => {
-        isMouseDown = true;
-        event.target.style.backgroundColor = '#388E3C';  // ボタン押下時の色変更
+    button.addEventListener('mousedown', function(event) {
+        isMouseDown = true;  // ← 修正済み（代入）
+        event.target.style.backgroundColor = '#388E3C';
         selectedLetters.push(event.target.dataset.letter);
     });
 
-    // マウスがボタン上にあるときにドラッグしているとみなして処理
-    button.addEventListener('mouseenter', (event) => {
+    button.addEventListener('mouseenter', function(event) {
         if (isMouseDown) {
             event.target.style.backgroundColor = '#388E3C';
             if (!selectedLetters.includes(event.target.dataset.letter)) {
@@ -86,16 +84,12 @@ document.querySelectorAll('.circle-button').forEach(button => {
         }
     });
 
-    // マウスが離れたらドラッグ終了
-    button.addEventListener('mouseup', () => {
+    button.addEventListener('mouseup', function() {
         isMouseDown = false;
-        // Streamlitに選択された文字を渡す
         const queryString = selectedLetters.join(',');
         window.location.search = '?letters=' + queryString;
     });
 });
-
-// ドラッグ終了後、現在選択されている文字を表示
 </script>
 """, unsafe_allow_html=True)
 
