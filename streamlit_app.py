@@ -71,7 +71,7 @@ let selectedLetters = [];
 // ボタンのmousedownイベントを検知
 document.querySelectorAll('.circle-button').forEach(button => {
     button.addEventListener('mousedown', (event) => {
-        isMouseDown == true;
+        isMouseDown = true;
         event.target.style.backgroundColor = '#388E3C';  // ボタン押下時の色変更
         selectedLetters.push(event.target.dataset.letter);
     });
