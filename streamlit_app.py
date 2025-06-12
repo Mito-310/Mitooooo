@@ -57,7 +57,7 @@ st.title("Word Connect")
 st.write(f"レベル: {st.session_state.level + 1}")
 st.write(f"スコア: {st.session_state.score}")
 
-# CSS: 丸いボタンスタイル
+# CSS: 丸いボタンスタイルと円形配置
 st.markdown("""
     <style>
     div.stButton > button {
@@ -76,14 +76,46 @@ st.markdown("""
         background-color: #ddd;
         border-color: #666;
     }
+    .circle-container {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        align-items: center;
+        width: 300px;
+        height: 300px;
+        position: relative;
+        margin: auto;
+    }
+    .circle-button {
+        position: absolute;
+        width: 60px;
+        height: 60px;
+        border-radius: 30px;
+        background-color: #4CAF50;
+        color: white;
+        font-size: 20px;
+        border: 2px solid #999;
+        transition: background-color 0.2s ease-in-out;
+    }
+    .circle-button:hover {
+        background-color: #ddd;
+    }
     </style>
 """, unsafe_allow_html=True)
 
-# アルファベットボタンを表示
+# 円形にボタン配置
 st.write("## 使える文字")
 cols = st.columns(len(letters))
+
+# 円形に配置するための計算
+num_buttons = len(letters)
+angle_step = 360 / num_buttons
 for i, letter in enumerate(letters):
-    if cols[i].button(letter, key=f"letter_{i}"):
+    angle = angle_step * i
+    left = 50 + 40 * (i % 2)
+    top = 50 + 40 * (i // 2)
+
+    if st.button(letter, key=f"letter_{i}"):
         st.session_state.current_selection.append(letter)
 
 # 選択中の単語表示
