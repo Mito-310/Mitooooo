@@ -167,7 +167,7 @@ full_html = f"""
 </html>
 """
 
-st.title("🕒 時計型ボタン配置（Word Connect）")
+st.title("Word Connect")
 st.write("マウスを押しながらドラッグするとボタンが順に選ばれます。")
 
 components.html(full_html, height=450)
