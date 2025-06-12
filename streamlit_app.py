@@ -97,7 +97,8 @@ document.querySelectorAll('.circle-button').forEach(button => {
 """, unsafe_allow_html=True)
 
 # 文字選択をキャッチ
-letters_clicked = st.experimental_get_query_params().get("letters", [])
+# st.experimental_get_query_params() → st.query_params に変更
+letters_clicked = st.query_params.get("letters", [])
 if letters_clicked:
     st.session_state.current_selection = letters_clicked[0].split(',')
     st.experimental_set_query_params()  # クエリをクリア
