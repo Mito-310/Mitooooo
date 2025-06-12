@@ -1,5 +1,6 @@
 import streamlit as st
 import random
+import math
 
 # 単語リスト
 words = [
@@ -57,7 +58,7 @@ st.title("Word Connect")
 st.write(f"レベル: {st.session_state.level + 1}")
 st.write(f"スコア: {st.session_state.score}")
 
-# CSS: 丸いボタンスタイルと円形配置
+# CSS: 丸いボタンスタイルと円状配置
 st.markdown("""
     <style>
     div.stButton > button {
@@ -77,13 +78,9 @@ st.markdown("""
         border-color: #666;
     }
     .circle-container {
-        display: flex;
-        justify-content: center;
-        flex-wrap: wrap;
-        align-items: center;
+        position: relative;
         width: 300px;
         height: 300px;
-        position: relative;
         margin: auto;
     }
     .circle-button {
@@ -103,19 +100,35 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# 円形にボタン配置
+# 円形にボタン配置する関数
+def get_circle_position(index, total_buttons, radius=120):
+    # 角度を計算（円周上に均等に配置）
+    angle = (index / total_buttons) * 2 * math.pi  # ラジアン
+    # x, y座標を計算
+    x = 150 + radius * math.cos(angle)  # 中心 (150, 150) を基準に
+    y = 150 + radius * math.sin(angle)
+    return x, y
+
+# アルファベットボタンを円周上に配置
 st.write("## 使える文字")
-cols = st.columns(len(letters))
+circle_buttons = []
 
-# 円形に配置するための計算
-num_buttons = len(letters)
-angle_step = 360 / num_buttons
+# ボタン配置
 for i, letter in enumerate(letters):
-    angle = angle_step * i
-    left = 50 + 40 * (i % 2)
-    top = 50 + 40 * (i // 2)
-
-    if st.button(letter, key=f"letter_{i}"):
+    x, y = get_circle_position(i, len(letters))
+    button = st.button(letter, key=f"letter_{i}", use_container_width=False)
+    # ボタン位置
+    st.markdown(f"""
+        <style>
+        .stButton[data-baseweb="button"] {{
+            position: absolute;
+            left: {x - 30}px;
+            top: {y - 30}px;
+        }}
+        </style>
+    """, unsafe_allow_html=True)
+    
+    if button:
         st.session_state.current_selection.append(letter)
 
 # 選択中の単語表示
