@@ -60,7 +60,8 @@ full_html = f"""
     .circle-button:hover {{
         background-color: #388E3C;
     }}
-    </style>
+    <<canvas id="lineCanvas" width="300" height="300" style="position: absolute; top: 40px; left: 40px; z-index: -1;"></canvas>
+>
 </head>
 <body>
 <div class="circle-container" id="circle-container">
@@ -93,7 +94,54 @@ full_html = f"""
             window.parent.postMessage({{type: 'letters', data: queryString}}, '*');
         }});
     }});
+<<script>
+let isMouseDown = false;
+let selectedLetters = [];
+let points = [];
+
+document.querySelectorAll('.circle-button').forEach(button => {
+    button.addEventListener('mousedown', function(event) {
+        isMouseDown = true;
+        event.target.style.backgroundColor = '#FF5722'; // オレンジ色
+        selectedLetters.push(event.target.dataset.letter);
+        points.push({ x: event.clientX, y: event.clientY });
+        drawLine();
+    });
+
+    button.addEventListener('mouseenter', function(event) {
+        if (isMouseDown) {
+            event.target.style.backgroundColor = '#FF5722'; // オレンジ色
+            if (!selectedLetters.includes(event.target.dataset.letter)) {
+                selectedLetters.push(event.target.dataset.letter);
+                points.push({ x: event.clientX, y: event.clientY });
+                drawLine();
+            }
+        }
+    });
+
+    button.addEventListener('mouseup', function() {
+        isMouseDown = false;
+        const queryString = selectedLetters.join(',');
+        window.location.search = '?letters=' + queryString;
+    });
+});
+
+function drawLine() {
+    const canvas = document.getElementById('lineCanvas');
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height); // 既存の線をクリア
+
+    ctx.beginPath();
+    ctx.moveTo(points[0].x, points[0].y);
+    points.forEach(point => {
+        ctx.lineTo(point.x, point.y);
+    });
+    ctx.strokeStyle = '#FF5722'; // オレンジ色
+    ctx.lineWidth = 2;
+    ctx.stroke();
+}
 </script>
+>
 </body>
 </html>
 """
