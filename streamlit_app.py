@@ -1,32 +1,43 @@
 import streamlit as st
 import random
 import math
+import streamlit.components.v1 as components
 
 # 初期化
 if 'current_selection' not in st.session_state:
     st.session_state.current_selection = []
 
-# 固定の12文字（テスト用にランダムに選択）
+# ランダムな12文字
 all_letters = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
 random.seed(0)
 letters = random.sample(all_letters, 12)
 
-# タイトル
-st.title("🕒 時計型ボタン配置（Word Connect）")
-st.write("マウスを押しながらドラッグするとボタンを順番に押せます。")
+# 円形に並べるボタンのHTMLを生成
+button_html = ''.join([
+    f'''
+    <button class="circle-button" id="button_{i}"
+            data-letter="{letter}"
+            style="left: {150 + 120 * math.cos(2 * math.pi * i / 12 - math.pi/2) - 30}px;
+                   top:  {150 + 120 * math.sin(2 * math.pi * i / 12 - math.pi/2) - 30}px;">
+        {letter}
+    </button>
+    ''' for i, letter in enumerate(letters)
+])
 
-# CSS と 円形配置コンテナ
-st.markdown("""
+# HTML + CSS + JavaScript を組み立て
+full_html = f"""
+<html>
+<head>
     <style>
-    .circle-container {
+    .circle-container {{
         position: relative;
         width: 300px;
         height: 300px;
         margin: 40px auto;
         border: 2px solid #ccc;
         border-radius: 50%;
-    }
-    .circle-button {
+    }}
+    .circle-button {{
         position: absolute;
         width: 60px;
         height: 60px;
@@ -41,78 +52,53 @@ st.markdown("""
         justify-content: center;
         align-items: center;
         transition: background-color 0.2s ease-in-out;
-    }
-    .circle-button:hover {
+    }}
+    .circle-button:hover {{
         background-color: #388E3C;
-    }
+    }}
     </style>
-""", unsafe_allow_html=True)
-
-# 円形配置ボタンのHTMLを生成
-button_html = ''.join([
-    f'''
-    <button class="circle-button" id="button_{i}" 
-            data-letter="{letter}" 
-            style="
-            left: {150 + 120 * math.cos(2 * math.pi * i / 12 - math.pi/2) - 30}px;
-            top: {150 + 120 * math.sin(2 * math.pi * i / 12 - math.pi/2) - 30}px;">
-            {letter}
-    </button>
-    ''' for i, letter in enumerate(letters)
-])
-
-# HTML + JavaScript をマークダウンで描画
-st.markdown("""
+</head>
+<body>
 <div class="circle-container" id="circle-container">
-""" + button_html + """
+    {button_html}
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
     let isMouseDown = false;
     let selectedLetters = [];
 
-    document.querySelectorAll('.circle-button').forEach(button => {
-        button.addEventListener('mousedown', function(event) {
+    document.querySelectorAll('.circle-button').forEach(button => {{
+        button.addEventListener('mousedown', function(event) {{
             isMouseDown = true;
             event.target.style.backgroundColor = '#388E3C';
             selectedLetters.push(event.target.dataset.letter);
-        });
+        }});
 
-        button.addEventListener('mouseenter', function(event) {
-            if (isMouseDown) {
+        button.addEventListener('mouseenter', function(event) {{
+            if (isMouseDown) {{
                 event.target.style.backgroundColor = '#388E3C';
-                if (!selectedLetters.includes(event.target.dataset.letter)) {
+                if (!selectedLetters.includes(event.target.dataset.letter)) {{
                     selectedLetters.push(event.target.dataset.letter);
-                }
-            }
-        });
+                }}
+            }}
+        }});
 
-        button.addEventListener('mouseup', function() {
+        button.addEventListener('mouseup', function() {{
             isMouseDown = false;
             const queryString = selectedLetters.join(',');
-            window.history.pushState({}, '', '?letters=' + queryString); // ページ遷移せずにURLを更新
-        });
-    });
-});
+            window.parent.postMessage({{type: 'letters', data: queryString}}, '*');
+        }});
+    }});
 </script>
-""", unsafe_allow_html=True)
+</body>
+</html>
+"""
 
-# 文字選択をキャッチ
-letters_clicked = st.query_params.get("letters", [])
-if letters_clicked:
-    st.session_state.current_selection = letters_clicked[0].split(',')
+# タイトルと説明
+st.title("🕒 時計型ボタン配置（Word Connect）")
+st.write("マウスを押しながらドラッグするとボタンが順に選ばれます。")
 
-# 現在の選択
-current_word = ''.join(st.session_state.current_selection)
-st.write(f"### ✍️ 選択中の文字: **{current_word}**")
+# HTML を iframe で描画
+components.html(full_html, height=400)
 
-# アクションボタン
-col1, col2 = st.columns(2)
-with col1:
-    if st.button("提出"):
-        st.success(f"仮：『{current_word}』を提出しました（ここに単語判定処理を追加できます）")
-        st.session_state.current_selection = []
-with col2:
-    if st.button("リセット"):
-        st.session_state.current_selection = []
+# クエリパラメータは使わず、postMessage 経由で JS と連携する場合も検討できます（次の段階で）
