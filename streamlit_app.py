@@ -101,7 +101,7 @@ let points = [];
 
 document.querySelectorAll('.circle-button').forEach(button => {
     button.addEventListener('mousedown', function(event) {
-        isMouseDown = true;
+        isMouseDown == true;
         event.target.style.backgroundColor = '#FF5722'; // オレンジ色
         selectedLetters.push(event.target.dataset.letter);
         points.push({ x: event.clientX, y: event.clientY });
