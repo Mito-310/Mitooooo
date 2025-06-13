@@ -79,8 +79,8 @@ full_html = f"""
     }}
     canvas {{
         position: absolute;
-        top: 60px;
-        left: 40px;
+        top: 0;
+        left: 0;
         z-index: -1;
     }}
     </style>
@@ -90,9 +90,8 @@ full_html = f"""
 
 <div class="circle-container" id="circle-container">
     {button_html}
+    <canvas id="lineCanvas" width="300" height="300"></canvas>
 </div>
-
-<canvas id="lineCanvas" width="300" height="300"></canvas>
 
 <script>
     let isMouseDown = false;
@@ -100,9 +99,18 @@ full_html = f"""
     let points = [];
 
     const selectedWordDiv = document.getElementById('selected-word');
+    const container = document.getElementById('circle-container');
 
     function updateSelectedWord() {{
         selectedWordDiv.textContent = selectedLetters.join('');
+    }}
+
+    function getRelativeCenterPosition(elem, container) {{
+        const elemRect = elem.getBoundingClientRect();
+        const containerRect = container.getBoundingClientRect();
+        const centerX = elemRect.left - containerRect.left + elem.offsetWidth / 2;
+        const centerY = elemRect.top - containerRect.top + elem.offsetHeight / 2;
+        return {{ x: centerX, y: centerY }};
     }}
 
     document.querySelectorAll('.circle-button').forEach(button => {{
@@ -111,7 +119,7 @@ full_html = f"""
             if (!event.target.classList.contains('selected')) {{
                 event.target.classList.add('selected');
                 selectedLetters.push(event.target.dataset.letter);
-                points.push({{ x: event.target.offsetLeft + 30, y: event.target.offsetTop + 30 }});
+                points.push(getRelativeCenterPosition(event.target, container));
                 drawLine();
                 updateSelectedWord();
             }}
@@ -123,7 +131,7 @@ full_html = f"""
                 if (!event.target.classList.contains('selected')) {{
                     event.target.classList.add('selected');
                     selectedLetters.push(event.target.dataset.letter);
-                    points.push({{ x: event.target.offsetLeft + 30, y: event.target.offsetTop + 30 }});
+                    points.push(getRelativeCenterPosition(event.target, container));
                     drawLine();
                     updateSelectedWord();
                 }}
@@ -154,7 +162,6 @@ full_html = f"""
         ctx.stroke();
     }}
 
-    // 画面全体でマウスアップ監視
     document.addEventListener('mouseup', function() {{
         if(isMouseDown) {{
             isMouseDown = false;
@@ -170,4 +177,4 @@ full_html = f"""
 st.title("Word Connect")
 st.write("マウスを押しながらドラッグするとボタンが順に選ばれます。")
 
-components.html(full_html, height=450)
+components.html(full_html, height=500)
