@@ -114,36 +114,54 @@ full_html = f"""
     }}
 
     document.querySelectorAll('.circle-button').forEach(button => {{
-        button.addEventListener('mousedown', function(event) {{
-            isMouseDown = true;
-            if (!event.target.classList.contains('selected')) {{
-                event.target.classList.add('selected');
-                selectedLetters.push(event.target.dataset.letter);
-                points.push(getRelativeCenterPosition(event.target, container));
+        button.addEventListener('mousedown', handlePointerDown);
+        button.addEventListener('mouseenter', handlePointerMove);
+        button.addEventListener('mouseup', handlePointerUp);
+        
+        button.addEventListener('touchstart', handlePointerDown);
+        button.addEventListener('touchmove', handlePointerMove);
+        button.addEventListener('touchend', handlePointerUp);
+    }});
+
+    function handlePointerDown(event) {{
+        isMouseDown = true;
+        let target = event.target;
+        if (event.type.startsWith('touch')) {{
+            target = event.touches[0].target;
+        }}
+        if (!target.classList.contains('selected')) {{
+            target.classList.add('selected');
+            selectedLetters.push(target.dataset.letter);
+            points.push(getRelativeCenterPosition(target, container));
+            drawLine();
+            updateSelectedWord();
+        }}
+        event.preventDefault();
+    }}
+
+    function handlePointerMove(event) {{
+        if (isMouseDown) {{
+            let target = event.target;
+            if (event.type.startsWith('touch')) {{
+                target = event.touches[0].target;
+            }}
+            if (!target.classList.contains('selected')) {{
+                target.classList.add('selected');
+                selectedLetters.push(target.dataset.letter);
+                points.push(getRelativeCenterPosition(target, container));
                 drawLine();
                 updateSelectedWord();
             }}
-            event.preventDefault();
-        }});
+        }}
+        event.preventDefault();
+    }}
 
-        button.addEventListener('mouseenter', function(event) {{
-            if (isMouseDown) {{
-                if (!event.target.classList.contains('selected')) {{
-                    event.target.classList.add('selected');
-                    selectedLetters.push(event.target.dataset.letter);
-                    points.push(getRelativeCenterPosition(event.target, container));
-                    drawLine();
-                    updateSelectedWord();
-                }}
-            }}
-        }});
-
-        button.addEventListener('mouseup', function(event) {{
-            isMouseDown = false;
-            const queryString = selectedLetters.join(',');
-            window.parent.postMessage({{type: 'letters', data: queryString}}, '*');
-        }});
-    }});
+    function handlePointerUp(event) {{
+        isMouseDown = false;
+        const queryString = selectedLetters.join(',');
+        window.parent.postMessage({{type: 'letters', data: queryString}}, '*');
+        event.preventDefault();
+    }}
 
     function drawLine() {{
         const canvas = document.getElementById('lineCanvas');
@@ -175,6 +193,6 @@ full_html = f"""
 """
 
 st.title("Word Connect")
-st.write("マウスを押しながらドラッグするとボタンが順に選ばれます。")
+st.write("マウスまたはタッチ操作でボタンを順に選んでください。")
 
 components.html(full_html, height=500)
