@@ -67,6 +67,9 @@ full_html = f"""
         background-color: #f0f0f0;
     }}
     #selected-word {{
+        position: fixed;
+        top: 0;
+        left: 0;
         width: 100%;
         text-align: center;
         font-size: 28px;
@@ -76,6 +79,9 @@ full_html = f"""
         letter-spacing: 4px;
         min-height: 40px;
         color: #FF5722;
+        background-color: #fff;
+        z-index: 999;
+        border-bottom: 2px solid #FF5722;
     }}
     canvas {{
         position: absolute;
