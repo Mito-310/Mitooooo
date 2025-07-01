@@ -1,11 +1,23 @@
+import nltk
+nltk.download('words')
+
 import streamlit as st
 import random
 import math
 import streamlit.components.v1 as components
+import nltk
+from nltk.corpus import words
+
+# NLTKの辞書データをダウンロードして使用
+nltk.download('words')
+valid_words = set(words.words())  # NLTKから有効な英単語リストを取得
 
 # 初期化
 if 'current_selection' not in st.session_state:
     st.session_state.current_selection = []
+
+if 'correct_word' not in st.session_state:
+    st.session_state.correct_word = ""
 
 # ランダムな12文字
 all_letters = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
@@ -92,7 +104,7 @@ full_html = f"""
     </style>
 </head>
 <body>
-<div id="selected-word">{st.session_state.current_selection}</div>
+<div id="selected-word">{st.session_state.correct_word}</div>
 
 <div class="circle-container" id="circle-container">
     {button_html}
@@ -110,6 +122,11 @@ full_html = f"""
     function updateSelectedWord() {{
         selectedWordDiv.textContent = selectedLetters.join('');
         window.parent.postMessage({{type: 'letters', data: selectedLetters.join('')}});  // Streamlitに選択された文字列を送信
+    }}
+
+    function checkValidWord() {{
+        const currentWord = selectedLetters.join('');
+        window.parent.postMessage({{type: 'word-check', word: currentWord}}, '*');  // 単語が有効かどうか確認
     }}
 
     function getRelativeCenterPosition(elem, container) {{
@@ -152,6 +169,7 @@ full_html = f"""
             points.push(getRelativeCenterPosition(target, container));
             drawLine();
             updateSelectedWord();
+            checkValidWord();  // 単語が有効かチェック
         }}
         event.preventDefault();
     }}
@@ -168,6 +186,7 @@ full_html = f"""
                 points.push(getRelativeCenterPosition(target, container));
                 drawLine();
                 updateSelectedWord();
+                checkValidWord();  // 単語が有効かチェック
             }}
         }}
         event.preventDefault();
@@ -202,36 +221,4 @@ full_html = f"""
         if(isMouseDown) {{
             isMouseDown = false;
             const queryString = selectedLetters.join(',');
-            window.parent.postMessage({{type: 'letters', data: queryString}}, '*');
-            resetSelection(); // ここでも選択をリセット
-        }}
-    }});
-
-    document.addEventListener('touchend', function() {{
-        if(isMouseDown) {{
-            isMouseDown = false;
-            const queryString = selectedLetters.join(',');
-            window.parent.postMessage({{type: 'letters', data: queryString}}, '*');
-            resetSelection(); // ここでも選択をリセット
-        }}
-    }});
-</script>
-</body>
-</html>
-"""
-
-# タイトル
-st.title("Word Connect")
-st.write("マウスまたはタッチ操作でボタンを順に選んでください。")
-
-# 選択された文字列をHTML側に渡すためのメッセージを受け取る
-def message_handler(msg):
-    if msg.get("type") == "letters":
-        st.session_state.current_selection = msg["data"]
-
-# 既存のHTMLを表示
-components.html(full_html, height=500)
-
-# 受け取った選択された文字列を表示
-st.write("### 選択された文字列:")
-st.write(''.join(st.session_state.current_selection))
+            window.parent.postMessage({{type:
