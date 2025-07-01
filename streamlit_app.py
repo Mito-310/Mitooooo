@@ -7,18 +7,29 @@ import streamlit.components.v1 as components
 if 'current_selection' not in st.session_state:
     st.session_state.current_selection = []
 
-# ランダムな12文字
+# ユーザーにレベルを選択させる
+level = st.selectbox("レベルを選択してください", ["レベル 1 (6文字)", "レベル 2 (8文字)", "レベル 3 (12文字)"])
+
+# レベルに応じて文字数を設定
+if level == "レベル 1 (6文字)":
+    num_letters = 6
+elif level == "レベル 2 (8文字)":
+    num_letters = 8
+else:
+    num_letters = 12
+
+# ランダムな文字を生成
 all_letters = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
 random.seed(0)
-letters = random.sample(all_letters, 12)
+letters = random.sample(all_letters, num_letters)
 
 # 円形に並べるボタンのHTMLを生成
 button_html = ''.join([
     f'''
     <button class="circle-button" id="button_{i}"
             data-letter="{letter}"
-            style="left: {150 + 120 * math.cos(2 * math.pi * i / 12 - math.pi/2) - 30}px;
-                   top:  {150 + 120 * math.sin(2 * math.pi * i / 12 - math.pi/2) - 30}px;">
+            style="left: {150 + 120 * math.cos(2 * math.pi * i / num_letters - math.pi/2) - 30}px;
+                   top:  {150 + 120 * math.sin(2 * math.pi * i / num_letters - math.pi/2) - 30}px;">
         {letter}
     </button>
     ''' for i, letter in enumerate(letters)
