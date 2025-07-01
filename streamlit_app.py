@@ -1,23 +1,11 @@
-import nltk
-nltk.download('words')
-
 import streamlit as st
 import random
 import math
 import streamlit.components.v1 as components
-import nltk
-from nltk.corpus import words
-
-# NLTKの辞書データをダウンロードして使用
-nltk.download('words')
-valid_words = set(words.words())  # NLTKから有効な英単語リストを取得
 
 # 初期化
 if 'current_selection' not in st.session_state:
     st.session_state.current_selection = []
-
-if 'correct_word' not in st.session_state:
-    st.session_state.correct_word = ""
 
 # ランダムな12文字
 all_letters = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
@@ -104,7 +92,7 @@ full_html = f"""
     </style>
 </head>
 <body>
-<div id="selected-word">{st.session_state.correct_word}</div>
+<div id="selected-word">{st.session_state.get('correct_word', '')}</div>
 
 <div class="circle-container" id="circle-container">
     {button_html}
@@ -221,4 +209,27 @@ full_html = f"""
         if(isMouseDown) {{
             isMouseDown = false;
             const queryString = selectedLetters.join(',');
-            window.parent.postMessage({{type:
+            window.parent.postMessage({{type: 'letters', data: queryString}}, '*');
+            resetSelection(); // ここでも選択をリセット
+        }}
+    }});
+
+    document.addEventListener('touchend', function() {{
+        if(isMouseDown) {{
+            isMouseDown = false;
+            const queryString = selectedLetters.join(',');
+            window.parent.postMessage({{type: 'letters', data: queryString}}, '*');
+            resetSelection(); // ここでも選択をリセット
+        }}
+    }});
+</script>
+</body>
+</html>
+"""
+
+# Streamlitの表示
+st.title("Word Connect")
+st.write("マウスまたはタッチ操作でボタンを順に選んでください。")
+
+# components.html()で表示
+components.html(full_html, height=500)
