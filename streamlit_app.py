@@ -86,7 +86,7 @@ full_html = f"""
     </style>
 </head>
 <body>
-<div id="selected-word"></div>
+<div id="selected-word">{st.session_state.current_selection}</div>
 
 <div class="circle-container" id="circle-container">
     {button_html}
@@ -103,6 +103,7 @@ full_html = f"""
 
     function updateSelectedWord() {{
         selectedWordDiv.textContent = selectedLetters.join('');
+        window.parent.postMessage({{type: 'letters', data: selectedLetters.join('')}});  // Streamlitに選択された文字列を送信
     }}
 
     function getRelativeCenterPosition(elem, container) {{
@@ -213,7 +214,18 @@ full_html = f"""
 </html>
 """
 
+# タイトル
 st.title("Word Connect")
 st.write("マウスまたはタッチ操作でボタンを順に選んでください。")
 
+# 選択された文字列をHTML側に渡すためのメッセージを受け取る
+def message_handler(msg):
+    if msg.get("type") == "letters":
+        st.session_state.current_selection = msg["data"]
+
+# 既存のHTMLを表示
 components.html(full_html, height=500)
+
+# 受け取った選択された文字列を表示
+st.write("### 選択された文字列:")
+st.write(''.join(st.session_state.current_selection))
