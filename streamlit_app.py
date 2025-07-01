@@ -114,13 +114,21 @@ full_html = f"""
     }}
 
     function resetSelection() {{
-        selectedLetters = [];
-        points = [];
-        document.querySelectorAll('.circle-button').forEach(button => {{
-            button.classList.remove('selected');
-        }});
-        updateSelectedWord();
-        drawLine();
+        // 選択された単語を円の上部に表示
+        const selectedWord = selectedLetters.join('');
+        setTimeout(function() {{
+            selectedWordDiv.textContent = selectedWord; // 単語を表示
+            setTimeout(function() {{
+                // 一定時間後に選択をリセット
+                selectedLetters = [];
+                points = [];
+                document.querySelectorAll('.circle-button').forEach(button => {{
+                    button.classList.remove('selected');
+                }});
+                updateSelectedWord();
+                drawLine();
+            }}, 1000); // 1秒後にリセット
+        }}, 200); // 少し遅れて表示
     }}
 
     document.querySelectorAll('.circle-button').forEach(button => {{
