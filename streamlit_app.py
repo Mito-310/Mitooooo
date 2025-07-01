@@ -3,6 +3,141 @@ import random
 import math
 import streamlit.components.v1 as components
 
+# 単語リスト
+words = [
+    'admit', 'adventure', 'afford', 'appreciate', 'medicine', 'population', 'rely', 'conversation',
+    'exactly', 'spirit', 'treat', 'anxious', 'unless', 'frankly', 'whisper', 'appointment',
+    'decoration', 'decrease', 'despite', 'explanation', 'explorer', 'furniture', 'further',
+    'charity', 'spare', 'forecast', 'audience', 'impress', 'apply', 'instruction', 'award',
+    'destroy', 'generally', 'contain', 'sweep', 'ideal', 'chew', 'modern', 'author', 'nation',
+    'ceremony', 'direction', 'issue', 'silly', 'eventually', 'ancestor', 'memorize', 'corporation',
+    'product', 'citizen', 'prove', 'commercial', 'disappoint', 'journey', 'originally', 'soil',
+    'fantastic', 'attractive', 'prevent', 'examination', 'role', 'courage', 'silence', 'confident',
+    'emotion', 'nod', 'recommend', 'surround', 'hire', 'chemistry', 'require', 'forgive', 'stare',
+    'exhibit', 'suggestion', 'constant', 'exhibition', 'operation', 'receipt', 'survive', 'otherwise',
+    'suitable', 'avenue', 'earn', 'enemy', 'achieve', 'advertisement', 'instrument', 'organize',
+    'unfortunately', 'describe', 'employ', 'examine', 'harmful', 'importance', 'region', 'relation',
+    'rough', 'remind', 'surface'
+]
+
+# 単語辞書
+dictionary = set([
+    'ad', 'it', 'admit', 'venture', 'afford', 'appreciate', 'med', 'medicine', 'pop', 'population',
+    'rely', 'con', 'conversation', 'exact', 'exactly', 'spirit', 'treat', 'anxious', 'unless',
+    'frank', 'frankly', 'whisper', 'appointment', 'decoration', 'decrease', 'despite',
+    'explain', 'explanation', 'explore', 'explorer', 'furnish', 'furniture', 'further',
+    'charity', 'spare', 'forecast', 'audience', 'impress', 'apply', 'instruct', 'instruction',
+    'award', 'destroy', 'generally', 'contain', 'sweep', 'ideal', 'chew', 'modern', 'author',
+    'nation', 'ceremony', 'direction', 'issue', 'silly', 'event', 'eventually', 'ancestor',
+    'memorize', 'corporation', 'product', 'citizen', 'prove', 'commercial', 'disappoint',
+    'journey', 'original', 'originally', 'soil', 'fantastic', 'attractive', 'prevent',
+    'examination', 'role', 'courage', 'silence', 'confident', 'emotion', 'nod', 'recommend',
+    'surround', 'hire', 'chemistry', 'require', 'forgive', 'stare', 'exhibit', 'suggestion',
+    'constant', 'exhibition', 'operation', 'receipt', 'survive', 'otherwise', 'suitable',
+    'avenue', 'earn', 'enemy', 'achieve', 'advertisement', 'instrument', 'organize',
+    'unfortunately', 'describe', 'employ', 'examine', 'harmful', 'importance', 'region',
+    'relation', 'rough', 'remind', 'surface', 'am', 'me', 'in', 'on', 'no', 'or', 'an'
+])
+
+# レベル管理
+words_per_level = 3
+if 'level' not in st.session_state:
+    st.session_state.level = 0
+if 'score' not in st.session_state:
+    st.session_state.score = 0
+if 'found_words' not in st.session_state:
+    st.session_state.found_words = []
+if 'current_selection' not in st.session_state:
+    st.session_state.current_selection = []
+
+# 現在の単語セット
+word_list = words[st.session_state.level * words_per_level:(st.session_state.level + 1) * words_per_level]
+letters = list(set(''.join(word_list)))
+
+# タイトルと情報表示
+st.title("Word Connect")
+st.write(f"レベル: {st.session_state.level + 1}")
+st.write(f"スコア: {st.session_state.score}")
+
+# CSS: 丸いボタンスタイル
+st.markdown("""
+    <style>
+    div.stButton > button {
+        border-radius: 50%;
+        height: 60px;
+        width: 60px;
+        margin: 4px;
+        font-weight: bold;
+        font-size: 20px;
+        background-color: #f2f2f2;
+        color: #333;
+        border: 2px solid #999;
+        transition: all 0.2s ease-in-out;
+    }
+    div.stButton > button:hover {
+        background-color: #ddd;
+        border-color: #666;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+# アルファベットボタンを表示
+st.write("## 使える文字")
+cols = st.columns(len(letters))
+for i, letter in enumerate(letters):
+    if cols[i].button(letter, key=f"letter_{i}"):
+        st.session_state.current_selection.append(letter)
+
+# 選択中の単語表示
+current_word = ''.join(st.session_state.current_selection)
+st.write(f"### 選択中の単語: **{current_word}**")
+
+# 単語が作れるかの判定関数
+def can_form_word(word, letters_available):
+    letters_copy = list(letters_available)
+    for c in word:
+        if c in letters_copy:
+            letters_copy.remove(c)
+        else:
+            return False
+    return True
+
+# 提出処理
+if st.button("提出"):
+    if current_word in dictionary and can_form_word(current_word, letters) and current_word not in st.session_state.found_words:
+        st.success(f"正解！『{current_word}』を見つけました。")
+        st.session_state.found_words.append(current_word)
+        st.session_state.score += 1
+    else:
+        st.error("不正解か既に見つけた単語です。")
+    st.session_state.current_selection = []
+
+# リセットボタン
+if st.button("reset"):
+    st.session_state.current_selection = []
+
+# 発見済み単語
+st.write("## My辞書")
+if st.session_state.found_words:
+    st.write(", ".join(st.session_state.found_words))
+else:
+    st.write("まだ単語は見つかっていません。")
+
+# レベルクリア判定
+required_words_found = all(word in st.session_state.found_words for word in word_list)
+if required_words_found:
+    st.success("🎉 レベルクリア！次のレベルへ進みます。")
+    if st.button("次のレベルへ"):
+        st.session_state.level += 1
+        st.session_state.found_words = []
+        st.session_state.current_selection = []
+        st.experimental_rerun()
+
+# 全レベル終了メッセージ
+if st.session_state.level >= len(words) // words_per_level:
+    st.balloons()
+    st.write("すべてのレベルをクリアしました！おめでとうございます！")
+
 # 初期化
 if 'current_selection' not in st.session_state:
     st.session_state.current_selection = []
@@ -18,210 +153,4 @@ button_html = ''.join([
     <button class="circle-button" id="button_{i}"
             data-letter="{letter}"
             style="left: {150 + 120 * math.cos(2 * math.pi * i / 12 - math.pi/2) - 30}px;
-                   top:  {150 + 120 * math.sin(2 * math.pi * i / 12 - math.pi/2) - 30}px;">
-        {letter}
-    </button>
-    ''' for i, letter in enumerate(letters)
-])
-
-# HTML + CSS + JavaScript を組み立て
-full_html = f"""
-<html>
-<head>
-    <style>
-    body {{
-        margin: 0;
-        font-family: Arial, sans-serif;
-        user-select: none;
-    }}
-    .circle-container {{
-        position: relative;
-        width: 300px;
-        height: 300px;
-        margin: 60px auto 40px auto;
-        border: 2px solid #ccc;
-        border-radius: 50%;
-    }}
-    .circle-button {{
-        position: absolute;
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        background-color: white;
-        color: black;
-        font-size: 20px;
-        font-weight: bold;
-        border: 2px solid #4CAF50;
-        cursor: pointer;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
-    }}
-    .circle-button.selected {{
-        background-color: #FF5722;
-        border-color: #FF5722;
-        color: white;
-    }}
-    .circle-button:hover {{
-        background-color: #f0f0f0;
-    }}
-    #selected-word {{
-        width: 100%;
-        text-align: center;
-        font-size: 28px;
-        font-weight: bold;
-        padding-top: 10px;
-        user-select: none;
-        letter-spacing: 4px;
-        min-height: 40px;
-        color: #FF5722;
-    }}
-    canvas {{
-        position: absolute;
-        top: 0;
-        left: 0;
-        z-index: -1;
-    }}
-    </style>
-</head>
-<body>
-<div id="selected-word"></div>
-
-<div class="circle-container" id="circle-container">
-    {button_html}
-    <canvas id="lineCanvas" width="300" height="300"></canvas>
-</div>
-
-<script>
-    let isMouseDown = false;
-    let selectedLetters = [];
-    let points = [];
-
-    const selectedWordDiv = document.getElementById('selected-word');
-    const container = document.getElementById('circle-container');
-
-    function updateSelectedWord() {{
-        selectedWordDiv.textContent = selectedLetters.join('');
-    }}
-
-    function getRelativeCenterPosition(elem, container) {{
-        const elemRect = elem.getBoundingClientRect();
-        const containerRect = container.getBoundingClientRect();
-        const centerX = elemRect.left - containerRect.left + elem.offsetWidth / 2;
-        const centerY = elemRect.top - containerRect.top + elem.offsetHeight / 2;
-        return {{ x: centerX, y: centerY }};
-    }}
-
-    function resetSelection() {{
-        // 選択された単語を円の上部に表示
-        const selectedWord = selectedLetters.join('');
-        setTimeout(function() {{
-            selectedWordDiv.textContent = selectedWord; // 単語を表示
-            setTimeout(function() {{
-                // 一定時間後に選択をリセット
-                selectedLetters = [];
-                points = [];
-                document.querySelectorAll('.circle-button').forEach(button => {{
-                    button.classList.remove('selected');
-                }});
-                updateSelectedWord();
-                drawLine();
-            }}, 1000); // 1秒後にリセット
-        }}, 200); // 少し遅れて表示
-    }}
-
-    document.querySelectorAll('.circle-button').forEach(button => {{
-        button.addEventListener('mousedown', handlePointerDown);
-        button.addEventListener('mouseenter', handlePointerMove);
-        button.addEventListener('mouseup', handlePointerUp);
-        
-        button.addEventListener('touchstart', handlePointerDown);
-        button.addEventListener('touchmove', handlePointerMove);
-        button.addEventListener('touchend', handlePointerUp);
-    }});
-
-    function handlePointerDown(event) {{
-        isMouseDown = true;
-        let target = event.target;
-        if (event.type.startsWith('touch')) {{
-            target = event.touches[0].target;
-        }}
-        if (!target.classList.contains('selected')) {{
-            target.classList.add('selected');
-            selectedLetters.push(target.dataset.letter);
-            points.push(getRelativeCenterPosition(target, container));
-            drawLine();
-            updateSelectedWord();
-        }}
-        event.preventDefault();
-    }}
-
-    function handlePointerMove(event) {{
-        if (isMouseDown) {{
-            let target = event.target;
-            if (event.type.startsWith('touch')) {{
-                target = event.touches[0].target;
-            }}
-            if (!target.classList.contains('selected')) {{
-                target.classList.add('selected');
-                selectedLetters.push(target.dataset.letter);
-                points.push(getRelativeCenterPosition(target, container));
-                drawLine();
-                updateSelectedWord();
-            }}
-        }}
-        event.preventDefault();
-    }}
-
-    function handlePointerUp(event) {{
-        isMouseDown = false;
-        const queryString = selectedLetters.join(',');
-        window.parent.postMessage({{type: 'letters', data: queryString}}, '*');
-        resetSelection(); // ここで選択をリセット
-        event.preventDefault();
-    }}
-
-    function drawLine() {{
-        const canvas = document.getElementById('lineCanvas');
-        const ctx = canvas.getContext('2d');
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        if(points.length === 0) return;
-
-        ctx.beginPath();
-        ctx.moveTo(points[0].x, points[0].y);
-        points.forEach(point => {{
-            ctx.lineTo(point.x, point.y);
-        }});
-        ctx.strokeStyle = '#FF5722';
-        ctx.lineWidth = 3;
-        ctx.stroke();
-    }}
-
-    document.addEventListener('mouseup', function() {{
-        if(isMouseDown) {{
-            isMouseDown = false;
-            const queryString = selectedLetters.join(',');
-            window.parent.postMessage({{type: 'letters', data: queryString}}, '*');
-            resetSelection(); // ここでも選択をリセット
-        }}
-    }});
-
-    document.addEventListener('touchend', function() {{
-        if(isMouseDown) {{
-            isMouseDown = false;
-            const queryString = selectedLetters.join(',');
-            window.parent.postMessage({{type: 'letters', data: queryString}}, '*');
-            resetSelection(); // ここでも選択をリセット
-        }}
-    }});
-</script>
-</body>
-</html>
-"""
-
-st.title("Word Connect")
-st.write("マウスまたはタッチ操作でボタンを順に選んでください。")
-
-components.html(full_html, height=500)
+                   top:  {150 + 120 * math.sin(2 * math.pi * i / 
