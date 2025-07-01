@@ -9,18 +9,18 @@ if 'current_selection' not in st.session_state:
 if 'selected_word' not in st.session_state:
     st.session_state.selected_word = ""
 
-# ランダムな12文字
+# ランダムな5文字
 all_letters = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
 random.seed(0)
-letters = random.sample(all_letters, 12)
+letters = random.sample(all_letters, 5)  # ここを5文字に変更
 
 # 円形に並べるボタンのHTMLを生成
 button_html = ''.join([
     f'''
     <button class="circle-button" id="button_{i}"
             data-letter="{letter}"
-            style="left: {150 + 120 * math.cos(2 * math.pi * i / 12 - math.pi/2) - 30}px;
-                   top:  {150 + 120 * math.sin(2 * math.pi * i / 12 - math.pi/2) - 30}px;">
+            style="left: {150 + 120 * math.cos(2 * math.pi * i / 5 - math.pi/2) - 30}px;
+                   top:  {150 + 120 * math.sin(2 * math.pi * i / 5 - math.pi/2) - 30}px;">
         {letter}
     </button>
     ''' for i, letter in enumerate(letters)
@@ -100,11 +100,17 @@ full_html = f"""
     let isMouseDown = false;
     let selectedLetters = [];
     let points = [];
-
+    
     const selectedWordDiv = document.getElementById('selected-word');
-
+    
     function updateSelectedWord() {{
         selectedWordDiv.textContent = selectedLetters.join('');
+    }}
+
+    // ボタンの位置取得関数
+    function getButtonPosition(button) {{
+        const rect = button.getBoundingClientRect();
+        return {{ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 }};
     }}
 
     document.querySelectorAll('.circle-button').forEach(button => {{
@@ -113,7 +119,8 @@ full_html = f"""
             if (!event.target.classList.contains('selected')) {{
                 event.target.classList.add('selected');
                 selectedLetters.push(event.target.dataset.letter);
-                points.push({{ x: event.target.offsetLeft + 30, y: event.target.offsetTop + 30 }});
+                const position = getButtonPosition(event.target);
+                points.push(position);
                 drawLine();
                 updateSelectedWord();
             }}
@@ -125,7 +132,8 @@ full_html = f"""
                 if (!event.target.classList.contains('selected')) {{
                     event.target.classList.add('selected');
                     selectedLetters.push(event.target.dataset.letter);
-                    points.push({{ x: event.target.offsetLeft + 30, y: event.target.offsetTop + 30 }});
+                    const position = getButtonPosition(event.target);
+                    points.push(position);
                     drawLine();
                     updateSelectedWord();
                 }}
