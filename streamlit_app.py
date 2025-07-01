@@ -6,6 +6,8 @@ import streamlit.components.v1 as components
 # 初期化
 if 'current_selection' not in st.session_state:
     st.session_state.current_selection = []
+if 'selected_word' not in st.session_state:
+    st.session_state.selected_word = ""
 
 # ランダムな12文字
 all_letters = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
@@ -79,19 +81,20 @@ full_html = f"""
     }}
     canvas {{
         position: absolute;
-        top: 0;
-        left: 0;
+        top: 60px;
+        left: 40px;
         z-index: -1;
     }}
     </style>
 </head>
 <body>
-<div id="selected-word"></div>
+<div id="selected-word">{st.session_state.selected_word}</div>
 
 <div class="circle-container" id="circle-container">
     {button_html}
-    <canvas id="lineCanvas" width="300" height="300"></canvas>
 </div>
+
+<canvas id="lineCanvas" width="300" height="300"></canvas>
 
 <script>
     let isMouseDown = false;
@@ -99,80 +102,42 @@ full_html = f"""
     let points = [];
 
     const selectedWordDiv = document.getElementById('selected-word');
-    const container = document.getElementById('circle-container');
 
     function updateSelectedWord() {{
         selectedWordDiv.textContent = selectedLetters.join('');
     }}
 
-    function getRelativeCenterPosition(elem, container) {{
-        const elemRect = elem.getBoundingClientRect();
-        const containerRect = container.getBoundingClientRect();
-        const centerX = elemRect.left - containerRect.left + elem.offsetWidth / 2;
-        const centerY = elemRect.top - containerRect.top + elem.offsetHeight / 2;
-        return {{ x: centerX, y: centerY }};
-    }}
-
-    function resetSelection() {{
-        selectedLetters = [];
-        points = [];
-        document.querySelectorAll('.circle-button').forEach(button => {{
-            button.classList.remove('selected');
-        }});
-        updateSelectedWord();
-        drawLine();
-    }}
-
     document.querySelectorAll('.circle-button').forEach(button => {{
-        button.addEventListener('mousedown', handlePointerDown);
-        button.addEventListener('mouseenter', handlePointerMove);
-        button.addEventListener('mouseup', handlePointerUp);
-        
-        button.addEventListener('touchstart', handlePointerDown);
-        button.addEventListener('touchmove', handlePointerMove);
-        button.addEventListener('touchend', handlePointerUp);
-    }});
-
-    function handlePointerDown(event) {{
-        isMouseDown = true;
-        let target = event.target;
-        if (event.type.startsWith('touch')) {{
-            target = event.touches[0].target;
-        }}
-        if (!target.classList.contains('selected')) {{
-            target.classList.add('selected');
-            selectedLetters.push(target.dataset.letter);
-            points.push(getRelativeCenterPosition(target, container));
-            drawLine();
-            updateSelectedWord();
-        }}
-        event.preventDefault();
-    }}
-
-    function handlePointerMove(event) {{
-        if (isMouseDown) {{
-            let target = event.target;
-            if (event.type.startsWith('touch')) {{
-                target = event.touches[0].target;
-            }}
-            if (!target.classList.contains('selected')) {{
-                target.classList.add('selected');
-                selectedLetters.push(target.dataset.letter);
-                points.push(getRelativeCenterPosition(target, container));
+        button.addEventListener('mousedown', function(event) {{
+            isMouseDown = true;
+            if (!event.target.classList.contains('selected')) {{
+                event.target.classList.add('selected');
+                selectedLetters.push(event.target.dataset.letter);
+                points.push({{ x: event.target.offsetLeft + 30, y: event.target.offsetTop + 30 }});
                 drawLine();
                 updateSelectedWord();
             }}
-        }}
-        event.preventDefault();
-    }}
+            event.preventDefault();
+        }});
 
-    function handlePointerUp(event) {{
-        isMouseDown = false;
-        const queryString = selectedLetters.join(',');
-        window.parent.postMessage({{type: 'letters', data: queryString}}, '*');
-        resetSelection(); // ここで選択をリセット
-        event.preventDefault();
-    }}
+        button.addEventListener('mouseenter', function(event) {{
+            if (isMouseDown) {{
+                if (!event.target.classList.contains('selected')) {{
+                    event.target.classList.add('selected');
+                    selectedLetters.push(event.target.dataset.letter);
+                    points.push({{ x: event.target.offsetLeft + 30, y: event.target.offsetTop + 30 }});
+                    drawLine();
+                    updateSelectedWord();
+                }}
+            }}
+        }});
+
+        button.addEventListener('mouseup', function(event) {{
+            isMouseDown = false;
+            const queryString = selectedLetters.join(',');
+            window.parent.postMessage({{type: 'letters', data: queryString}}, '*');
+        }});
+    }});
 
     function drawLine() {{
         const canvas = document.getElementById('lineCanvas');
@@ -191,21 +156,12 @@ full_html = f"""
         ctx.stroke();
     }}
 
+    // 画面全体でマウスアップ監視
     document.addEventListener('mouseup', function() {{
         if(isMouseDown) {{
             isMouseDown = false;
             const queryString = selectedLetters.join(',');
             window.parent.postMessage({{type: 'letters', data: queryString}}, '*');
-            resetSelection(); // ここでも選択をリセット
-        }}
-    }});
-
-    document.addEventListener('touchend', function() {{
-        if(isMouseDown) {{
-            isMouseDown = false;
-            const queryString = selectedLetters.join(',');
-            window.parent.postMessage({{type: 'letters', data: queryString}}, '*');
-            resetSelection(); // ここでも選択をリセット
         }}
     }});
 </script>
@@ -213,7 +169,17 @@ full_html = f"""
 </html>
 """
 
+# タイトル
 st.title("Word Connect")
-st.write("マウスまたはタッチ操作でボタンを順に選んでください。")
 
-components.html(full_html, height=500)
+# 選択された単語を表示
+st.write(f"### 選択された単語: {st.session_state.selected_word}")
+
+# 既存のHTMLを表示
+components.html(full_html, height=450)
+
+# リセットボタン
+if st.button("リセット"):
+    st.session_state.current_selection = []
+    st.session_state.selected_word = ""  # 選択された単語もリセット
+    st.experimental_rerun()
