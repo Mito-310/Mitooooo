@@ -113,6 +113,16 @@ full_html = f"""
         return {{ x: centerX, y: centerY }};
     }}
 
+    function resetSelection() {{
+        selectedLetters = [];
+        points = [];
+        document.querySelectorAll('.circle-button').forEach(button => {{
+            button.classList.remove('selected');
+        }});
+        updateSelectedWord();
+        drawLine();
+    }}
+
     document.querySelectorAll('.circle-button').forEach(button => {{
         button.addEventListener('mousedown', handlePointerDown);
         button.addEventListener('mouseenter', handlePointerMove);
@@ -160,6 +170,7 @@ full_html = f"""
         isMouseDown = false;
         const queryString = selectedLetters.join(',');
         window.parent.postMessage({{type: 'letters', data: queryString}}, '*');
+        resetSelection(); // ここで選択をリセット
         event.preventDefault();
     }}
 
@@ -185,6 +196,16 @@ full_html = f"""
             isMouseDown = false;
             const queryString = selectedLetters.join(',');
             window.parent.postMessage({{type: 'letters', data: queryString}}, '*');
+            resetSelection(); // ここでも選択をリセット
+        }}
+    }});
+
+    document.addEventListener('touchend', function() {{
+        if(isMouseDown) {{
+            isMouseDown = false;
+            const queryString = selectedLetters.join(',');
+            window.parent.postMessage({{type: 'letters', data: queryString}}, '*');
+            resetSelection(); // ここでも選択をリセット
         }}
     }});
 </script>
