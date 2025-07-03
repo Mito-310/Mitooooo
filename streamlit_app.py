@@ -58,7 +58,7 @@ if st.session_state.game_state == 'title':
 elif st.session_state.game_state == 'stage_select':
     st.markdown("""
     <div style="text-align: center; padding: 30px;">
-        <h2 style="color: #4CAF50;">ステージを選択してください</h2>
+        <h2 style="color: #4CAF50;">ステージ選択</h2>
     </div>
     """, unsafe_allow_html=True)
     
@@ -75,7 +75,7 @@ elif st.session_state.game_state == 'stage_select':
             </div>
             """, unsafe_allow_html=True)
             
-            if st.button(f"ステージ {stage_num} を選択", key=f"stage_{stage_num}", use_container_width=True):
+            if st.button(f"選択", key=f"stage_{stage_num}", use_container_width=True):
                 st.session_state.current_stage = stage_num
                 st.session_state.target_words = STAGES[stage_num]['words']
                 st.session_state.found_words = []
