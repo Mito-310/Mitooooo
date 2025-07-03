@@ -50,7 +50,7 @@ if st.session_state.game_state == 'title':
     
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        if st.button("🎮 ゲーム開始", use_container_width=True, type="primary"):
+        if st.button("START", use_container_width=True, type="primary"):
             st.session_state.game_state = 'stage_select'
             st.rerun()
 
@@ -84,7 +84,7 @@ elif st.session_state.game_state == 'stage_select':
     
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        if st.button("🏠 タイトルに戻る", use_container_width=True):
+        if st.button("タイトルに戻る", use_container_width=True):
             st.session_state.game_state = 'title'
             st.rerun()
 
