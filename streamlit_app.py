@@ -37,7 +37,7 @@ if st.session_state.game_state == 'title':
     st.markdown("""
     <div style="text-align: center; padding: 50px;">
         <h1 style="font-size: 48px; color: #FF5722; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">
-            🎯 Word Connect 🎯
+             Word Connect 
         </h1>
         <p style="font-size: 24px; color: #666; margin: 30px 0;">
             文字を繋げて単語を作ろう！
@@ -295,8 +295,8 @@ elif st.session_state.game_state == 'game':
     <div id="selected-word"></div>
     <div id="target-words">目標: {', '.join(st.session_state.target_words)}</div>
     <div id="found-words">見つけた単語: {', '.join(st.session_state.found_words) if st.session_state.found_words else 'なし'}</div>
-    <div id="success-message" class="success-message">正解！ 🎉</div>
-    <div id="complete-message" class="complete-message">ステージクリア！ 🏆</div>
+    <div id="success-message" class="success-message">正解！ </div>
+    <div id="complete-message" class="complete-message">ステージクリア！ </div>
 
     <div class="circle-container" id="circle-container">
         {button_html}
@@ -539,13 +539,13 @@ elif st.session_state.game_state == 'game':
     # ステージクリア判定
     if len(st.session_state.found_words) == len(st.session_state.target_words):
         st.balloons()
-        st.success("🎉 ステージクリア！おめでとうございます！")
+        st.success("Stage Clear！おめでとうございます！")
         col1, col2 = st.columns(2)
         with col1:
-            if st.button("🏠 タイトルに戻る", use_container_width=True):
+            if st.button("タイトルに戻る", use_container_width=True):
                 st.session_state.game_state = 'title'
                 st.rerun()
         with col2:
-            if st.button("📝 ステージ選択", use_container_width=True):
+            if st.button("ステージ選択", use_container_width=True):
                 st.session_state.game_state = 'stage_select'
                 st.rerun()
