@@ -28,6 +28,7 @@ button_html = ''.join([
     f'''
     <button class="circle-button" id="button_{i}"
             data-letter="{letter}"
+            data-index="{i}"
             style="left: {150 + 120 * math.cos(2 * math.pi * i / num_letters - math.pi/2) - 30}px;
                    top:  {150 + 120 * math.sin(2 * math.pi * i / num_letters - math.pi/2) - 30}px;">
         {letter}
@@ -39,11 +40,18 @@ button_html = ''.join([
 full_html = f"""
 <html>
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <style>
     body {{
         margin: 0;
         font-family: Arial, sans-serif;
         user-select: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        touch-action: none;
+        -webkit-touch-callout: none;
+        -webkit-tap-highlight-color: transparent;
     }}
     .circle-container {{
         position: relative;
@@ -52,6 +60,7 @@ full_html = f"""
         margin: 60px auto 40px auto;
         border: 2px solid #ccc;
         border-radius: 50%;
+        touch-action: none;
     }}
     .circle-button {{
         position: absolute;
@@ -68,6 +77,9 @@ full_html = f"""
         justify-content: center;
         align-items: center;
         transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+        touch-action: none;
+        -webkit-touch-callout: none;
+        -webkit-tap-highlight-color: transparent;
     }}
     .circle-button.selected {{
         background-color: #FF5722;
@@ -93,12 +105,14 @@ full_html = f"""
         background-color: #fff;
         z-index: 999;
         border-bottom: 2px solid #FF5722;
+        touch-action: none;
     }}
     canvas {{
         position: absolute;
         top: 0;
         left: 0;
         z-index: -1;
+        touch-action: none;
     }}
     </style>
 </head>
@@ -111,21 +125,24 @@ full_html = f"""
 </div>
 
 <script>
-    let isMouseDown = false;
+    let isInteracting = false;
     let selectedLetters = [];
+    let selectedButtons = [];
     let points = [];
 
     const selectedWordDiv = document.getElementById('selected-word');
     const container = document.getElementById('circle-container');
+    const canvas = document.getElementById('lineCanvas');
+    const ctx = canvas.getContext('2d');
 
     function updateSelectedWord() {{
         selectedWordDiv.textContent = selectedLetters.join('');
-        window.parent.postMessage({{type: 'letters', data: selectedLetters.join('')}});  // Streamlitに選択された文字列を送信
+        window.parent.postMessage({{type: 'letters', data: selectedLetters.join('')}}, '*');
     }}
 
     function checkValidWord() {{
         const currentWord = selectedLetters.join('');
-        window.parent.postMessage({{type: 'word-check', word: currentWord}}, '*');  // 単語が有効かどうか確認
+        window.parent.postMessage({{type: 'word-check', word: currentWord}}, '*');
     }}
 
     function getRelativeCenterPosition(elem, container) {{
@@ -138,6 +155,7 @@ full_html = f"""
 
     function resetSelection() {{
         selectedLetters = [];
+        selectedButtons = [];
         points = [];
         document.querySelectorAll('.circle-button').forEach(button => {{
             button.classList.remove('selected');
@@ -146,62 +164,99 @@ full_html = f"""
         drawLine();
     }}
 
-    document.querySelectorAll('.circle-button').forEach(button => {{
-        button.addEventListener('mousedown', handlePointerDown);
-        button.addEventListener('mouseenter', handlePointerMove);
-        button.addEventListener('mouseup', handlePointerUp);
-        
-        button.addEventListener('touchstart', handlePointerDown);
-        button.addEventListener('touchmove', handlePointerMove);
-        button.addEventListener('touchend', handlePointerUp);
-    }});
-
-    function handlePointerDown(event) {{
-        isMouseDown = true;
-        let target = event.target;
-        if (event.type.startsWith('touch')) {{
-            target = event.touches[0].target;
-        }}
-        if (!target.classList.contains('selected')) {{
-            target.classList.add('selected');
-            selectedLetters.push(target.dataset.letter);
-            points.push(getRelativeCenterPosition(target, container));
+    function selectButton(button) {{
+        if (!selectedButtons.includes(button)) {{
+            button.classList.add('selected');
+            selectedLetters.push(button.dataset.letter);
+            selectedButtons.push(button);
+            points.push(getRelativeCenterPosition(button, container));
             drawLine();
             updateSelectedWord();
-            checkValidWord();  // 単語が有効かチェック
+            checkValidWord();
+        }}
+    }}
+
+    function getButtonAtPosition(x, y) {{
+        const buttons = document.querySelectorAll('.circle-button');
+        for (let button of buttons) {{
+            const rect = button.getBoundingClientRect();
+            const containerRect = container.getBoundingClientRect();
+            const relativeX = x - containerRect.left;
+            const relativeY = y - containerRect.top;
+            const buttonX = rect.left - containerRect.left;
+            const buttonY = rect.top - containerRect.top;
+            
+            if (relativeX >= buttonX && relativeX <= buttonX + rect.width &&
+                relativeY >= buttonY && relativeY <= buttonY + rect.height) {{
+                return button;
+            }}
+        }}
+        return null;
+    }}
+
+    // マウスイベント
+    function handleMouseDown(event) {{
+        isInteracting = true;
+        const button = event.target.closest('.circle-button');
+        if (button) {{
+            selectButton(button);
         }}
         event.preventDefault();
     }}
 
-    function handlePointerMove(event) {{
-        if (isMouseDown) {{
-            let target = event.target;
-            if (event.type.startsWith('touch')) {{
-                target = event.touches[0].target;
-            }}
-            if (!target.classList.contains('selected')) {{
-                target.classList.add('selected');
-                selectedLetters.push(target.dataset.letter);
-                points.push(getRelativeCenterPosition(target, container));
-                drawLine();
-                updateSelectedWord();
-                checkValidWord();  // 単語が有効かチェック
-            }}
+    function handleMouseMove(event) {{
+        if (!isInteracting) return;
+        
+        const button = getButtonAtPosition(event.clientX, event.clientY);
+        if (button) {{
+            selectButton(button);
         }}
         event.preventDefault();
     }}
 
-    function handlePointerUp(event) {{
-        isMouseDown = false;
-        const queryString = selectedLetters.join(',');
-        window.parent.postMessage({{type: 'letters', data: queryString}}, '*');
-        resetSelection(); // ここで選択をリセット
+    function handleMouseUp(event) {{
+        if (isInteracting) {{
+            isInteracting = false;
+            const queryString = selectedLetters.join(',');
+            window.parent.postMessage({{type: 'letters', data: queryString}}, '*');
+            setTimeout(resetSelection, 500); // 少し遅延を入れて結果を見せる
+        }}
+        event.preventDefault();
+    }}
+
+    // タッチイベント
+    function handleTouchStart(event) {{
+        isInteracting = true;
+        const touch = event.touches[0];
+        const button = getButtonAtPosition(touch.clientX, touch.clientY);
+        if (button) {{
+            selectButton(button);
+        }}
+        event.preventDefault();
+    }}
+
+    function handleTouchMove(event) {{
+        if (!isInteracting) return;
+        
+        const touch = event.touches[0];
+        const button = getButtonAtPosition(touch.clientX, touch.clientY);
+        if (button) {{
+            selectButton(button);
+        }}
+        event.preventDefault();
+    }}
+
+    function handleTouchEnd(event) {{
+        if (isInteracting) {{
+            isInteracting = false;
+            const queryString = selectedLetters.join(',');
+            window.parent.postMessage({{type: 'letters', data: queryString}}, '*');
+            setTimeout(resetSelection, 500); // 少し遅延を入れて結果を見せる
+        }}
         event.preventDefault();
     }}
 
     function drawLine() {{
-        const canvas = document.getElementById('lineCanvas');
-        const ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         if(points.length === 0) return;
@@ -213,24 +268,38 @@ full_html = f"""
         }});
         ctx.strokeStyle = '#FF5722';
         ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
         ctx.stroke();
     }}
 
+    // イベントリスナーの設定
+    container.addEventListener('mousedown', handleMouseDown);
+    container.addEventListener('mousemove', handleMouseMove);
+    container.addEventListener('mouseup', handleMouseUp);
+    container.addEventListener('mouseleave', handleMouseUp);
+
+    container.addEventListener('touchstart', handleTouchStart, {{passive: false}});
+    container.addEventListener('touchmove', handleTouchMove, {{passive: false}});
+    container.addEventListener('touchend', handleTouchEnd, {{passive: false}});
+    container.addEventListener('touchcancel', handleTouchEnd, {{passive: false}});
+
+    // 全体のイベントリスナー（タッチが範囲外に出た場合の処理）
     document.addEventListener('mouseup', function() {{
-        if(isMouseDown) {{
-            isMouseDown = false;
+        if(isInteracting) {{
+            isInteracting = false;
             const queryString = selectedLetters.join(',');
             window.parent.postMessage({{type: 'letters', data: queryString}}, '*');
-            resetSelection(); // ここでも選択をリセット
+            setTimeout(resetSelection, 500);
         }}
     }});
 
     document.addEventListener('touchend', function() {{
-        if(isMouseDown) {{
-            isMouseDown = false;
+        if(isInteracting) {{
+            isInteracting = false;
             const queryString = selectedLetters.join(',');
             window.parent.postMessage({{type: 'letters', data: queryString}}, '*');
-            resetSelection(); // ここでも選択をリセット
+            setTimeout(resetSelection, 500);
         }}
     }});
 </script>
