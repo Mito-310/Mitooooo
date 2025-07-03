@@ -16,17 +16,17 @@ if 'found_words' not in st.session_state:
 # ステージ設定
 STAGES = {
     1: {
-        'name': 'ステージ 1: 動物',
+        'name': 'ステージ 1',
         'letters': ['C', 'A', 'T', 'D', 'O', 'G'],
         'words': ['CAT', 'DOG', 'COD', 'TAG', 'GOD', 'COG']
     },
     2: {
-        'name': 'ステージ 2: 色',
+        'name': 'ステージ 2',
         'letters': ['R', 'E', 'D', 'B', 'L', 'U', 'E', 'G'],
         'words': ['RED', 'BLUE', 'BED', 'LED', 'RUB', 'BUG', 'GEL', 'LEG']
     },
     3: {
-        'name': 'ステージ 3: 食べ物',
+        'name': 'ステージ 3',
         'letters': ['B', 'R', 'E', 'A', 'D', 'C', 'A', 'K', 'E', 'F', 'I', 'S'],
         'words': ['BREAD', 'CAKE', 'FISH', 'RICE', 'BEEF', 'DESK', 'FIRE', 'SAKE', 'FACE', 'DEAR']
     }
