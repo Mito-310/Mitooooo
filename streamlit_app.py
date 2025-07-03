@@ -6,9 +6,31 @@ import streamlit.components.v1 as components
 # 初期化
 if 'current_selection' not in st.session_state:
     st.session_state.current_selection = []
+if 'target_words' not in st.session_state:
+    st.session_state.target_words = []
+if 'found_words' not in st.session_state:
+    st.session_state.found_words = []
 
 # ユーザーにレベルを選択させる
 level = st.selectbox("レベルを選択してください", ["レベル 1 (6文字)", "レベル 2 (8文字)", "レベル 3 (12文字)"])
+
+# 正解単語を入力
+st.subheader("正解単語を設定")
+target_word_input = st.text_input("正解単語を入力してください（カンマで複数指定可能）", 
+                                  placeholder="例: CAT,DOG,BIRD")
+
+if target_word_input:
+    words = [word.strip().upper() for word in target_word_input.split(',') if word.strip()]
+    st.session_state.target_words = words
+    st.write(f"設定された正解単語: {', '.join(words)}")
+
+if st.session_state.found_words:
+    st.success(f"見つけた単語: {', '.join(st.session_state.found_words)}")
+
+# リセットボタン
+if st.button("ゲームをリセット"):
+    st.session_state.found_words = []
+    st.rerun()
 
 # レベルに応じて文字数を設定
 if level == "レベル 1 (6文字)":
@@ -52,6 +74,12 @@ full_html = f"""
         touch-action: none;
         -webkit-touch-callout: none;
         -webkit-tap-highlight-color: transparent;
+    canvas {{
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: -1;
+        touch-action: none;
     }}
     .circle-container {{
         position: relative;
@@ -117,7 +145,10 @@ full_html = f"""
     </style>
 </head>
 <body>
-<div id="selected-word">{st.session_state.get('correct_word', '')}</div>
+<div id="selected-word"></div>
+<div id="target-words">正解単語: {', '.join(st.session_state.target_words) if st.session_state.target_words else '未設定'}</div>
+<div id="found-words">見つけた単語: {', '.join(st.session_state.found_words) if st.session_state.found_words else 'なし'}</div>
+<div id="success-message" class="success-message">正解！</div>
 
 <div class="circle-container" id="circle-container">
     {button_html}
@@ -129,20 +160,38 @@ full_html = f"""
     let selectedLetters = [];
     let selectedButtons = [];
     let points = [];
+    let targetWords = {st.session_state.target_words};
+    let foundWords = {st.session_state.found_words};
 
     const selectedWordDiv = document.getElementById('selected-word');
+    const targetWordsDiv = document.getElementById('target-words');
+    const foundWordsDiv = document.getElementById('found-words');
+    const successMessageDiv = document.getElementById('success-message');
     const container = document.getElementById('circle-container');
     const canvas = document.getElementById('lineCanvas');
     const ctx = canvas.getContext('2d');
 
     function updateSelectedWord() {{
         selectedWordDiv.textContent = selectedLetters.join('');
-        window.parent.postMessage({{type: 'letters', data: selectedLetters.join('')}}, '*');
     }}
 
-    function checkValidWord() {{
+    function checkCorrectWord() {{
         const currentWord = selectedLetters.join('');
-        window.parent.postMessage({{type: 'word-check', word: currentWord}}, '*');
+        if (currentWord && targetWords.includes(currentWord) && !foundWords.includes(currentWord)) {{
+            foundWords.push(currentWord);
+            foundWordsDiv.textContent = '見つけた単語: ' + (foundWords.length ? foundWords.join(', ') : 'なし');
+            showSuccessMessage();
+            window.parent.postMessage({{type: 'correct-word', word: currentWord}}, '*');
+            return true;
+        }}
+        return false;
+    }}
+
+    function showSuccessMessage() {{
+        successMessageDiv.classList.add('show');
+        setTimeout(() => {{
+            successMessageDiv.classList.remove('show');
+        }}, 2000);
     }}
 
     function getRelativeCenterPosition(elem, container) {{
@@ -172,7 +221,6 @@ full_html = f"""
             points.push(getRelativeCenterPosition(button, container));
             drawLine();
             updateSelectedWord();
-            checkValidWord();
         }}
     }}
 
@@ -217,9 +265,10 @@ full_html = f"""
     function handleMouseUp(event) {{
         if (isInteracting) {{
             isInteracting = false;
-            const queryString = selectedLetters.join(',');
-            window.parent.postMessage({{type: 'letters', data: queryString}}, '*');
-            setTimeout(resetSelection, 500); // 少し遅延を入れて結果を見せる
+            const isCorrect = checkCorrectWord();
+            setTimeout(() => {{
+                resetSelection();
+            }}, isCorrect ? 2000 : 500);
         }}
         event.preventDefault();
     }}
@@ -249,9 +298,10 @@ full_html = f"""
     function handleTouchEnd(event) {{
         if (isInteracting) {{
             isInteracting = false;
-            const queryString = selectedLetters.join(',');
-            window.parent.postMessage({{type: 'letters', data: queryString}}, '*');
-            setTimeout(resetSelection, 500); // 少し遅延を入れて結果を見せる
+            const isCorrect = checkCorrectWord();
+            setTimeout(() => {{
+                resetSelection();
+            }}, isCorrect ? 2000 : 500);
         }}
         event.preventDefault();
     }}
@@ -288,18 +338,20 @@ full_html = f"""
     document.addEventListener('mouseup', function() {{
         if(isInteracting) {{
             isInteracting = false;
-            const queryString = selectedLetters.join(',');
-            window.parent.postMessage({{type: 'letters', data: queryString}}, '*');
-            setTimeout(resetSelection, 500);
+            const isCorrect = checkCorrectWord();
+            setTimeout(() => {{
+                resetSelection();
+            }}, isCorrect ? 2000 : 500);
         }}
     }});
 
     document.addEventListener('touchend', function() {{
         if(isInteracting) {{
             isInteracting = false;
-            const queryString = selectedLetters.join(',');
-            window.parent.postMessage({{type: 'letters', data: queryString}}, '*');
-            setTimeout(resetSelection, 500);
+            const isCorrect = checkCorrectWord();
+            setTimeout(() => {{
+                resetSelection();
+            }}, isCorrect ? 2000 : 500);
         }}
     }});
 </script>
