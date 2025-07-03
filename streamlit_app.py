@@ -43,7 +43,7 @@ if st.session_state.game_state == 'title':
             文字を繋げて単語を作ろう！
         </p>
         <p style="font-size: 18px; color: #999; margin: 20px 0;">
-            指でスワイプして文字を繋げてください
+            マウスドラッグやスワイプで文字を繋げてください
         </p>
     </div>
     """, unsafe_allow_html=True)
@@ -115,13 +115,13 @@ elif st.session_state.game_state == 'game':
     # 円形に並べるボタンのHTMLを生成
     button_html = ''.join([
         f'''
-        <button class="circle-button" id="button_{i}"
+        <div class="circle-button" id="button_{i}"
                 data-letter="{letter}"
                 data-index="{i}"
                 style="left: {150 + 120 * math.cos(2 * math.pi * i / num_letters - math.pi/2) - 30}px;
                        top:  {150 + 120 * math.sin(2 * math.pi * i / num_letters - math.pi/2) - 30}px;">
             {letter}
-        </button>
+        </div>
         ''' for i, letter in enumerate(letters)
     ])
 
@@ -141,6 +141,7 @@ elif st.session_state.game_state == 'game':
             touch-action: none;
             -webkit-touch-callout: none;
             -webkit-tap-highlight-color: transparent;
+            overflow: hidden;
         }}
         .circle-container {{
             position: relative;
@@ -180,6 +181,10 @@ elif st.session_state.game_state == 'game':
             box-shadow: 0 6px 12px rgba(255,87,34,0.4);
         }}
         .circle-button:hover {{
+            transform: scale(1.05);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        }}
+        .circle-button.hover {{
             transform: scale(1.05);
             box-shadow: 0 6px 12px rgba(0,0,0,0.3);
         }}
@@ -280,8 +285,9 @@ elif st.session_state.game_state == 'game':
             position: absolute;
             top: 0;
             left: 0;
-            z-index: -1;
+            z-index: 1;
             touch-action: none;
+            pointer-events: none;
         }}
         </style>
     </head>
@@ -298,12 +304,13 @@ elif st.session_state.game_state == 'game':
     </div>
 
     <script>
-        let isInteracting = false;
+        let isDragging = false;
         let selectedLetters = [];
         let selectedButtons = [];
         let points = [];
         let targetWords = {st.session_state.target_words};
         let foundWords = {st.session_state.found_words};
+        let currentHoverButton = null;
 
         const selectedWordDiv = document.getElementById('selected-word');
         const targetWordsDiv = document.getElementById('target-words');
@@ -332,7 +339,6 @@ elif st.session_state.game_state == 'game':
                     }}, 1000);
                 }}
                 
-                window.parent.postMessage({{type: 'correct-word', word: currentWord}}, '*');
                 return true;
             }}
             return false;
@@ -349,15 +355,14 @@ elif st.session_state.game_state == 'game':
             completeMessageDiv.classList.add('show');
             setTimeout(() => {{
                 completeMessageDiv.classList.remove('show');
-                window.parent.postMessage({{type: 'stage-complete'}}, '*');
             }}, 3000);
         }}
 
-        function getRelativeCenterPosition(elem, container) {{
-            const elemRect = elem.getBoundingClientRect();
+        function getButtonCenterPosition(button) {{
+            const rect = button.getBoundingClientRect();
             const containerRect = container.getBoundingClientRect();
-            const centerX = elemRect.left - containerRect.left + elem.offsetWidth / 2;
-            const centerY = elemRect.top - containerRect.top + elem.offsetHeight / 2;
+            const centerX = rect.left - containerRect.left + rect.width / 2;
+            const centerY = rect.top - containerRect.top + rect.height / 2;
             return {{ x: centerX, y: centerY }};
         }}
 
@@ -367,7 +372,9 @@ elif st.session_state.game_state == 'game':
             points = [];
             document.querySelectorAll('.circle-button').forEach(button => {{
                 button.classList.remove('selected');
+                button.classList.remove('hover');
             }});
+            currentHoverButton = null;
             updateSelectedWord();
             drawLine();
         }}
@@ -377,9 +384,9 @@ elif st.session_state.game_state == 'game':
                 button.classList.add('selected');
                 selectedLetters.push(button.dataset.letter);
                 selectedButtons.push(button);
-                points.push(getRelativeCenterPosition(button, container));
-                drawLine();
+                points.push(getButtonCenterPosition(button));
                 updateSelectedWord();
+                drawLine();
             }}
         }}
 
@@ -387,139 +394,140 @@ elif st.session_state.game_state == 'game':
             const buttons = document.querySelectorAll('.circle-button');
             for (let button of buttons) {{
                 const rect = button.getBoundingClientRect();
-                const containerRect = container.getBoundingClientRect();
-                const relativeX = x - containerRect.left;
-                const relativeY = y - containerRect.top;
-                const buttonX = rect.left - containerRect.left;
-                const buttonY = rect.top - containerRect.top;
-                
-                if (relativeX >= buttonX && relativeX <= buttonX + rect.width &&
-                    relativeY >= buttonY && relativeY <= buttonY + rect.height) {{
+                if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {{
                     return button;
                 }}
             }}
             return null;
         }}
 
+        function handleHover(button) {{
+            if (button !== currentHoverButton) {{
+                // 前のホバーボタンからhoverクラスを除去
+                if (currentHoverButton && !selectedButtons.includes(currentHoverButton)) {{
+                    currentHoverButton.classList.remove('hover');
+                }}
+                
+                // 新しいホバーボタンにhoverクラスを追加
+                if (button && !selectedButtons.includes(button)) {{
+                    button.classList.add('hover');
+                }}
+                
+                currentHoverButton = button;
+            }}
+        }}
+
         // マウスイベント
         function handleMouseDown(event) {{
-            isInteracting = true;
+            event.preventDefault();
+            isDragging = true;
             const button = event.target.closest('.circle-button');
             if (button) {{
                 selectButton(button);
+                handleHover(button);
             }}
-            event.preventDefault();
         }}
 
         function handleMouseMove(event) {{
-            if (!isInteracting) return;
-            
+            event.preventDefault();
             const button = getButtonAtPosition(event.clientX, event.clientY);
-            if (button) {{
+            
+            if (isDragging && button) {{
                 selectButton(button);
             }}
-            event.preventDefault();
+            
+            handleHover(button);
         }}
 
         function handleMouseUp(event) {{
-            if (isInteracting) {{
-                isInteracting = false;
+            event.preventDefault();
+            if (isDragging) {{
+                isDragging = false;
                 const isCorrect = checkCorrectWord();
                 setTimeout(() => {{
                     resetSelection();
-                }}, isCorrect ? 2000 : 500);
+                }}, isCorrect ? 1500 : 300);
             }}
-            event.preventDefault();
         }}
 
         // タッチイベント
         function handleTouchStart(event) {{
-            isInteracting = true;
+            event.preventDefault();
+            isDragging = true;
             const touch = event.touches[0];
             const button = getButtonAtPosition(touch.clientX, touch.clientY);
             if (button) {{
                 selectButton(button);
+                handleHover(button);
             }}
-            event.preventDefault();
         }}
 
         function handleTouchMove(event) {{
-            if (!isInteracting) return;
+            event.preventDefault();
+            if (!isDragging) return;
             
             const touch = event.touches[0];
             const button = getButtonAtPosition(touch.clientX, touch.clientY);
+            
             if (button) {{
                 selectButton(button);
+                handleHover(button);
             }}
-            event.preventDefault();
         }}
 
         function handleTouchEnd(event) {{
-            if (isInteracting) {{
-                isInteracting = false;
+            event.preventDefault();
+            if (isDragging) {{
+                isDragging = false;
                 const isCorrect = checkCorrectWord();
                 setTimeout(() => {{
                     resetSelection();
-                }}, isCorrect ? 2000 : 500);
+                }}, isCorrect ? 1500 : 300);
             }}
-            event.preventDefault();
         }}
 
         function drawLine() {{
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            if(points.length === 0) return;
+            if (points.length < 2) return;
 
-            // グラデーション効果のある線
-            const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-            gradient.addColorStop(0, '#FF5722');
-            gradient.addColorStop(1, '#FF8A65');
-
+            // グラデーション効果のある線を描画
             ctx.beginPath();
             ctx.moveTo(points[0].x, points[0].y);
-            points.forEach(point => {{
-                ctx.lineTo(point.x, point.y);
-            }});
-            ctx.strokeStyle = gradient;
+            
+            for (let i = 1; i < points.length; i++) {{
+                ctx.lineTo(points[i].x, points[i].y);
+            }}
+            
+            // 線のスタイル設定
+            ctx.strokeStyle = '#FF5722';
             ctx.lineWidth = 4;
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
-            ctx.shadowColor = 'rgba(255, 87, 34, 0.3)';
-            ctx.shadowBlur = 8;
+            ctx.shadowColor = 'rgba(255, 87, 34, 0.4)';
+            ctx.shadowBlur = 6;
             ctx.stroke();
+
+            // 点を描画
+            points.forEach(point => {{
+                ctx.beginPath();
+                ctx.arc(point.x, point.y, 3, 0, 2 * Math.PI);
+                ctx.fillStyle = '#FF5722';
+                ctx.fill();
+            }});
         }}
 
         // イベントリスナーの設定
         container.addEventListener('mousedown', handleMouseDown);
-        container.addEventListener('mousemove', handleMouseMove);
-        container.addEventListener('mouseup', handleMouseUp);
-        container.addEventListener('mouseleave', handleMouseUp);
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
 
         container.addEventListener('touchstart', handleTouchStart, {{passive: false}});
         container.addEventListener('touchmove', handleTouchMove, {{passive: false}});
         container.addEventListener('touchend', handleTouchEnd, {{passive: false}});
-        container.addEventListener('touchcancel', handleTouchEnd, {{passive: false}});
 
-        // 全体のイベントリスナー
-        document.addEventListener('mouseup', function() {{
-            if(isInteracting) {{
-                isInteracting = false;
-                const isCorrect = checkCorrectWord();
-                setTimeout(() => {{
-                    resetSelection();
-                }}, isCorrect ? 2000 : 500);
-            }}
-        }});
-
-        document.addEventListener('touchend', function() {{
-            if(isInteracting) {{
-                isInteracting = false;
-                const isCorrect = checkCorrectWord();
-                setTimeout(() => {{
-                    resetSelection();
-                }}, isCorrect ? 2000 : 500);
-            }}
-        }});
+        // 初期化
+        updateSelectedWord();
     </script>
     </body>
     </html>
