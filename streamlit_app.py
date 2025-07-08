@@ -119,15 +119,21 @@ elif st.session_state.game_state == 'game':
     st.progress(progress)
     st.write(f"進行状況: {len(st.session_state.found_words)} / {len(st.session_state.target_words)} 単語")
     
-    # 目標単語の四角表示を生成
+    # 目標単語の四角表示を生成（アルファベット順にソート）
+    sorted_words = sorted(st.session_state.target_words)
     target_boxes_html = []
-    for word in st.session_state.target_words:
-        is_found = word in st.session_state.found_words
-        boxes = word_to_boxes(word, is_found)
-        color = '#4CAF50' if is_found else '#999'
-        target_boxes_html.append(f'<span style="color: {color}; font-weight: bold;">{boxes}</span>')
     
-    target_display = ' | '.join(target_boxes_html)
+    for word in sorted_words:
+        is_found = word in st.session_state.found_words
+        boxes_html = ""
+        for i, letter in enumerate(word):
+            if is_found:
+                boxes_html += f'<span style="display: inline-block; width: 20px; height: 20px; border: 2px solid #4CAF50; background: #4CAF50; color: white; text-align: center; line-height: 16px; margin: 1px; font-size: 12px; font-weight: bold;">{letter}</span>'
+            else:
+                boxes_html += f'<span style="display: inline-block; width: 20px; height: 20px; border: 2px solid #999; background: white; text-align: center; line-height: 16px; margin: 1px;"></span>'
+        target_boxes_html.append(f'<div style="display: inline-block; margin: 0 10px;">{boxes_html}</div>')
+    
+    target_display = ' '.join(target_boxes_html)
     
     # 見つけた単語の表示
     found_display = ', '.join(st.session_state.found_words) if st.session_state.found_words else 'なし'
@@ -572,7 +578,7 @@ elif st.session_state.game_state == 'game':
     # ステージクリア判定
     if len(st.session_state.found_words) == len(st.session_state.target_words):
         st.balloons()
-        st.success("Stage Clear！おめでとうございます！")
+        st.success("Stage Clear")
         col1, col2 = st.columns(2)
         with col1:
             if st.button("タイトルに戻る", use_container_width=True):
