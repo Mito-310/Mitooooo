@@ -582,3 +582,4 @@ elif st.session_state.game_state == 'game':
             if st.button("ステージ選択", use_container_width=True):
                 st.session_state.game_state = 'stage_select'
                 st.rerun()
+                
