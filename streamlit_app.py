@@ -167,7 +167,7 @@ elif st.session_state.game_state == 'game':
             position: relative;
             width: 300px;
             height: 300px;
-            margin: 100px auto 40px auto;
+            margin: 150px auto 40px auto;
             border: 2px solid #ccc;
             border-radius: 50%;
             touch-action: none;
@@ -582,4 +582,3 @@ elif st.session_state.game_state == 'game':
             if st.button("ステージ選択", use_container_width=True):
                 st.session_state.game_state = 'stage_select'
                 st.rerun()
-                
