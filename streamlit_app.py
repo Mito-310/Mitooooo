@@ -32,68 +32,36 @@ STAGES = {
     }
 }
 
-# 単語を四角（空欄）に変換する関数
-def word_to_boxes(word, found=False):
-    if found:
-        return ' '.join(word)
-    else:
-        return ' '.join(['□'] * len(word))
-
 # タイトル画面
 if st.session_state.game_state == 'title':
-    st.markdown("""
-    <div style="text-align: center; padding: 50px;">
-        <h1 style="font-size: 48px; color: #FF5722; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">
-             Word Connect 
-        </h1>
-        <p style="font-size: 24px; color: #666; margin: 30px 0;">
-            文字を繋げて単語を作ろう！
-        </p>
-        <p style="font-size: 18px; color: #999; margin: 20px 0;">
-            マウスドラッグやスワイプで文字を繋げてください
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
+    st.title("Word Connect")
+    st.write("文字を繋げて単語を作ろう！")
+    st.write("マウスドラッグやスワイプで文字を繋げてください")
     
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        if st.button("START", use_container_width=True, type="primary"):
-            st.session_state.game_state = 'stage_select'
-            st.rerun()
+    if st.button("START"):
+        st.session_state.game_state = 'stage_select'
+        st.rerun()
 
 # ステージ選択画面
 elif st.session_state.game_state == 'stage_select':
-    st.markdown("""
-    <div style="text-align: center; padding: 30px;">
-        <h2 style="color: #4CAF50;">ステージ選択</h2>
-    </div>
-    """, unsafe_allow_html=True)
+    st.header("ステージ選択")
     
     for stage_num, stage_info in STAGES.items():
-        col1, col2, col3 = st.columns([1, 2, 1])
-        with col2:
-            st.markdown(f"""
-            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                        color: white; padding: 20px; margin: 10px 0; 
-                        border-radius: 10px; text-align: center;">
-                <h3>{stage_info['name']}</h3>
-                <p>文字数: {len(stage_info['letters'])}個</p>
-                <p>単語数: {len(stage_info['words'])}個</p>
-            </div>
-            """, unsafe_allow_html=True)
+        with st.container():
+            st.subheader(stage_info['name'])
+            st.write(f"文字数: {len(stage_info['letters'])}個")
+            st.write(f"単語数: {len(stage_info['words'])}個")
             
-            if st.button(f"選択", key=f"stage_{stage_num}", use_container_width=True):
+            if st.button(f"選択", key=f"stage_{stage_num}"):
                 st.session_state.current_stage = stage_num
                 st.session_state.target_words = STAGES[stage_num]['words']
                 st.session_state.found_words = []
                 st.session_state.game_state = 'game'
                 st.rerun()
     
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        if st.button("←タイトルに戻る", use_container_width=True):
-            st.session_state.game_state = 'title'
-            st.rerun()
+    if st.button("← タイトルに戻る"):
+        st.session_state.game_state = 'title'
+        st.rerun()
 
 # ゲーム画面
 elif st.session_state.game_state == 'game':
@@ -108,7 +76,7 @@ elif st.session_state.game_state == 'game':
             st.session_state.game_state = 'stage_select'
             st.rerun()
     with col2:
-        st.markdown(f"<h3 style='text-align: center; color: #4CAF50;'>{current_stage_info['name']}</h3>", unsafe_allow_html=True)
+        st.header(current_stage_info['name'])
     with col3:
         if st.button("🔄 リセット"):
             st.session_state.found_words = []
@@ -119,19 +87,19 @@ elif st.session_state.game_state == 'game':
     st.progress(progress)
     st.write(f"進行状況: {len(st.session_state.found_words)} / {len(st.session_state.target_words)} 単語")
     
-    # 目標単語の四角表示を生成（アルファベット順にソート）
+    # 目標単語の表示
     sorted_words = sorted(st.session_state.target_words)
     target_boxes_html = []
     
     for word in sorted_words:
         is_found = word in st.session_state.found_words
         boxes_html = ""
-        for i, letter in enumerate(word):
+        for letter in word:
             if is_found:
-                boxes_html += f'<span style="display: inline-block; width: 20px; height: 20px; border: 2px solid #4CAF50; background: #4CAF50; color: white; text-align: center; line-height: 16px; margin: 1px; font-size: 12px; font-weight: bold;">{letter}</span>'
+                boxes_html += f'<span style="display: inline-block; width: 20px; height: 20px; border: 1px solid #333; background: #4CAF50; color: white; text-align: center; line-height: 18px; margin: 1px; font-size: 12px;">{letter}</span>'
             else:
-                boxes_html += f'<span style="display: inline-block; width: 20px; height: 20px; border: 2px solid #999; background: white; text-align: center; line-height: 16px; margin: 1px;"></span>'
-        target_boxes_html.append(f'<div style="display: inline-block; margin: 0 10px;">{boxes_html}</div>')
+                boxes_html += f'<span style="display: inline-block; width: 20px; height: 20px; border: 1px solid #333; background: white; text-align: center; line-height: 18px; margin: 1px;"></span>'
+        target_boxes_html.append(f'<div style="display: inline-block; margin: 5px;">{boxes_html}</div>')
     
     target_display = ' '.join(target_boxes_html)
     
@@ -144,14 +112,14 @@ elif st.session_state.game_state == 'game':
         <div class="circle-button" id="button_{i}"
                 data-letter="{letter}"
                 data-index="{i}"
-                style="left: {150 + 120 * math.cos(2 * math.pi * i / num_letters - math.pi/2) - 30}px;
-                       top:  {150 + 120 * math.sin(2 * math.pi * i / num_letters - math.pi/2) - 30}px;">
+                style="left: {150 + 120 * math.cos(2 * math.pi * i / num_letters - math.pi/2) - 25}px;
+                       top:  {150 + 120 * math.sin(2 * math.pi * i / num_letters - math.pi/2) - 25}px;">
             {letter}
         </div>
         ''' for i, letter in enumerate(letters)
     ])
 
-    # HTML + CSS + JavaScript を組み立て
+    # シンプルなHTML + CSS + JavaScript
     full_html = f"""
     <html>
     <head>
@@ -173,46 +141,40 @@ elif st.session_state.game_state == 'game':
             position: relative;
             width: 300px;
             height: 300px;
-            margin: 180px auto 40px auto;
+            margin: 150px auto 40px auto;
             border: 2px solid #ccc;
             border-radius: 50%;
             touch-action: none;
-            background: linear-gradient(45deg, #f0f8ff, #e6f3ff);
+            background: #f9f9f9;
         }}
         .circle-button {{
             position: absolute;
-            width: 60px;
-            height: 60px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
-            background: linear-gradient(145deg, #ffffff, #f0f0f0);
+            background: white;
             color: #333;
-            font-size: 20px;
+            font-size: 18px;
             font-weight: bold;
-            border: 2px solid #4CAF50;
+            border: 2px solid #333;
             cursor: pointer;
             display: flex;
             justify-content: center;
             align-items: center;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             touch-action: none;
             -webkit-touch-callout: none;
             -webkit-tap-highlight-color: transparent;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         }}
         .circle-button.selected {{
-            background: linear-gradient(145deg, #FF5722, #E64A19);
-            border-color: #FF5722;
+            background: #333;
             color: white;
-            transform: scale(1.1);
-            box-shadow: 0 6px 12px rgba(255,87,34,0.4);
         }}
         .circle-button:hover {{
-            transform: scale(1.05);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+            background: #f0f0f0;
         }}
         .circle-button.hover {{
-            transform: scale(1.05);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+            background: #f0f0f0;
         }}
         #selected-word {{
             position: fixed;
@@ -220,93 +182,84 @@ elif st.session_state.game_state == 'game':
             left: 0;
             width: 100%;
             text-align: center;
-            font-size: 32px;
-            font-weight: bold;
-            padding: 15px;
-            user-select: none;
-            letter-spacing: 6px;
-            min-height: 50px;
-            color: #FF5722;
-            background: linear-gradient(135deg, #fff, #f8f8f8);
-            z-index: 999;
-            border-bottom: 3px solid #FF5722;
-            touch-action: none;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-        }}
-        #target-words {{
-            position: fixed;
-            top: 70px;
-            left: 0;
-            width: 100%;
-            text-align: center;
-            font-size: 16px;
+            font-size: 24px;
             font-weight: bold;
             padding: 10px;
             user-select: none;
-            color: #666;
-            background: linear-gradient(135deg, #e8f5e8, #f0f8f0);
-            z-index: 998;
-            border-bottom: 1px solid #ddd;
+            letter-spacing: 4px;
+            min-height: 40px;
+            color: #333;
+            background: white;
+            z-index: 999;
+            border-bottom: 1px solid #ccc;
             touch-action: none;
-            line-height: 1.5;
         }}
-        #found-words {{
+        #target-words {{
             position: fixed;
-            top: 120px;
+            top: 60px;
             left: 0;
             width: 100%;
             text-align: center;
             font-size: 14px;
-            padding: 8px;
+            padding: 10px;
             user-select: none;
-            color: #2196F3;
-            background: linear-gradient(135deg, #e3f2fd, #f0f8ff);
-            z-index: 997;
-            border-bottom: 1px solid #ddd;
+            color: #666;
+            background: #f9f9f9;
+            z-index: 998;
+            border-bottom: 1px solid #ccc;
             touch-action: none;
-            min-height: 25px;
+        }}
+        #found-words {{
+            position: fixed;
+            top: 110px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 12px;
+            padding: 5px;
+            user-select: none;
+            color: #333;
+            background: #f0f0f0;
+            z-index: 997;
+            border-bottom: 1px solid #ccc;
+            touch-action: none;
+            min-height: 20px;
         }}
         .success-message {{
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: linear-gradient(135deg, #4CAF50, #45a049);
+            background: #4CAF50;
             color: white;
-            padding: 30px;
-            border-radius: 15px;
-            font-size: 28px;
+            padding: 20px;
+            border-radius: 5px;
+            font-size: 18px;
             font-weight: bold;
             z-index: 1000;
             opacity: 0;
-            transition: all 0.5s ease;
-            box-shadow: 0 10px 30px rgba(76,175,80,0.3);
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
         }}
         .success-message.show {{
             opacity: 1;
-            transform: translate(-50%, -50%) scale(1.1);
         }}
         .complete-message {{
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: linear-gradient(135deg, #FF6B6B, #FF5722);
+            background: #2196F3;
             color: white;
-            padding: 40px;
-            border-radius: 20px;
-            font-size: 32px;
+            padding: 30px;
+            border-radius: 5px;
+            font-size: 24px;
             font-weight: bold;
             z-index: 1001;
             opacity: 0;
-            transition: all 0.5s ease;
-            box-shadow: 0 15px 40px rgba(255,107,107,0.4);
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
         }}
         .complete-message.show {{
             opacity: 1;
-            transform: translate(-50%, -50%) scale(1.1);
         }}
         canvas {{
             position: absolute;
@@ -322,8 +275,8 @@ elif st.session_state.game_state == 'game':
     <div id="selected-word"></div>
     <div id="target-words">{target_display}</div>
     <div id="found-words">見つけた単語: {found_display}</div>
-    <div id="success-message" class="success-message">正解！ </div>
-    <div id="complete-message" class="complete-message">ステージクリア！ </div>
+    <div id="success-message" class="success-message">正解！</div>
+    <div id="complete-message" class="complete-message">ステージクリア！</div>
 
     <div class="circle-container" id="circle-container">
         {button_html}
@@ -356,8 +309,8 @@ elif st.session_state.game_state == 'game':
             const targetBoxes = targetWords.map(word => {{
                 const isFound = foundWords.includes(word);
                 const boxes = isFound ? word.split('').join(' ') : '□'.repeat(word.length).split('').join(' ');
-                const color = isFound ? '#4CAF50' : '#999';
-                return `<span style="color: ${{color}}; font-weight: bold;">${{boxes}}</span>`;
+                const color = isFound ? '#4CAF50' : '#666';
+                return `<span style="color: ${{color}};">${{boxes}}</span>`;
             }});
             targetWordsDiv.innerHTML = targetBoxes.join(' | ');
         }}
@@ -370,7 +323,6 @@ elif st.session_state.game_state == 'game':
                 updateTargetDisplay();
                 showSuccessMessage();
                 
-                // 全ての単語を見つけた場合
                 if (foundWords.length === targetWords.length) {{
                     setTimeout(() => {{
                         showCompleteMessage();
@@ -386,14 +338,14 @@ elif st.session_state.game_state == 'game':
             successMessageDiv.classList.add('show');
             setTimeout(() => {{
                 successMessageDiv.classList.remove('show');
-            }}, 2000);
+            }}, 1500);
         }}
 
         function showCompleteMessage() {{
             completeMessageDiv.classList.add('show');
             setTimeout(() => {{
                 completeMessageDiv.classList.remove('show');
-            }}, 3000);
+            }}, 2500);
         }}
 
         function getButtonCenterPosition(button) {{
@@ -441,12 +393,10 @@ elif st.session_state.game_state == 'game':
 
         function handleHover(button) {{
             if (button !== currentHoverButton) {{
-                // 前のホバーボタンからhoverクラスを除去
                 if (currentHoverButton && !selectedButtons.includes(currentHoverButton)) {{
                     currentHoverButton.classList.remove('hover');
                 }}
                 
-                // 新しいホバーボタンにhoverクラスを追加
                 if (button && !selectedButtons.includes(button)) {{
                     button.classList.add('hover');
                 }}
@@ -484,7 +434,7 @@ elif st.session_state.game_state == 'game':
                 const isCorrect = checkCorrectWord();
                 setTimeout(() => {{
                     resetSelection();
-                }}, isCorrect ? 1500 : 300);
+                }}, isCorrect ? 1000 : 200);
             }}
         }}
 
@@ -520,7 +470,7 @@ elif st.session_state.game_state == 'game':
                 const isCorrect = checkCorrectWord();
                 setTimeout(() => {{
                     resetSelection();
-                }}, isCorrect ? 1500 : 300);
+                }}, isCorrect ? 1000 : 200);
             }}
         }}
 
@@ -529,7 +479,6 @@ elif st.session_state.game_state == 'game':
 
             if (points.length < 2) return;
 
-            // グラデーション効果のある線を描画
             ctx.beginPath();
             ctx.moveTo(points[0].x, points[0].y);
             
@@ -537,20 +486,14 @@ elif st.session_state.game_state == 'game':
                 ctx.lineTo(points[i].x, points[i].y);
             }}
             
-            // 線のスタイル設定
-            ctx.strokeStyle = '#FF5722';
-            ctx.lineWidth = 4;
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
-            ctx.shadowColor = 'rgba(255, 87, 34, 0.4)';
-            ctx.shadowBlur = 6;
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
             ctx.stroke();
 
-            // 点を描画
             points.forEach(point => {{
                 ctx.beginPath();
-                ctx.arc(point.x, point.y, 3, 0, 2 * Math.PI);
-                ctx.fillStyle = '#FF5722';
+                ctx.arc(point.x, point.y, 2, 0, 2 * Math.PI);
+                ctx.fillStyle = '#333';
                 ctx.fill();
             }});
         }}
