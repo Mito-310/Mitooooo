@@ -572,7 +572,7 @@ elif st.session_state.game_state == 'game':
     # ステージクリア判定
     if len(st.session_state.found_words) == len(st.session_state.target_words):
         st.balloons()
-        st.success("Stage Clear！")
+        st.success("Stage Clear！おめでとうございます！")
         col1, col2 = st.columns(2)
         with col1:
             if st.button("タイトルに戻る", use_container_width=True):
