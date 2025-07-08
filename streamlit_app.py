@@ -32,6 +32,13 @@ STAGES = {
     }
 }
 
+# 単語を四角（空欄）に変換する関数
+def word_to_boxes(word, found=False):
+    if found:
+        return ' '.join(word)
+    else:
+        return ' '.join(['□'] * len(word))
+
 # タイトル画面
 if st.session_state.game_state == 'title':
     st.markdown("""
@@ -111,6 +118,19 @@ elif st.session_state.game_state == 'game':
     progress = len(st.session_state.found_words) / len(st.session_state.target_words)
     st.progress(progress)
     st.write(f"進行状況: {len(st.session_state.found_words)} / {len(st.session_state.target_words)} 単語")
+    
+    # 目標単語の四角表示を生成
+    target_boxes_html = []
+    for word in st.session_state.target_words:
+        is_found = word in st.session_state.found_words
+        boxes = word_to_boxes(word, is_found)
+        color = '#4CAF50' if is_found else '#999'
+        target_boxes_html.append(f'<span style="color: {color}; font-weight: bold;">{boxes}</span>')
+    
+    target_display = ' | '.join(target_boxes_html)
+    
+    # 見つけた単語の表示
+    found_display = ', '.join(st.session_state.found_words) if st.session_state.found_words else 'なし'
     
     # 円形に並べるボタンのHTMLを生成
     button_html = ''.join([
@@ -217,15 +237,16 @@ elif st.session_state.game_state == 'game':
             font-weight: bold;
             padding: 10px;
             user-select: none;
-            color: #4CAF50;
+            color: #666;
             background: linear-gradient(135deg, #e8f5e8, #f0f8f0);
             z-index: 998;
             border-bottom: 1px solid #ddd;
             touch-action: none;
+            line-height: 1.5;
         }}
         #found-words {{
             position: fixed;
-            top: 110px;
+            top: 120px;
             left: 0;
             width: 100%;
             text-align: center;
@@ -293,8 +314,8 @@ elif st.session_state.game_state == 'game':
     </head>
     <body>
     <div id="selected-word"></div>
-    <div id="target-words">目標: {', '.join(st.session_state.target_words)}</div>
-    <div id="found-words">見つけた単語: {', '.join(st.session_state.found_words) if st.session_state.found_words else 'なし'}</div>
+    <div id="target-words">{target_display}</div>
+    <div id="found-words">見つけた単語: {found_display}</div>
     <div id="success-message" class="success-message">正解！ </div>
     <div id="complete-message" class="complete-message">ステージクリア！ </div>
 
@@ -325,11 +346,22 @@ elif st.session_state.game_state == 'game':
             selectedWordDiv.textContent = selectedLetters.join('');
         }}
 
+        function updateTargetDisplay() {{
+            const targetBoxes = targetWords.map(word => {{
+                const isFound = foundWords.includes(word);
+                const boxes = isFound ? word.split('').join(' ') : '□'.repeat(word.length).split('').join(' ');
+                const color = isFound ? '#4CAF50' : '#999';
+                return `<span style="color: ${{color}}; font-weight: bold;">${{boxes}}</span>`;
+            }});
+            targetWordsDiv.innerHTML = targetBoxes.join(' | ');
+        }}
+
         function checkCorrectWord() {{
             const currentWord = selectedLetters.join('');
             if (currentWord && targetWords.includes(currentWord) && !foundWords.includes(currentWord)) {{
                 foundWords.push(currentWord);
                 foundWordsDiv.textContent = '見つけた単語: ' + foundWords.join(', ');
+                updateTargetDisplay();
                 showSuccessMessage();
                 
                 // 全ての単語を見つけた場合
@@ -528,6 +560,7 @@ elif st.session_state.game_state == 'game':
 
         // 初期化
         updateSelectedWord();
+        updateTargetDisplay();
     </script>
     </body>
     </html>
@@ -539,7 +572,7 @@ elif st.session_state.game_state == 'game':
     # ステージクリア判定
     if len(st.session_state.found_words) == len(st.session_state.target_words):
         st.balloons()
-        st.success("Stage Clear！おめでとうございます！")
+        st.success("Stage Clear！")
         col1, col2 = st.columns(2)
         with col1:
             if st.button("タイトルに戻る", use_container_width=True):
