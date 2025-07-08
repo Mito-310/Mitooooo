@@ -167,7 +167,7 @@ elif st.session_state.game_state == 'game':
             position: relative;
             width: 300px;
             height: 300px;
-            margin: 150px auto 40px auto;
+            margin: 180px auto 40px auto;
             border: 2px solid #ccc;
             border-radius: 50%;
             touch-action: none;
