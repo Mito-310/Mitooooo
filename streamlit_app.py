@@ -35,8 +35,7 @@ STAGES = {
 # タイトル画面
 if st.session_state.game_state == 'title':
     st.title("Word Connect")
-    st.write("文字を繋げて単語を作ろう！")
-    st.write("マウスドラッグやスワイプで文字を繋げてください")
+    st.write("文字を繋げて単語を作ろう")
     
     if st.button("START"):
         st.session_state.game_state = 'stage_select'
@@ -72,13 +71,13 @@ elif st.session_state.game_state == 'game':
     # ヘッダー
     col1, col2, col3 = st.columns([1, 2, 1])
     with col1:
-        if st.button("⬅️ 戻る"):
+        if st.button("⬅戻る"):
             st.session_state.game_state = 'stage_select'
             st.rerun()
     with col2:
         st.header(current_stage_info['name'])
     with col3:
-        if st.button("🔄 リセット"):
+        if st.button("リセット"):
             st.session_state.found_words = []
             st.rerun()
     
