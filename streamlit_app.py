@@ -32,35 +32,176 @@ STAGES = {
     }
 }
 
-# タイトル画面
+# タイトル画面とステージ選択を統合
 if st.session_state.game_state == 'title':
-    st.title("Word Connect")
-    st.write("文字を繋げて単語を作ろう")
+    # シンプルなスタイリング
+    st.markdown("""
+    <style>
+    .title-section {
+        text-align: center;
+        padding: 3rem 1rem;
+        border-bottom: 2px solid #e0e0e0;
+        margin-bottom: 2rem;
+    }
     
-    if st.button("START"):
-        st.session_state.game_state = 'stage_select'
-        st.rerun()
+    .game-title {
+        font-size: 3rem;
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 1rem;
+        letter-spacing: 1px;
+    }
+    
+    .game-subtitle {
+        font-size: 1.2rem;
+        color: #666;
+        margin-bottom: 0;
+    }
+    
+    .stage-section {
+        padding: 2rem 1rem;
+    }
+    
+    .stage-header {
+        text-align: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .stage-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-top: 2rem;
+    }
+    
+    .stage-card {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 1.5rem;
+        transition: all 0.2s ease;
+        background: #fafafa;
+    }
+    
+    .stage-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        border-color: #999;
+    }
+    
+    .stage-title {
+        font-size: 1.4rem;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stage-info {
+        color: #666;
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+    }
+    
+    .stage-button {
+        width: 100%;
+        background: #333;
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 4px;
+        font-size: 1rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .stage-button:hover {
+        background: #555;
+        transform: translateY(-1px);
+    }
+    
+    .stage-button:active {
+        transform: translateY(0px);
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    # タイトルセクション
+    st.markdown("""
+    <div class="title-section">
+        <h1 class="game-title">WORD CONNECT</h1>
+        <p class="game-subtitle">文字を繋げて単語を作ろう</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # ステージ選択セクション
+    st.markdown("""
+    <div class="stage-section">
+        <div class="stage-header">
+            <h2 style="color: #333; margin: 0;">ステージ選択</h2>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # ステージカードのグリッド
+    cols = st.columns(3)
+    
+    for i, (stage_num, stage_info) in enumerate(STAGES.items()):
+        with cols[i % 3]:
+            with st.container():
+                st.markdown(f"""
+                <div class="stage-card">
+                    <div class="stage-title">{stage_info['name']}</div>
+                    <div class="stage-info">
+                        文字数: {len(stage_info['letters'])}個<br>
+                        単語数: {len(stage_info['words'])}個
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                if st.button(f"プレイ開始", key=f"stage_{stage_num}", use_container_width=True):
+                    st.session_state.current_stage = stage_num
+                    st.session_state.target_words = STAGES[stage_num]['words']
+                    st.session_state.found_words = []
+                    st.session_state.game_state = 'game'
+                    st.rerun()
+    
+    # ボタンのスタイルをカスタマイズ
+    st.markdown("""
+    <style>
+    .stButton > button {
+        background: #333 !important;
+        color: white !important;
+        border: none !important;
+        padding: 0.75rem 1.5rem !important;
+        border-radius: 4px !important;
+        font-size: 1rem !important;
+        font-weight: 500 !important;
+        transition: all 0.2s ease !important;
+        width: 100% !important;
+        height: 45px !important;
+    }
+    
+    .stButton > button:hover {
+        background: #555 !important;
+        transform: translateY(-1px) !important;
+    }
+    
+    .stButton > button:active {
+        transform: translateY(0px) !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
-# ステージ選択画面
+# ゲーム画面への遷移処理（ステージ選択画面は統合されたため削除）
 elif st.session_state.game_state == 'stage_select':
-    st.header("ステージ選択")
-    
-    for stage_num, stage_info in STAGES.items():
-        with st.container():
-            st.subheader(stage_info['name'])
-            st.write(f"文字数: {len(stage_info['letters'])}個")
-            st.write(f"単語数: {len(stage_info['words'])}個")
-            
-            if st.button(f"選択", key=f"stage_{stage_num}"):
-                st.session_state.current_stage = stage_num
-                st.session_state.target_words = STAGES[stage_num]['words']
-                st.session_state.found_words = []
-                st.session_state.game_state = 'game'
-                st.rerun()
-    
-    if st.button("← タイトルに戻る"):
-        st.session_state.game_state = 'title'
-        st.rerun()
+    # この状態は使用されなくなったため、タイトルに戻す
+    st.session_state.game_state = 'title'
+    st.rerun()
+
+# ゲーム画面
+    # この処理は統合されたため不要
 
 # ゲーム画面
 elif st.session_state.game_state == 'game':
@@ -71,8 +212,8 @@ elif st.session_state.game_state == 'game':
     # ヘッダー
     col1, col2, col3 = st.columns([1, 2, 1])
     with col1:
-        if st.button("⬅戻る"):
-            st.session_state.game_state = 'stage_select'
+        if st.button("⬅タイトルに戻る"):
+            st.session_state.game_state = 'title'
             st.rerun()
     with col2:
         st.header(current_stage_info['name'])
@@ -527,6 +668,6 @@ elif st.session_state.game_state == 'game':
                 st.session_state.game_state = 'title'
                 st.rerun()
         with col2:
-            if st.button("ステージ選択", use_container_width=True):
-                st.session_state.game_state = 'stage_select'
+            if st.button("タイトルに戻る", use_container_width=True):
+                st.session_state.game_state = 'title'
                 st.rerun()
