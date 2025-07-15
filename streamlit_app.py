@@ -812,4 +812,4 @@ elif st.session_state.game_state == 'game':
     components.html(full_html, height=600)
     
     # ステージクリア判定
-    if len(st.session_state.found_words) == len(st.session_
+    if len(st.session_state.found_words) == len(st.session)
