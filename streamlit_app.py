@@ -296,9 +296,6 @@ if st.session_state.game_state == 'title':
                     <div class="stage-card">
                         <div class="stage-title">{stage_info['name']}</div>
                         <div class="stage-info">
-                            文字数: {len(stage_info['letters'])}個<br>
-                            単語数: {len(stage_info['words'])}個
-                        </div>
 
                     </div>
                     """, unsafe_allow_html=True)
