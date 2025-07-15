@@ -372,8 +372,7 @@ elif st.session_state.game_state == 'game':
             st.session_state.found_words = []
             st.rerun()
     
-    # 問題文の表示
-    st.info(f"問題文: {current_stage_info['problem_text']}")
+    
     
     # 進行状況
     progress = len(st.session_state.found_words) / len(st.session_state.target_words)
