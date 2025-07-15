@@ -40,7 +40,6 @@ if st.session_state.game_state == 'title':
     .title-section {
         text-align: center;
         padding: 3rem 1rem;
-        border-bottom: 2px solid #e0e0e0;
         margin-bottom: 2rem;
     }
     
@@ -56,6 +55,34 @@ if st.session_state.game_state == 'title':
         font-size: 1.2rem;
         color: #666;
         margin-bottom: 2rem;
+    }
+    
+    .game-rules {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 1.5rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+        text-align: left;
+        margin-bottom: 2rem;
+    }
+    
+    .game-rules h3 {
+        color: #333;
+        margin-bottom: 1rem;
+        text-align: center;
+        font-size: 1.1rem;
+    }
+    
+    .game-rules ul {
+        margin: 0;
+        padding-left: 1.5rem;
+        color: #555;
+    }
+    
+    .game-rules li {
+        margin-bottom: 0.5rem;
+        line-height: 1.5;
     }
     
     .start-button-container {
@@ -136,6 +163,14 @@ if st.session_state.game_state == 'title':
     <div class="title-section">
         <h1 class="game-title">WORD CONNECT</h1>
         <p class="game-subtitle">文字を繋げて単語を作ろう</p>
+        <div class="game-rules">
+            <h3>ゲームルール</h3>
+            <ul>
+                <li>円形に配置された文字をマウスでドラッグ、またはスワイプして繋げて単語を作る</li>
+                <li>すべての目標単語を見つけるとステージクリア！</li>
+                <li>同じ文字を重複して使うことはできません</li>
+            </ul>
+        </div>
     </div>
     """, unsafe_allow_html=True)
     
