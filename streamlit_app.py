@@ -299,8 +299,7 @@ if st.session_state.game_state == 'title':
                             文字数: {len(stage_info['letters'])}個<br>
                             単語数: {len(stage_info['words'])}個
                         </div>
-                        <div class="problem-text">
-                            問題文: {stage_info['problem_text']}
+
                         </div>
                     </div>
                     """, unsafe_allow_html=True)
