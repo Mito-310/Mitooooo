@@ -85,6 +85,12 @@ if st.session_state.game_state == 'title':
         line-height: 1.5;
     }
     
+    .game-rules p {
+        margin: 0.5rem 0;
+        color: #555;
+        line-height: 1.5;
+    }
+    
     .start-button-container {
         margin: 2rem 0;
     }
@@ -165,11 +171,10 @@ if st.session_state.game_state == 'title':
         <p class="game-subtitle">文字を繋げて単語を作ろう</p>
         <div class="game-rules">
             <h3>ゲームルール</h3>
-            <ul>
-                <li>円形に配置された文字をマウスでドラッグ、またはスワイプして繋げて単語を作る</li>
-                <li>すべての目標単語を見つけるとステージクリア！</li>
-                <li>同じ文字を重複して使うことはできません</li>
-            </ul>
+            <p>円形に配置された文字をドラッグして繋げて単語を作る</p>
+            <p>すべての目標単語を見つけるとステージクリア</p>
+            <p>同じ文字を重複して使うことはできません</p>
+            <p>マウスまたはタッチで文字を選択してください</p>
         </div>
     </div>
     """, unsafe_allow_html=True)
