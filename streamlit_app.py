@@ -55,7 +55,11 @@ if st.session_state.game_state == 'title':
     .game-subtitle {
         font-size: 1.2rem;
         color: #666;
-        margin-bottom: 0;
+        margin-bottom: 2rem;
+    }
+    
+    .start-button-container {
+        margin: 2rem 0;
     }
     
     .stage-section {
@@ -135,6 +139,16 @@ if st.session_state.game_state == 'title':
     </div>
     """, unsafe_allow_html=True)
     
+    # STARTボタン
+    col1, col2, col3 = st.columns([1, 1, 1])
+    with col2:
+        if st.button("START", key="start_button", use_container_width=True):
+            st.session_state.current_stage = 1
+            st.session_state.target_words = STAGES[1]['words']
+            st.session_state.found_words = []
+            st.session_state.game_state = 'game'
+            st.rerun()
+    
     # ステージ選択セクション
     st.markdown("""
     <div class="stage-section">
@@ -190,6 +204,20 @@ if st.session_state.game_state == 'title':
     
     .stButton > button:active {
         transform: translateY(0px) !important;
+    }
+    
+    /* STARTボタンのスタイル */
+    .stButton[data-testid="start_button"] > button {
+        background: #4CAF50 !important;
+        font-size: 1.2rem !important;
+        font-weight: 600 !important;
+        height: 50px !important;
+        border-radius: 25px !important;
+        letter-spacing: 2px !important;
+    }
+    
+    .stButton[data-testid="start_button"] > button:hover {
+        background: #45a049 !important;
     }
     </style>
     """, unsafe_allow_html=True)
