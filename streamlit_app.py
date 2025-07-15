@@ -300,7 +300,6 @@ if st.session_state.game_state == 'title':
                             単語数: {len(stage_info['words'])}個
                         </div>
 
-                        </div>
                     </div>
                     """, unsafe_allow_html=True)
                     
