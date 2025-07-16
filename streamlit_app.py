@@ -20,9 +20,20 @@ def load_problems_from_excel(file_path):
             # 問題文から文字を抽出（重複を除去）
             unique_letters = list(set(problem_text.upper().replace(' ', '')))
             
-            # ①-⑳の列から単語を抽出
+            # 答えの数を取得（'答えの数'列があれば使用、なければデフォルト値）
+            if '答えの数' in df.columns and pd.notna(row['答えの数']):
+                answer_count = int(row['答えの数'])
+            else:
+                answer_count = 6  # デフォルト値
+            
+            # ①-⑳の列から単語を抽出（答えの数まで）
             words = []
-            for col in df.columns[1:]:  # 問題文以外の列
+            answer_columns = [col for col in df.columns if col.startswith('①') or col.startswith('②') or col.startswith('③') or col.startswith('④') or col.startswith('⑤') or col.startswith('⑥') or col.startswith('⑦') or col.startswith('⑧') or col.startswith('⑨') or col.startswith('⑩') or col.startswith('⑪') or col.startswith('⑫') or col.startswith('⑬') or col.startswith('⑭') or col.startswith('⑮') or col.startswith('⑯') or col.startswith('⑰') or col.startswith('⑱') or col.startswith('⑲') or col.startswith('⑳')]
+            
+            # 答えの数に応じて単語を取得
+            for i, col in enumerate(answer_columns):
+                if i >= answer_count:  # 答えの数に達したら停止
+                    break
                 if pd.notna(row[col]):
                     word = str(row[col]).strip().upper()
                     if word and word not in words:
@@ -32,7 +43,8 @@ def load_problems_from_excel(file_path):
                 'name': f'ステージ {stage_num}',
                 'problem_text': problem_text,
                 'letters': unique_letters,
-                'words': words
+                'words': words,
+                'answer_count': answer_count
             }
         
         return problems
@@ -46,19 +58,22 @@ DEFAULT_STAGES = {
         'name': 'ステージ 1',
         'problem_text': 'CATDOG',
         'letters': ['C', 'A', 'T', 'D', 'O', 'G'],
-        'words': ['CAT', 'DOG', 'COD', 'TAG', 'GOD', 'COG']
+        'words': ['CAT', 'DOG', 'COD', 'TAG', 'GOD', 'COG'],
+        'answer_count': 6
     },
     2: {
         'name': 'ステージ 2',
         'problem_text': 'REDBLUE',
         'letters': ['R', 'E', 'D', 'B', 'L', 'U'],
-        'words': ['RED', 'BLUE', 'BED', 'LED', 'RUB', 'BUG']
+        'words': ['RED', 'BLUE', 'BED', 'LED', 'RUB', 'BUG'],
+        'answer_count': 6
     },
     3: {
         'name': 'ステージ 3',
         'problem_text': 'BREADCAKE',
         'letters': ['B', 'R', 'E', 'A', 'D', 'C', 'K'],
-        'words': ['BREAD', 'CAKE', 'DEAR', 'CARE', 'BEAR']
+        'words': ['BREAD', 'CAKE', 'DEAR', 'CARE', 'BEAR'],
+        'answer_count': 5
     }
 }
 
@@ -98,7 +113,7 @@ if st.session_state.game_state == 'title':
     uploaded_file = st.sidebar.file_uploader(
         "新しい問題ファイルをアップロード", 
         type=['xlsx', 'xls'],
-        help="問題文列と①-⑳の回答列を含むExcelファイルをアップロードしてください"
+        help="問題文列、答えの数列、①-⑳の回答列を含むExcelファイルをアップロードしてください"
     )
     
     if uploaded_file is not None:
@@ -119,9 +134,19 @@ if st.session_state.game_state == 'title':
                     # 問題文から文字を抽出
                     unique_letters = list(set(problem_text.upper().replace(' ', '')))
                     
-                    # 回答列から単語を抽出
+                    # 答えの数を取得
+                    if '答えの数' in df.columns and pd.notna(row['答えの数']):
+                        answer_count = int(row['答えの数'])
+                    else:
+                        answer_count = 6  # デフォルト値
+                    
+                    # 回答列から単語を抽出（答えの数まで）
                     words = []
-                    for col in df.columns[1:]:
+                    answer_columns = [col for col in df.columns if col not in ['問題文', '答えの数']]
+                    
+                    for i, col in enumerate(answer_columns):
+                        if i >= answer_count:  # 答えの数に達したら停止
+                            break
                         if pd.notna(row[col]):
                             word = str(row[col]).strip().upper()
                             if word and word not in words:
@@ -131,7 +156,8 @@ if st.session_state.game_state == 'title':
                         'name': f'ステージ {stage_num}',
                         'problem_text': problem_text,
                         'letters': unique_letters,
-                        'words': words
+                        'words': words,
+                        'answer_count': answer_count
                     }
                 
                 st.session_state.stages = new_stages
@@ -147,6 +173,20 @@ if st.session_state.game_state == 'title':
     if st.sidebar.button("デフォルトステージに戻す"):
         st.session_state.stages = DEFAULT_STAGES
         st.rerun()
+    
+    # Excelファイルの形式説明
+    st.sidebar.markdown("### Excelファイルの形式")
+    st.sidebar.markdown("""
+    - **問題文**: 問題となる文字列
+    - **答えの数**: そのステージの答えの数（省略可、デフォルト6）
+    - **①, ②, ③...**: 答えとなる単語
+    
+    例：
+    | 問題文 | 答えの数 | ① | ② | ③ | ④ | ⑤ | ⑥ |
+    |--------|----------|---|---|---|---|---|---|
+    | CATDOG | 6 | CAT | DOG | COD | TAG | GOD | COG |
+    | REDBLUE | 4 | RED | BLUE | BED | LED | | |
+    """)
 
 # タイトル画面
 if st.session_state.game_state == 'title':
@@ -295,8 +335,8 @@ if st.session_state.game_state == 'title':
                     st.markdown(f"""
                     <div class="stage-card">
                         <div class="stage-title">{stage_info['name']}</div>
-                        <div class="stage-info">
-
+                        <div class="stage-info">答えの数: {stage_info.get('answer_count', 6)}個</div>
+                        <div class="problem-text">問題: {stage_info['problem_text']}</div>
                     </div>
                     """, unsafe_allow_html=True)
                     
@@ -361,13 +401,11 @@ elif st.session_state.game_state == 'game':
             st.session_state.game_state = 'title'
             st.rerun()
     with col2:
-        st.header(current_stage_info['name'])
+        st.header(f"{current_stage_info['name']} (答え: {current_stage_info.get('answer_count', 6)}個)")
     with col3:
         if st.button("リセット"):
             st.session_state.found_words = []
             st.rerun()
-    
-    
     
     # 進行状況
     progress = len(st.session_state.found_words) / len(st.session_state.target_words)
@@ -709,101 +747,3 @@ elif st.session_state.game_state == 'game':
             
             if (isDragging && button) {{
                 selectButton(button);
-            }}
-            
-            handleHover(button);
-        }}
-
-        function handleMouseUp(event) {{
-            event.preventDefault();
-            if (isDragging) {{
-                isDragging = false;
-                const isCorrect = checkCorrectWord();
-                setTimeout(() => {{
-                    resetSelection();
-                }}, isCorrect ? 1000 : 200);
-            }}
-        }}
-
-        // タッチイベント
-        function handleTouchStart(event) {{
-            event.preventDefault();
-            isDragging = true;
-            const touch = event.touches[0];
-            const button = getButtonAtPosition(touch.clientX, touch.clientY);
-            if (button) {{
-                selectButton(button);
-                handleHover(button);
-            }}
-        }}
-
-        function handleTouchMove(event) {{
-            event.preventDefault();
-            if (!isDragging) return;
-            
-            const touch = event.touches[0];
-            const button = getButtonAtPosition(touch.clientX, touch.clientY);
-            
-            if (button) {{
-                selectButton(button);
-                handleHover(button);
-            }}
-        }}
-
-        function handleTouchEnd(event) {{
-            event.preventDefault();
-            if (isDragging) {{
-                isDragging = false;
-                const isCorrect = checkCorrectWord();
-                setTimeout(() => {{
-                    resetSelection();
-                }}, isCorrect ? 1000 : 200);
-            }}
-        }}
-
-        function drawLine() {{
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            if (points.length < 2) return;
-
-            ctx.beginPath();
-            ctx.moveTo(points[0].x, points[0].y);
-            
-            for (let i = 1; i < points.length; i++) {{
-                ctx.lineTo(points[i].x, points[i].y);
-            }}
-            
-            ctx.strokeStyle = '#333';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-
-            points.forEach(point => {{
-                ctx.beginPath();
-                ctx.arc(point.x, point.y, 2, 0, 2 * Math.PI);
-                ctx.fillStyle = '#333';
-                ctx.fill();
-            }});
-        }}
-
-        // イベントリスナーの設定
-        container.addEventListener('mousedown', handleMouseDown);
-        document.addEventListener('mousemove', handleMouseMove);
-        document.addEventListener('mouseup', handleMouseUp);
-
-        container.addEventListener('touchstart', handleTouchStart, {{passive: false}});
-        container.addEventListener('touchmove', handleTouchMove, {{passive: false}});
-        container.addEventListener('touchend', handleTouchEnd, {{passive: false}});
-
-        // 初期化
-        updateSelectedWord();
-        updateTargetDisplay();
-    </script>
-    </body>
-    </html>
-    """
-
-    # Streamlitの表示
-    components.html(full_html, height=600)
-    
-    # ステージクリア判定
-    if len(st.session_state.found_words) : len(st.session)
