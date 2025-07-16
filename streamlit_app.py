@@ -504,8 +504,8 @@ elif st.session_state.game_state == 'game':
     # 現在のステージのMy辞書を取得
     current_my_dictionary = st.session_state.my_dictionary.get(st.session_state.current_stage, [])
 
-    # HTML + CSS + JavaScript（My辞書機能を追加）
-    full_html = f"""
+    # HTMLテンプレートを作成（f-stringの代わりに.format()を使用）
+    html_template = """
     <html>
     <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
@@ -629,7 +629,7 @@ elif st.session_state.game_state == 'game':
             opacity: 1;
         }}
         .my-dict-message {{
-            position: fixed;
+            position: fixed
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
@@ -692,10 +692,10 @@ elif st.session_state.game_state == 'game':
         let selectedLetters = [];
         let selectedButtons = [];
         let points = [];
-        let targetWords = {st.session_state.target_words};
-        let foundWords = {st.session_state.found_words};
-        let foundMyWords = {st.session_state.found_my_words};
-        let myDictionary = {current_my_dictionary};
+        let targetWords = {target_words_json};
+        let foundWords = {found_words_json};
+        let foundMyWords = {found_my_words_json};
+        let myDictionary = {my_dictionary_json};
         let currentHoverButton = null;
 
         const selectedWordDiv = document.getElementById('selected-word');
@@ -724,10 +724,4 @@ elif st.session_state.game_state == 'game':
 
         function updateFoundWordsDisplay() {{
             const mainDisplay = foundWords.length > 0 ? foundWords.join(', ') : 'なし';
-            const myDisplay = foundMyWords.length > 0 ? foundMyWords.join(', ') : 'なし';
-            foundWordsDiv.innerHTML = `メイン正解: ${{mainDisplay}}<br>My辞書: ${{myDisplay}}`;
-        }}
-
-        function checkCorrectWord() {{
-            const currentWord = selectedLetters.join('');
-            if (!currentWord) return false;
+            const myDisplay = foundMyWords.length > 0 ? foundMyWords.join(', ') : 'なし';"""
