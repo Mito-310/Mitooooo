@@ -1,9 +1,68 @@
+
+①画面に表示されるメインの正解②「My辞書」という別のリストに入るサブ正解　の二つに分けて、答えに含まれていないけど存在する単語を正解判定にしたいときは
+
+編集
+プログラムやアプリケーションで単語の正解判定システムを作る際の設計についてですね。
+
+メイン正解とサブ正解の分離構造
+
+この設計は非常に実用的で、以下のような実装が考えられます：
+
+データ構造例：
+
+javascript
+const wordData = {
+  "apple": {
+    mainAnswer: "りんご",           // 画面表示用のメイン正解
+    myDictionary: ["林檎", "アップル", "果物"]  // My辞書のサブ正解
+  }
+}
+判定ロジック：
+
+まず入力をメイン正解と照合
+不正解の場合、My辞書のサブ正解リストと照合
+どちらにもマッチしない場合のみ不正解とする
+ユーザー体験の観点から：
+
+メイン正解：最も一般的で標準的な答え
+My辞書：方言、別表記、類義語、個人的な覚え方など
+実装時の考慮点：
+
+サブ正解での正解時は「My辞書の答えも正解！」のような特別な表示
+学習効果を考慮し、メイン正解も併せて表示
+ユーザーが独自にMy辞書に単語を追加できる機能
+この仕組みにより、厳密性を保ちながらも柔軟な正解判定が可能になります。どのような種類のアプリケーションを想定されていますか？
+
+
+
+
+
+import streamlit as st import pandas as pd import random import math import streamlit.components.v1 as components # Excelファイルから問題を読み込む関数 @st.cache_data def load_problems_from_excel(file_path): """Excelファイルから問題を読み込む""" try: df = pd.read_excel(file_path) problems =
+
+pasted
+
+①画面に表示されるメインの正解②「My辞書」という別のリストに入るサブ正解　の二つに分けて、答えに含まれていないけど存在する単語を正解判定にしたいときは自分で正解を追加できるしくみにしたいです
+
+編集
+あなたのStreamlitアプリケーションで、メイン正解とMy辞書サブ正解を実装し、ユーザーが独自に正解を追加できる機能を追加しましょう。
+
+
+Word Connect Game with My Dictionary
+コード 
+
+
+
+
+
+
+貼り付けられたコンテンツ
+27.19 KB •809行
+ソースと形式が一致しない可能性があります
 import streamlit as st
 import pandas as pd
 import random
 import math
 import streamlit.components.v1 as components
-import json
 
 # Excelファイルから問題を読み込む関数
 @st.cache_data
@@ -63,10 +122,6 @@ DEFAULT_STAGES = {
     }
 }
 
-# My辞書の初期化
-if 'my_dictionary' not in st.session_state:
-    st.session_state.my_dictionary = {}  # {stage_num: [word1, word2, ...]}
-
 # 初期化
 if 'game_state' not in st.session_state:
     st.session_state.game_state = 'title'
@@ -76,45 +131,8 @@ if 'target_words' not in st.session_state:
     st.session_state.target_words = []
 if 'found_words' not in st.session_state:
     st.session_state.found_words = []
-if 'found_my_words' not in st.session_state:
-    st.session_state.found_my_words = []  # My辞書で見つけた単語
 if 'stages' not in st.session_state:
     st.session_state.stages = None
-
-# 単語の正解判定関数
-def check_word_validity(word, letters):
-    """作成した単語が使用可能な文字だけで構成されているかチェック"""
-    word = word.upper()
-    letter_count = {}
-    for letter in letters:
-        letter_count[letter] = letter_count.get(letter, 0) + 1
-    
-    for letter in word:
-        if letter not in letter_count or letter_count[letter] <= 0:
-            return False
-        letter_count[letter] -= 1
-    
-    return True
-
-# My辞書への単語追加機能
-def add_to_my_dictionary(stage_num, word, letters):
-    """My辞書に単語を追加"""
-    word = word.upper()
-    
-    if not check_word_validity(word, letters):
-        return False, "使用できない文字が含まれています"
-    
-    if stage_num not in st.session_state.my_dictionary:
-        st.session_state.my_dictionary[stage_num] = []
-    
-    if word in st.session_state.my_dictionary[stage_num]:
-        return False, "すでにMy辞書に登録されています"
-    
-    if word in st.session_state.target_words:
-        return False, "メイン正解に含まれています"
-    
-    st.session_state.my_dictionary[stage_num].append(word)
-    return True, "My辞書に追加しました"
 
 # Excelファイルから問題を読み込み
 if st.session_state.stages is None:
@@ -183,24 +201,6 @@ if st.session_state.game_state == 'title':
         
         except Exception as e:
             st.sidebar.error(f"ファイル読み込みエラー: {e}")
-    
-    # My辞書の管理
-    st.sidebar.header("My辞書の管理")
-    
-    # My辞書の表示
-    if st.session_state.my_dictionary:
-        st.sidebar.write("**登録された単語:**")
-        for stage_num, words in st.session_state.my_dictionary.items():
-            if words:
-                st.sidebar.write(f"ステージ {stage_num}: {', '.join(words)}")
-    else:
-        st.sidebar.write("まだ単語が登録されていません")
-    
-    # My辞書のクリア
-    if st.sidebar.button("My辞書をクリア"):
-        st.session_state.my_dictionary = {}
-        st.sidebar.success("My辞書をクリアしました")
-        st.rerun()
     
     # 現在の問題ファイル情報
     st.sidebar.write(f"現在のステージ数: {len(STAGES)}")
@@ -321,7 +321,6 @@ if st.session_state.game_state == 'title':
             <p>すべての目標単語を見つけるとステージクリア！</p>
             <p>同じ文字を重複して使うことはできません</p>
             <p>マウスまたはタッチで文字を選択してください</p>
-            <p><strong>新機能：</strong> 正解に含まれていない単語を見つけた場合、「My辞書」に追加できます</p>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -333,7 +332,6 @@ if st.session_state.game_state == 'title':
             st.session_state.current_stage = 1
             st.session_state.target_words = STAGES[1]['words']
             st.session_state.found_words = []
-            st.session_state.found_my_words = []
             st.session_state.game_state = 'game'
             st.rerun()
     
@@ -354,15 +352,11 @@ if st.session_state.game_state == 'title':
             if stage_num in STAGES:
                 stage_info = STAGES[stage_num]
                 with cols[j]:
-                    my_words_count = len(st.session_state.my_dictionary.get(stage_num, []))
-                    my_words_info = f" (+{my_words_count} My辞書)" if my_words_count > 0 else ""
-                    
                     st.markdown(f"""
                     <div class="stage-card">
                         <div class="stage-title">{stage_info['name']}</div>
                         <div class="stage-info">
-                            メイン正解: {len(stage_info['words'])}個{my_words_info}
-                        </div>
+
                     </div>
                     """, unsafe_allow_html=True)
                     
@@ -370,7 +364,6 @@ if st.session_state.game_state == 'title':
                         st.session_state.current_stage = stage_num
                         st.session_state.target_words = stage_info['words']
                         st.session_state.found_words = []
-                        st.session_state.found_my_words = []
                         st.session_state.game_state = 'game'
                         st.rerun()
     
@@ -432,19 +425,16 @@ elif st.session_state.game_state == 'game':
     with col3:
         if st.button("リセット"):
             st.session_state.found_words = []
-            st.session_state.found_my_words = []
             st.rerun()
+    
+    
     
     # 進行状況
     progress = len(st.session_state.found_words) / len(st.session_state.target_words)
     st.progress(progress)
-    st.write(f"メイン正解: {len(st.session_state.found_words)} / {len(st.session_state.target_words)} 単語")
+    st.write(f"進行状況: {len(st.session_state.found_words)} / {len(st.session_state.target_words)} 単語")
     
-    # My辞書の正解数表示
-    if st.session_state.found_my_words:
-        st.write(f"My辞書正解: {len(st.session_state.found_my_words)} 単語")
-    
-    # 目標単語の表示（メイン正解）
+    # 目標単語の表示
     sorted_words = sorted(st.session_state.target_words)
     target_boxes_html = []
     
@@ -461,32 +451,7 @@ elif st.session_state.game_state == 'game':
     target_display = ' '.join(target_boxes_html)
     
     # 見つけた単語の表示
-    found_main_display = ', '.join(st.session_state.found_words) if st.session_state.found_words else 'なし'
-    found_my_display = ', '.join(st.session_state.found_my_words) if st.session_state.found_my_words else 'なし'
-    
-    # My辞書への単語追加UI
-    st.markdown("---")
-    st.markdown("### My辞書への単語追加")
-    
-    col1, col2 = st.columns([3, 1])
-    with col1:
-        new_word = st.text_input("新しい単語を入力", placeholder="例: CAR", key="new_word_input")
-    with col2:
-        if st.button("追加", key="add_word_button"):
-            if new_word:
-                success, message = add_to_my_dictionary(st.session_state.current_stage, new_word, letters)
-                if success:
-                    st.success(message)
-                    st.rerun()
-                else:
-                    st.error(message)
-    
-    # 現在のステージのMy辞書表示
-    current_my_words = st.session_state.my_dictionary.get(st.session_state.current_stage, [])
-    if current_my_words:
-        st.write(f"**このステージのMy辞書:** {', '.join(current_my_words)}")
-    
-    st.markdown("---")
+    found_display = ', '.join(st.session_state.found_words) if st.session_state.found_words else 'なし'
     
     # 円形に並べるボタンのHTMLを生成
     button_html = ''.join([
@@ -501,11 +466,8 @@ elif st.session_state.game_state == 'game':
         ''' for i, letter in enumerate(letters)
     ])
 
-    # 現在のステージのMy辞書を取得
-    current_my_dictionary = st.session_state.my_dictionary.get(st.session_state.current_stage, [])
-
-    # HTMLテンプレートを作成（f-stringの代わりに.format()を使用）
-    html_template = """
+    # HTML + CSS + JavaScript（元のコードと同じ）
+    full_html = f"""
     <html>
     <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
@@ -628,24 +590,6 @@ elif st.session_state.game_state == 'game':
         .success-message.show {{
             opacity: 1;
         }}
-        .my-dict-message {{
-            position: fixed
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: #FF9800;
-            color: white;
-            padding: 20px;
-            border-radius: 5px;
-            font-size: 18px;
-            font-weight: bold;
-            z-index: 1000;
-            opacity: 0;
-            transition: all 0.3s ease;
-        }}
-        .my-dict-message.show {{
-            opacity: 1;
-        }}
         .complete-message {{
             position: fixed;
             top: 50%;
@@ -677,9 +621,8 @@ elif st.session_state.game_state == 'game':
     <body>
     <div id="selected-word"></div>
     <div id="target-words">{target_display}</div>
-    <div id="found-words">メイン正解: {found_main_display}<br>My辞書: {found_my_display}</div>
+    <div id="found-words">見つけた単語: {found_display}</div>
     <div id="success-message" class="success-message">正解！</div>
-    <div id="my-dict-message" class="my-dict-message">My辞書の単語！</div>
     <div id="complete-message" class="complete-message">ステージクリア！</div>
 
     <div class="circle-container" id="circle-container">
@@ -692,17 +635,14 @@ elif st.session_state.game_state == 'game':
         let selectedLetters = [];
         let selectedButtons = [];
         let points = [];
-        let targetWords = {target_words_json};
-        let foundWords = {found_words_json};
-        let foundMyWords = {found_my_words_json};
-        let myDictionary = {my_dictionary_json};
+        let targetWords = {st.session_state.target_words};
+        let foundWords = {st.session_state.found_words};
         let currentHoverButton = null;
 
         const selectedWordDiv = document.getElementById('selected-word');
         const targetWordsDiv = document.getElementById('target-words');
         const foundWordsDiv = document.getElementById('found-words');
         const successMessageDiv = document.getElementById('success-message');
-        const myDictMessageDiv = document.getElementById('my-dict-message');
         const completeMessageDiv = document.getElementById('complete-message');
         const container = document.getElementById('circle-container');
         const canvas = document.getElementById('lineCanvas');
@@ -722,6 +662,208 @@ elif st.session_state.game_state == 'game':
             targetWordsDiv.innerHTML = targetBoxes.join(' | ');
         }}
 
-        function updateFoundWordsDisplay() {{
-            const mainDisplay = foundWords.length > 0 ? foundWords.join(', ') : 'なし';
-            const myDisplay = foundMyWords.length > 0 ? foundMyWords.join(', ') : 'なし';"""
+        function checkCorrectWord() {{
+            const currentWord = selectedLetters.join('');
+            if (currentWord && targetWords.includes(currentWord) && !foundWords.includes(currentWord)) {{
+                foundWords.push(currentWord);
+                foundWordsDiv.textContent = '見つけた単語: ' + foundWords.join(', ');
+                updateTargetDisplay();
+                showSuccessMessage();
+                
+                if (foundWords.length === targetWords.length) {{
+                    setTimeout(() => {{
+                        showCompleteMessage();
+                    }}, 1000);
+                }}
+                
+                return true;
+            }}
+            return false;
+        }}
+
+        function showSuccessMessage() {{
+            successMessageDiv.classList.add('show');
+            setTimeout(() => {{
+                successMessageDiv.classList.remove('show');
+            }}, 1500);
+        }}
+
+        function showCompleteMessage() {{
+            completeMessageDiv.classList.add('show');
+            setTimeout(() => {{
+                completeMessageDiv.classList.remove('show');
+            }}, 2500);
+        }}
+
+        function getButtonCenterPosition(button) {{
+            const rect = button.getBoundingClientRect();
+            const containerRect = container.getBoundingClientRect();
+            const centerX = rect.left - containerRect.left + rect.width / 2;
+            const centerY = rect.top - containerRect.top + rect.height / 2;
+            return {{ x: centerX, y: centerY }};
+        }}
+
+        function resetSelection() {{
+            selectedLetters = [];
+            selectedButtons = [];
+            points = [];
+            document.querySelectorAll('.circle-button').forEach(button => {{
+                button.classList.remove('selected');
+                button.classList.remove('hover');
+            }});
+            currentHoverButton = null;
+            updateSelectedWord();
+            drawLine();
+        }}
+
+        function selectButton(button) {{
+            if (!selectedButtons.includes(button)) {{
+                button.classList.add('selected');
+                selectedLetters.push(button.dataset.letter);
+                selectedButtons.push(button);
+                points.push(getButtonCenterPosition(button));
+                updateSelectedWord();
+                drawLine();
+            }}
+        }}
+
+        function getButtonAtPosition(x, y) {{
+            const buttons = document.querySelectorAll('.circle-button');
+            for (let button of buttons) {{
+                const rect = button.getBoundingClientRect();
+                if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {{
+                    return button;
+                }}
+            }}
+            return null;
+        }}
+
+        function handleHover(button) {{
+            if (button !== currentHoverButton) {{
+                if (currentHoverButton && !selectedButtons.includes(currentHoverButton)) {{
+                    currentHoverButton.classList.remove('hover');
+                }}
+                
+                if (button && !selectedButtons.includes(button)) {{
+                    button.classList.add('hover');
+                }}
+                
+                currentHoverButton = button;
+            }}
+        }}
+
+        // マウスイベント
+        function handleMouseDown(event) {{
+            event.preventDefault();
+            isDragging = true;
+            const button = event.target.closest('.circle-button');
+            if (button) {{
+                selectButton(button);
+                handleHover(button);
+            }}
+        }}
+
+        function handleMouseMove(event) {{
+            event.preventDefault();
+            const button = getButtonAtPosition(event.clientX, event.clientY);
+            
+            if (isDragging && button) {{
+                selectButton(button);
+            }}
+            
+            handleHover(button);
+        }}
+
+        function handleMouseUp(event) {{
+            event.preventDefault();
+            if (isDragging) {{
+                isDragging = false;
+                const isCorrect = checkCorrectWord();
+                setTimeout(() => {{
+                    resetSelection();
+                }}, isCorrect ? 1000 : 200);
+            }}
+        }}
+
+        // タッチイベント
+        function handleTouchStart(event) {{
+            event.preventDefault();
+            isDragging = true;
+            const touch = event.touches[0];
+            const button = getButtonAtPosition(touch.clientX, touch.clientY);
+            if (button) {{
+                selectButton(button);
+                handleHover(button);
+            }}
+        }}
+
+        function handleTouchMove(event) {{
+            event.preventDefault();
+            if (!isDragging) return;
+            
+            const touch = event.touches[0];
+            const button = getButtonAtPosition(touch.clientX, touch.clientY);
+            
+            if (button) {{
+                selectButton(button);
+                handleHover(button);
+            }}
+        }}
+
+        function handleTouchEnd(event) {{
+            event.preventDefault();
+            if (isDragging) {{
+                isDragging = false;
+                const isCorrect = checkCorrectWord();
+                setTimeout(() => {{
+                    resetSelection();
+                }}, isCorrect ? 1000 : 200);
+            }}
+        }}
+
+        function drawLine() {{
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (points.length < 2) return;
+
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+            
+            for (let i = 1; i < points.length; i++) {{
+                ctx.lineTo(points[i].x, points[i].y);
+            }}
+            
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            points.forEach(point => {{
+                ctx.beginPath();
+                ctx.arc(point.x, point.y, 2, 0, 2 * Math.PI);
+                ctx.fillStyle = '#333';
+                ctx.fill();
+            }});
+        }}
+
+        // イベントリスナーの設定
+        container.addEventListener('mousedown', handleMouseDown);
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+
+        container.addEventListener('touchstart', handleTouchStart, {{passive: false}});
+        container.addEventListener('touchmove', handleTouchMove, {{passive: false}});
+        container.addEventListener('touchend', handleTouchEnd, {{passive: false}});
+
+        // 初期化
+        updateSelectedWord();
+        updateTargetDisplay();
+    </script>
+    </body>
+    </html>
+    """
+
+    # Streamlitの表示
+    components.html(full_html, height=600)
+    
+    # ステージクリア判定
+    if len(st.session_state.found_words) : len(st.session)
