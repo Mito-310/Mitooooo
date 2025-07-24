@@ -381,7 +381,7 @@ elif st.session_state.game_state == 'game':
     target_display = ' '.join(target_boxes_html)
     
     # 見つけた単語の表示
-    found_display = ', '.join(st.session_state.get("found_words", [])) if st.session_state.get("found_words") else '（なし）'
+    found_display = ', '.join(str(word) for word in st.session_state.get("found_words", []))
     
     # 円形に並べるボタンのHTMLを生成（シャッフル順序を適用）
     display_letters = []
