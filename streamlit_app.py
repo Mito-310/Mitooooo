@@ -973,13 +973,13 @@ st.markdown("""
     """
 
     # HTML コンポーネントを表示
-    found_word = components.html(html_content, height=550, scrolling=False)
+found_word = components.html(html_content, height=550, scrolling=False)
     
     # 単語が見つかった場合の処理
-    if found_word and found_word != "STAGE_COMPLETE" and found_word not in st.session_state.found_words:
-        st.session_state.found_words.append(found_word)
-        st.rerun()
+if found_word and found_word != "STAGE_COMPLETE" and found_word not in st.session_state.found_words:
+    st.session_state.found_words.append(found_word)
+    st.rerun()
     
     # ステージクリアの処理
-    if found_word == "STAGE_COMPLETE":
-        st.rerun()
+if found_word == "STAGE_COMPLETE":
+    st.rerun()
