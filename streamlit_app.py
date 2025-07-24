@@ -360,9 +360,20 @@ elif st.session_state.game_state == 'game':
                 st.write(f"{status} {word}")
     
     # 進行状況
-    progress = len(st.session_state.found_words) / len(st.session_state.target_words)
-    st.progress(progress)
-    st.write(f"進行状況: {len(st.session_state.found_words)} / {len(st.session_state.target_words)} 単語")
+    # 安全に初期化
+found_words = st.session_state.get("found_words", [])
+target_words = st.session_state.get("target_words", [])
+
+# 割り算前に 0 チェック
+if target_words:
+    progress = len(found_words) / len(target_words)
+else:
+    progress = 0.0  # 分母が0なら進捗は0%
+
+# 表示（進捗バーは 0.0〜1.0）
+st.progress(progress)
+st.write(f"進行状況: {len(found_words)} / {len(target_words)} 単語")
+
     
     # 目標単語の表示
     sorted_words = sorted(st.session_state.target_words)
