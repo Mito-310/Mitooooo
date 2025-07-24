@@ -360,65 +360,63 @@ elif st.session_state.game_state == 'game':
                 st.write(f"{status} {word}")
     
     # 進行状況
-# セッションステートから取得（安全に）
-found_words = st.session_state.get("found_words", [])
-target_words = st.session_state.get("target_words", [])
+    found_words = st.session_state.get("found_words", [])
+    target_words = st.session_state.get("target_words", [])
 
-# 長さの取得
-num_found = len(found_words)
-num_total = len(target_words)
+    # 長さの取得
+    num_found = len(found_words)
+    num_total = len(target_words)
 
-# 安全な進捗値の計算
-if num_total > 0:
-    progress = min(num_found / num_total, 1.0)  # 1.0 を超えないように制限
-else:
-    progress = 0.0  # デフォルト
+    # 安全な進捗値の計算
+    if num_total > 0:
+        progress = min(num_found / num_total, 1.0)  # 1.0 を超えないように制限
+    else:
+        progress = 0.0  # デフォルト
 
-# 表示
-st.progress(progress)
-st.write(f"進行状況: {num_found} / {num_total} 単語")
-
+    # 表示
+    st.progress(progress)
+    st.write(f"進行状況: {num_found} / {num_total} 単語")
     
     # 目標単語の表示
-sorted_words = sorted(st.session_state.target_words)
-target_boxes_html = []
+    sorted_words = sorted(st.session_state.target_words)
+    target_boxes_html = []
     
-for word in sorted_words:
-    is_found = word in st.session_state.found_words
-    boxes_html = ""
-    for letter in word:
-        if is_found:
-            boxes_html += f'<span style="display: inline-block; width: 20px; height: 20px; border: 1px solid #333; background: #4CAF50; color: white; text-align: center; line-height: 18px; margin: 1px; font-size: 12px;">{letter}</span>'
-        else:
-            boxes_html += f'<span style="display: inline-block; width: 20px; height: 20px; border: 1px solid #333; background: white; text-align: center; line-height: 18px; margin: 1px;"></span>'
-    target_boxes_html.append(f'<div style="display: inline-block; margin: 5px;">{boxes_html}</div>')
+    for word in sorted_words:
+        is_found = word in st.session_state.found_words
+        boxes_html = ""
+        for letter in word:
+            if is_found:
+                boxes_html += f'<span style="display: inline-block; width: 20px; height: 20px; border: 1px solid #333; background: #4CAF50; color: white; text-align: center; line-height: 18px; margin: 1px; font-size: 12px;">{letter}</span>'
+            else:
+                boxes_html += f'<span style="display: inline-block; width: 20px; height: 20px; border: 1px solid #333; background: white; text-align: center; line-height: 18px; margin: 1px;"></span>'
+        target_boxes_html.append(f'<div style="display: inline-block; margin: 5px;">{boxes_html}</div>')
     
-target_display = ' '.join(target_boxes_html)
+    target_display = ' '.join(target_boxes_html)
     
     # 見つけた単語の表示
-found_display = ', '.join(str(word) for word in st.session_state.get("found_words", []))
+    found_display = ', '.join(str(word) for word in st.session_state.get("found_words", []))
     
     # 円形に並べるボタンのHTMLを生成（シャッフル順序を適用）
-display_letters = []
-for i in st.session_state.letter_order:
+    display_letters = []
+    for i in st.session_state.letter_order:
         letter = letters[i]
         display_letter = letter.lower() if st.session_state.is_lowercase else letter
         display_letters.append(display_letter)
     
-button_html = ''.join([
+    button_html = ''.join([
         f'''
         <div class="circle-button" id="button_{i}"
-                data-letter="{letter}"
-                data-index="{i}"
-                style="left: {150 + 120 * math.cos(2 * math.pi * i / num_letters - math.pi/2) - 25}px;
-                       top:  {150 + 120 * math.sin(2 * math.pi * i / num_letters - math.pi/2) - 25}px;">
+             data-letter="{letter}"
+             data-index="{i}"
+             style="left: {150 + 120 * math.cos(2 * math.pi * i / num_letters - math.pi/2) - 25}px;
+                    top:  {150 + 120 * math.sin(2 * math.pi * i / num_letters - math.pi/2) - 25}px;">
             {letter}
         </div>
         ''' for i, letter in enumerate(display_letters)
     ])
 
     # 単語を見つけた時のStreamlit側での処理
-if st.session_state.found_words and len(st.session_state.found_words) == len(st.session_state.target_words):
+    if st.session_state.found_words and len(st.session_state.found_words) == len(st.session_state.target_words):
         st.success("ステージクリア！おめでとうございます！")
         
         # 次のステージボタン
@@ -431,12 +429,13 @@ if st.session_state.found_words and len(st.session_state.found_words) == len(st.
                 st.session_state.letter_order = list(range(len(STAGES[next_stage]['letters'])))
                 st.rerun()
     
-    # JavaScriptとHTMLの生成（f-stringの中括弧問題を回避）
-js_target_words = str(st.session_state.target_words)
-js_found_words = str(st.session_state.found_words)
-js_is_lowercase = str(st.session_state.is_lowercase).lower()
+    # JavaScriptとHTMLの生成
+    js_target_words = str(st.session_state.target_words).replace("'", '"')
+    js_found_words = str(st.session_state.found_words).replace("'", '"')
+    js_is_lowercase = str(st.session_state.is_lowercase).lower()
     
-html_content = f"""
+    html_content = f"""
+    <!DOCTYPE html>
     <html>
     <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
@@ -605,89 +604,6 @@ html_content = f"""
     </div>
 
     <script>
-    
-    </script>
-    </body>
-    </html>
-
-    <style>
-    """
-st.markdown("""
-    .success-message {
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background: linear-gradient(#4CAF50, #45a049);
-        color: white;
-        padding: 25px 35px;
-        border-radius: 15px;
-        font-size: 20px;
-        font-weight: bold;
-        z-index: 1000;
-        opacity: 0;
-        transition: all 0.4s ease;
-        box-shadow: 0 8px 16px rgba(0,0,0,0.2);
-    }
-    .success-message.show {
-        opacity: 1;
-        transform: translate(-50%, -50%) scale(1.1);
-    }
-    .complete-message {
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background: linear-gradient(135deg, #2196F3, #1976D2);
-        color: white;
-        padding: 40px 50px;
-        border-radius: 20px;
-        font-size: 26px;
-        font-weight: bold;
-        z-index: 1001;
-        opacity: 0;
-        transition: all 0.4s ease;
-        box-shadow: 0 12px 24px rgba(0,0,0,0.3);
-        text-align: center;
-    }
-    .complete-message.show {
-        opacity: 1;
-        transform: translate(-50%, -50%) scale(1.1);
-    }
-    canvas {
-        position: absolute;
-        top: 0;
-        left: 0;
-        z-index: 1;
-        touch-action: none;
-        pointer-events: none;
-    }
-    .instruction {
-        text-align: center;
-        color: #666;
-        font-size: 14px;
-        margin: 10px 0;
-    }
-
-""", unsafe_allow_html=True)
-
-
-"""</head>
-    <body>
-    <div id="selected-word">単語を作ってください</div>
-    <div id="target-words">{target_display}</div>
-    <div id="found-words">見つけた単語: {found_display}</div>
-    <div id="success-message" class="success-message">正解！</div>
-    <div id="complete-message" class="complete-message">clear!<br>おめでとうございます！</div>
-
-    <div class="instruction">文字をドラッグして単語を作ってください</div>
-    
-    <div class="circle-container" id="circle-container">
-        {button_html}
-        <canvas id="lineCanvas" width="300" height="300"></canvas>
-    </div>
-
-    <script>
         let isDragging = false;
         let selectedLetters = [];
         let selectedButtons = [];
@@ -819,182 +735,181 @@ st.markdown("""
                     ctx.lineTo(points[i].x, points[i].y);
                 }
                 ctx.stroke();
-            }
-        }
+            }}
+        }}
 
-        function handleHover(button) {
-            if (isDragging && !selectedButtons.includes(button)) {
-                if (currentHoverButton && currentHoverButton !== button) {
+        function handleHover(button) {{
+            if (isDragging && !selectedButtons.includes(button)) {{
+                if (currentHoverButton && currentHoverButton !== button) {{
                     currentHoverButton.classList.remove('hover');
-                }
+                }}
                 button.classList.add('hover');
                 currentHoverButton = button;
-            }
-        }
+            }}
+        }}
 
-        function clearHover() {
-            if (currentHoverButton) {
+        function clearHover() {{
+            if (currentHoverButton) {{
                 currentHoverButton.classList.remove('hover');
                 currentHoverButton = null;
-            }
-        }
+            }}
+        }}
 
         // マウスイベント
-        container.addEventListener('mousedown', (e) => {
+        container.addEventListener('mousedown', (e) => {{
             e.preventDefault();
             const button = getButtonAtPosition(e.clientX, e.clientY);
-            if (button) {
+            if (button) {{
                 isDragging = true;
                 resetSelection();
                 selectButton(button);
-            }
-        });
+            }}
+        }});
 
-        container.addEventListener('mousemove', (e) => {
-            if (isDragging) {
+        container.addEventListener('mousemove', (e) => {{
+            if (isDragging) {{
                 e.preventDefault();
                 const button = getButtonAtPosition(e.clientX, e.clientY);
-                if (button) {
+                if (button) {{
                     handleHover(button);
-                    if (!selectedButtons.includes(button)) {
+                    if (!selectedButtons.includes(button)) {{
                         selectButton(button);
                         clearHover();
-                    }
-                } else {
+                    }}
+                }} else {{
                     clearHover();
-                }
-            }
-        });
+                }}
+            }}
+        }});
 
-        container.addEventListener('mouseup', (e) => {
-            if (isDragging) {
+        container.addEventListener('mouseup', (e) => {{
+            if (isDragging) {{
                 e.preventDefault();
                 isDragging = false;
                 clearHover();
                 
-                if (selectedLetters.length > 0) {
+                if (selectedLetters.length > 0) {{
                     const found = checkCorrectWord();
-                    if (!found) {
+                    if (!found) {{
                         // 間違った単語の場合、短時間後にリセット
-                        setTimeout(() => {
+                        setTimeout(() => {{
                             resetSelection();
-                        }, 1000);
-                    } else {
+                        }}, 1000);
+                    }} else {{
                         resetSelection();
-                    }
-                }
-            }
-        });
+                    }}
+                }}
+            }}
+        }});
 
         // タッチイベント
-        container.addEventListener('touchstart', (e) => {
+        container.addEventListener('touchstart', (e) => {{
             e.preventDefault();
             const touch = e.touches[0];
             const button = getButtonAtPosition(touch.clientX, touch.clientY);
-            if (button) {
+            if (button) {{
                 isDragging = true;
                 resetSelection();
                 selectButton(button);
-            }
-        }, { passive: false });
+            }}
+        }}, {{ passive: false }});
 
-        container.addEventListener('touchmove', (e) => {
-            if (isDragging) {
+        container.addEventListener('touchmove', (e) => {{
+            if (isDragging) {{
                 e.preventDefault();
                 const touch = e.touches[0];
                 const button = getButtonAtPosition(touch.clientX, touch.clientY);
-                if (button) {
+                if (button) {{
                     handleHover(button);
-                    if (!selectedButtons.includes(button)) {
+                    if (!selectedButtons.includes(button)) {{
                         selectButton(button);
                         clearHover();
-                    }
-                } else {
+                    }}
+                }} else {{
                     clearHover();
-                }
-            }
-        }, { passive: false });
+                }}
+            }}
+        }}, {{ passive: false }});
 
-        container.addEventListener('touchend', (e) => {
-            if (isDragging) {
+        container.addEventListener('touchend', (e) => {{
+            if (isDragging) {{
                 e.preventDefault();
                 isDragging = false;
                 clearHover();
                 
-                if (selectedLetters.length > 0) {
+                if (selectedLetters.length > 0) {{
                     const found = checkCorrectWord();
-                    if (!found) {
+                    if (!found) {{
                         // 間違った単語の場合、短時間後にリセット
-                        setTimeout(() => {
+                        setTimeout(() => {{
                             resetSelection();
-                        }, 1000);
-                    } else {
+                        }}, 1000);
+                    }} else {{
                         resetSelection();
-                    }
-                }
-            }
-        }, { passive: false });
+                    }}
+                }}
+            }}
+        }}, {{ passive: false }});
 
         // ページ外でのマウス/タッチ終了を処理
-        document.addEventListener('mouseup', () => {
-            if (isDragging) {
+        document.addEventListener('mouseup', () => {{
+            if (isDragging) {{
                 isDragging = false;
                 clearHover();
-                if (selectedLetters.length > 0) {
+                if (selectedLetters.length > 0) {{
                     const found = checkCorrectWord();
-                    if (!found) {
-                        setTimeout(() => {
+                    if (!found) {{
+                        setTimeout(() => {{
                             resetSelection();
-                        }, 1000);
-                    } else {
+                        }}, 1000);
+                    }} else {{
                         resetSelection();
-                    }
-                }
-            }
-        });
+                    }}
+                }}
+            }}
+        }});
 
-        document.addEventListener('touchend', () => {
-            if (isDragging) {
+        document.addEventListener('touchend', () => {{
+            if (isDragging) {{
                 isDragging = false;
                 clearHover();
-                if (selectedLetters.length > 0) {
+                if (selectedLetters.length > 0) {{
                     const found = checkCorrectWord();
-                    if (!found) {
-                        setTimeout(() => {
+                    if (!found) {{
+                        setTimeout(() => {{
                             resetSelection();
-                        }, 1000);
-                    } else {
+                        }}, 1000);
+                    }} else {{
                         resetSelection();
-                    }
-                }
-            }
-        });
+                    }}
+                }}
+            }}
+        }});
 
         // キーボードイベント（ESCでリセット）
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
+        document.addEventListener('keydown', (e) => {{
+            if (e.key === 'Escape') {{
                 resetSelection();
-            }
-        });
+            }}
+        }});
 
         // 初期化
         updateSelectedWord();
         drawLine();
 
-    </style>
     </script>
     </body>
     </html>
     """
 
     # HTML コンポーネントを表示
-found_word = components.html(html_content, height=550, scrolling=False)
+    found_word = components.html(html_content, height=550, scrolling=False)
     
     # 単語が見つかった場合の処理
-if found_word and found_word != "STAGE_COMPLETE" and found_word not in st.session_state.found_words:
-    st.session_state.found_words.append(found_word)
-    st.rerun()
+    if found_word and found_word != "STAGE_COMPLETE" and found_word not in st.session_state.found_words:
+        st.session_state.found_words.append(found_word)
+        st.rerun()
     
     # ステージクリアの処理
-if found_word == "STAGE_COMPLETE":
-    st.rerun()
+    if found_word == "STAGE_COMPLETE":
+        st.rerun()
