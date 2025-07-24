@@ -590,7 +590,7 @@ elif st.session_state.game_state == 'game':
     </div>
 
     <script>
-    """ + javascript_code + """
+    
     </script>
     </body>
     </html>
