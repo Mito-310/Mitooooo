@@ -755,7 +755,7 @@ ctx.strokeStyle = '#333';
                 
                 // ポイントの描画
                 points.forEach((point, index) => {
-                    ctx.beginPath();
+                    ctx.beginPath() }
                     ctx.arc(point.x, point.y, 8, 0, 2 * Math.PI);
                     ctx.fillStyle = index === 0 ? '#4CAF50' : (index === points.length - 1 ? '#f44336' : '#2196F3');
                     ctx.fill();
