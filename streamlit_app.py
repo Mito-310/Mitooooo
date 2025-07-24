@@ -594,7 +594,7 @@ elif st.session_state.game_state == 'game':
     </script>
     </body>
     </html>
-    """
+    """ 
         .success-message {{
             position: fixed;
             top: 50%;
