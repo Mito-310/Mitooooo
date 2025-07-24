@@ -415,9 +415,13 @@ elif st.session_state.game_state == 'game':
                 st.session_state.found_words = []
                 st.session_state.letter_order = list(range(len(STAGES[next_stage]['letters'])))
                 st.rerun()
-
-    # HTMLコンポーネントの表示
-    components.html(f"""
+    
+    # JavaScriptとHTMLの生成（f-stringの中括弧問題を回避）
+    js_target_words = str(st.session_state.target_words)
+    js_found_words = str(st.session_state.found_words)
+    js_is_lowercase = str(st.session_state.is_lowercase).lower()
+    
+    html_content = f"""
     <html>
     <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
@@ -606,10 +610,10 @@ elif st.session_state.game_state == 'game':
         let selectedLetters = [];
         let selectedButtons = [];
         let points = [];
-        let targetWords = {st.session_state.target_words};
-        let foundWords = {st.session_state.found_words};
+        let targetWords = {js_target_words};
+        let foundWords = {js_found_words};
         let currentHoverButton = null;
-        let isLowercase = {str(st.session_state.is_lowercase).lower()};
+        let isLowercase = {js_is_lowercase};
 
         const selectedWordDiv = document.getElementById('selected-word');
         const targetWordsDiv = document.getElementById('target-words');
@@ -711,7 +715,7 @@ elif st.session_state.game_state == 'game':
                 const relativeX = x - containerRect.left;
                 const relativeY = y - containerRect.top;
                 
-                if (relativeX >= buttonLeft && relativeX <= buttonLeft + 50 && 
+                if (relativeX >= buttonLeft && relativeX <= buttonLeft + 50 &&
                     relativeY >= buttonTop && relativeY <= buttonTop + 50) {{
                     return button;
                 }}
@@ -719,50 +723,37 @@ elif st.session_state.game_state == 'game':
             return null;
         }}
 
-        function handleHover(button) {{
-            if (button !== currentHoverButton) {{
-                if (currentHoverButton && !selectedButtons.includes(currentHoverButton)) {{
-                    currentHoverButton.classList.remove('hover');
-                }}
-                
-                if (button && !selectedButtons.includes(button)) {{
-                    button.classList.add('hover');
-                }}
-ctx.strokeStyle = '#333';
+        function drawLine() {{
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (points.length > 1) {{
+                ctx.strokeStyle = '#333';
                 ctx.lineWidth = 3;
                 ctx.lineCap = 'round';
-                ctx.lineJoin = 'round';
-                
-                // 影の描画
-                ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
-                ctx.shadowBlur = 4;
-                ctx.shadowOffsetX = 2;
-                ctx.shadowOffsetY = 2;
                 
                 ctx.beginPath();
                 ctx.moveTo(points[0].x, points[0].y);
-                
                 for (let i = 1; i < points.length; i++) {
-                    ctx.lineTo(points[i].x, points[i].y) }
-                
-                ctx.stroke();
-                
-                // 影をリセット
-                ctx.shadowColor = 'transparent';
-                ctx.shadowBlur = 0;
-                ctx.shadowOffsetX = 0;
-                ctx.shadowOffsetY = 0;
-                
-                // ポイントの描画
-                points.forEach((point, index) => {
-                    ctx.beginPath() }
-                    ctx.arc(point.x, point.y, 8, 0, 2 * Math.PI);
-                    ctx.fillStyle = index === 0 ? '#4CAF50' : (index === points.length - 1 ? '#f44336' : '#2196F3');
-                    ctx.fill();
-                    ctx.strokeStyle = 'white';
-                    ctx.lineWidth = 2;
-                    ctx.stroke();
+                    ctx.lineTo(points[i].x, points[i].y);
                 }
+                ctx.stroke();
+            }
+        }
+
+        function handleHover(button) {
+            if (isDragging && !selectedButtons.includes(button)) {
+                if (currentHoverButton && currentHoverButton !== button) {
+                    currentHoverButton.classList.remove('hover');
+                }
+                button.classList.add('hover');
+                currentHoverButton = button;
+            }
+        }
+
+        function clearHover() {
+            if (currentHoverButton) {
+                currentHoverButton.classList.remove('hover');
+                currentHoverButton = null;
             }
         }
 
@@ -778,32 +769,38 @@ ctx.strokeStyle = '#333';
         });
 
         container.addEventListener('mousemove', (e) => {
-            e.preventDefault();
-            const button = getButtonAtPosition(e.clientX, e.clientY);
-            
-            if (isDragging && button && !selectedButtons.includes(button)) {
-                selectButton(button);
-            } else if (!isDragging) {
-                handleHover(button);
-            }
-        });
-
-        container.addEventListener('mouseup', (e) => {
-            e.preventDefault();
             if (isDragging) {
-                isDragging = false;
-                if (!checkCorrectWord()) {
-                    setTimeout(resetSelection, 500);
+                e.preventDefault();
+                const button = getButtonAtPosition(e.clientX, e.clientY);
+                if (button) {
+                    handleHover(button);
+                    if (!selectedButtons.includes(button)) {
+                        selectButton(button);
+                        clearHover();
+                    }
                 } else {
-                    resetSelection();
+                    clearHover();
                 }
             }
         });
 
-        container.addEventListener('mouseleave', () => {
-            if (currentHoverButton && !selectedButtons.includes(currentHoverButton)) {
-                currentHoverButton.classList.remove('hover');
-                currentHoverButton = null;
+        container.addEventListener('mouseup', (e) => {
+            if (isDragging) {
+                e.preventDefault();
+                isDragging = false;
+                clearHover();
+                
+                if (selectedLetters.length > 0) {
+                    const found = checkCorrectWord();
+                    if (!found) {
+                        // 間違った単語の場合、短時間後にリセット
+                        setTimeout(() => {
+                            resetSelection();
+                        }, 1000);
+                    } else {
+                        resetSelection();
+                    }
+                }
             }
         });
 
@@ -817,96 +814,104 @@ ctx.strokeStyle = '#333';
                 resetSelection();
                 selectButton(button);
             }
-        });
+        }, { passive: false });
 
         container.addEventListener('touchmove', (e) => {
-            e.preventDefault();
-            const touch = e.touches[0];
-            const button = getButtonAtPosition(touch.clientX, touch.clientY);
-            
-            if (isDragging && button && !selectedButtons.includes(button)) {
-                selectButton(button);
+            if (isDragging) {
+                e.preventDefault();
+                const touch = e.touches[0];
+                const button = getButtonAtPosition(touch.clientX, touch.clientY);
+                if (button) {
+                    handleHover(button);
+                    if (!selectedButtons.includes(button)) {
+                        selectButton(button);
+                        clearHover();
+                    }
+                } else {
+                    clearHover();
+                }
             }
-        });
+        }, { passive: false });
 
         container.addEventListener('touchend', (e) => {
-            e.preventDefault();
+            if (isDragging) {
+                e.preventDefault();
+                isDragging = false;
+                clearHover();
+                
+                if (selectedLetters.length > 0) {
+                    const found = checkCorrectWord();
+                    if (!found) {
+                        // 間違った単語の場合、短時間後にリセット
+                        setTimeout(() => {
+                            resetSelection();
+                        }, 1000);
+                    } else {
+                        resetSelection();
+                    }
+                }
+            }
+        }, { passive: false });
+
+        // ページ外でのマウス/タッチ終了を処理
+        document.addEventListener('mouseup', () => {
             if (isDragging) {
                 isDragging = false;
-                if (!checkCorrectWord()) {
-                    setTimeout(resetSelection, 500);
-                } else {
-                    resetSelection();
+                clearHover();
+                if (selectedLetters.length > 0) {
+                    const found = checkCorrectWord();
+                    if (!found) {
+                        setTimeout(() => {
+                            resetSelection();
+                        }, 1000);
+                    } else {
+                        resetSelection();
+                    }
                 }
             }
         });
 
-        // コンテキストメニューの無効化
-        container.addEventListener('contextmenu', (e) => {
-            e.preventDefault();
+        document.addEventListener('touchend', () => {
+            if (isDragging) {
+                isDragging = false;
+                clearHover();
+                if (selectedLetters.length > 0) {
+                    const found = checkCorrectWord();
+                    if (!found) {
+                        setTimeout(() => {
+                            resetSelection();
+                        }, 1000);
+                    } else {
+                        resetSelection();
+                    }
+                }
+            }
+        });
+
+        // キーボードイベント（ESCでリセット）
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                resetSelection();
+            }
         });
 
         // 初期化
         updateSelectedWord();
         drawLine();
 
-        // Streamlitとの通信用
-        window.addEventListener('message', (event) => {
-            if (event.data.type === 'streamlit:componentReady') {
-                // コンポーネントの準備完了
-                console.log('Word Connect game ready');
-            }
-        });
-
-        // リサイズ対応
-        window.addEventListener('resize', () => {
-            // 必要に応じてキャンバスのサイズ調整
-            drawLine();
-        });
-
-        // デバッグ用
-        console.log('Target words:', targetWords);
-        console.log('Found words:', foundWords);
-        console.log('Is lowercase:', isLowercase);
     </script>
     </body>
     </html>
-    """, height=600)
+    """
 
-    # Streamlit側でJavaScriptからの値を受け取る処理
-    if hasattr(st, 'session_state') and hasattr(st.session_state, 'component_value'):
-        component_value = st.session_state.get('component_value', None)
-        if component_value and component_value not in st.session_state.found_words:
-            if component_value == 'STAGE_COMPLETE':
-                # ステージクリア処理は既に上記で実装済み
-                pass
-            elif component_value in st.session_state.target_words:
-                st.session_state.found_words.append(component_value)
-                st.rerun()
-
-# クリア画面（必要に応じて追加）
-elif st.session_state.game_state == 'complete':
-    st.markdown("""
-    <div style="text-align: center; padding: 3rem;">
-        <h1 style="color: #4CAF50; font-size: 3rem;">🎉 ゲームクリア！</h1>
-        <p style="font-size: 1.2rem; margin: 2rem 0;">
-            すべてのステージをクリアしました！<br>
-            お疲れさまでした！
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
+    # HTML コンポーネントを表示
+    found_word = components.html(html_content, height=550, scrolling=False)
     
-    col1, col2, col3 = st.columns([1, 1, 1])
-    with col2:
-        if st.button("🏠 タイトルに戻る", use_container_width=True):
-            st.session_state.game_state = 'title'
-            st.rerun()
-
-# フッター
-if st.session_state.game_state != 'game':
-    st.markdown("""
-    <div style="text-align: center; padding: 2rem; color: #666; font-size: 0.9rem; border-top: 1px solid #e0e0e0; margin-top: 3rem;">
-        <p>WORD CONNECT - 文字を繋げて単語を作るゲーム</p>
-        <p>Powered by Streamlit</p>
-    </div>
-    """, unsafe_allow_html=True)
+    # 単語が見つかった場合の処理
+    if found_word and found_word != "STAGE_COMPLETE" and found_word not in st.session_state.found_words:
+        st.session_state.found_words.append(found_word)
+        st.rerun()
+    
+    # ステージクリアの処理
+    if found_word == "STAGE_COMPLETE":
+        st.rerun()
