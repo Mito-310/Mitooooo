@@ -376,32 +376,32 @@ st.write(f"進行状況: {len(found_words)} / {len(target_words)} 単語")
 
     
     # 目標単語の表示
-    sorted_words = sorted(st.session_state.target_words)
-    target_boxes_html = []
+sorted_words = sorted(st.session_state.target_words)
+target_boxes_html = []
     
-    for word in sorted_words:
-        is_found = word in st.session_state.found_words
-        boxes_html = ""
-        for letter in word:
-            if is_found:
-                boxes_html += f'<span style="display: inline-block; width: 20px; height: 20px; border: 1px solid #333; background: #4CAF50; color: white; text-align: center; line-height: 18px; margin: 1px; font-size: 12px;">{letter}</span>'
-            else:
-                boxes_html += f'<span style="display: inline-block; width: 20px; height: 20px; border: 1px solid #333; background: white; text-align: center; line-height: 18px; margin: 1px;"></span>'
-        target_boxes_html.append(f'<div style="display: inline-block; margin: 5px;">{boxes_html}</div>')
+for word in sorted_words:
+    is_found = word in st.session_state.found_words
+    boxes_html = ""
+    for letter in word:
+        if is_found:
+            boxes_html += f'<span style="display: inline-block; width: 20px; height: 20px; border: 1px solid #333; background: #4CAF50; color: white; text-align: center; line-height: 18px; margin: 1px; font-size: 12px;">{letter}</span>'
+        else:
+            boxes_html += f'<span style="display: inline-block; width: 20px; height: 20px; border: 1px solid #333; background: white; text-align: center; line-height: 18px; margin: 1px;"></span>'
+    target_boxes_html.append(f'<div style="display: inline-block; margin: 5px;">{boxes_html}</div>')
     
-    target_display = ' '.join(target_boxes_html)
+target_display = ' '.join(target_boxes_html)
     
     # 見つけた単語の表示
-    found_display = ', '.join(str(word) for word in st.session_state.get("found_words", []))
+found_display = ', '.join(str(word) for word in st.session_state.get("found_words", []))
     
     # 円形に並べるボタンのHTMLを生成（シャッフル順序を適用）
-    display_letters = []
-    for i in st.session_state.letter_order:
+display_letters = []
+for i in st.session_state.letter_order:
         letter = letters[i]
         display_letter = letter.lower() if st.session_state.is_lowercase else letter
         display_letters.append(display_letter)
     
-    button_html = ''.join([
+button_html = ''.join([
         f'''
         <div class="circle-button" id="button_{i}"
                 data-letter="{letter}"
@@ -414,7 +414,7 @@ st.write(f"進行状況: {len(found_words)} / {len(target_words)} 単語")
     ])
 
     # 単語を見つけた時のStreamlit側での処理
-    if st.session_state.found_words and len(st.session_state.found_words) == len(st.session_state.target_words):
+if st.session_state.found_words and len(st.session_state.found_words) == len(st.session_state.target_words):
         st.success("ステージクリア！おめでとうございます！")
         
         # 次のステージボタン
@@ -428,11 +428,11 @@ st.write(f"進行状況: {len(found_words)} / {len(target_words)} 単語")
                 st.rerun()
     
     # JavaScriptとHTMLの生成（f-stringの中括弧問題を回避）
-    js_target_words = str(st.session_state.target_words)
-    js_found_words = str(st.session_state.found_words)
-    js_is_lowercase = str(st.session_state.is_lowercase).lower()
+js_target_words = str(st.session_state.target_words)
+js_found_words = str(st.session_state.found_words)
+js_is_lowercase = str(st.session_state.is_lowercase).lower()
     
-    html_content = f"""
+html_content = f"""
     <html>
     <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
