@@ -652,7 +652,7 @@ st.markdown(
         margin: 10px 0;
     }}
         </style>
-unsafe_allow_html=True
+""", unsafe_allow_html=True
 )
     </head>
     <body>
