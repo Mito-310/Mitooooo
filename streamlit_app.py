@@ -737,7 +737,7 @@ elif st.session_state.game_state == 'game':
                     ctx.lineTo(points[i].x, points[i].y)}; 
                 ctx.stroke();
             }}
-        }
+        }}
 
         function handleHover(button) {
             if (isDragging && !selectedButtons.includes(button)) {
