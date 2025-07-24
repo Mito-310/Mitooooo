@@ -594,63 +594,65 @@ elif st.session_state.game_state == 'game':
     </script>
     </body>
     </html>
+st.markdown(
     """ 
-        .success-message {{
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: linear-gradient(135deg, #4CAF50, #45a049);
-            color: white;
-            padding: 25px 35px;
-            border-radius: 15px;
-            font-size: 20px;
-            font-weight: bold;
-            z-index: 1000;
-            opacity: 0;
-            transition: all 0.4s ease;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
-        }}
-        .success-message.show {{
-            opacity: 1;
-            transform: translate(-50%, -50%) scale(1.1);
-        }}
-        .complete-message {{
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: linear-gradient(135deg, #2196F3, #1976D2);
-            color: white;
-            padding: 40px 50px;
-            border-radius: 20px;
-            font-size: 26px;
-            font-weight: bold;
-            z-index: 1001;
-            opacity: 0;
-            transition: all 0.4s ease;
-            box-shadow: 0 12px 24px rgba(0,0,0,0.3);
-            text-align: center;
-        }}
-        .complete-message.show {{
-            opacity: 1;
-            transform: translate(-50%, -50%) scale(1.1);
-        }}
-        canvas {{
-            position: absolute;
-            top: 0;
-            left: 0;
-            z-index: 1;
-            touch-action: none;
-            pointer-events: none;
-        }}
-        .instruction {{
-            text-align: center;
-            color: #666;
-            font-size: 14px;
-            margin: 10px 0;
-        }}
+    .success-message {{
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: linear-gradient(135deg, #4CAF50, #45a049);
+        color: white;
+        padding: 25px 35px;
+        border-radius: 15px;
+        font-size: 20px;
+        font-weight: bold;
+        z-index: 1000;
+        opacity: 0;
+        transition: all 0.4s ease;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    }}
+    .success-message.show {{
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.1);
+    }}
+    .complete-message {{
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: linear-gradient(135deg, #2196F3, #1976D2);
+        color: white;
+        padding: 40px 50px;
+        border-radius: 20px;
+        font-size: 26px;
+        font-weight: bold;
+        z-index: 1001;
+        opacity: 0;
+        transition: all 0.4s ease;
+        box-shadow: 0 12px 24px rgba(0,0,0,0.3);
+        text-align: center;
+    }}
+    .complete-message.show {{
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.1);
+    }}
+    canvas {{
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 1;
+        touch-action: none;
+        pointer-events: none;
+    }}
+    .instruction {{
+        text-align: center;
+        color: #666;
+        font-size: 14px;
+        margin: 10px 0;
+    }}
         </style>
+)
     </head>
     <body>
     <div id="selected-word">単語を作ってください</div>
