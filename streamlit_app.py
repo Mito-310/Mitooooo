@@ -762,7 +762,7 @@ ctx.strokeStyle = '#333';
                     ctx.strokeStyle = 'white';
                     ctx.lineWidth = 2;
                     ctx.stroke();
-                });
+                }
             }
         }
 
