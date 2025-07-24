@@ -612,11 +612,11 @@ st.markdown("""
         transition: all 0.4s ease;
         box-shadow: 0 8px 16px rgba(0,0,0,0.2);
     }
-    .success-message.show {{
+    .success-message.show {
         opacity: 1;
         transform: translate(-50%, -50%) scale(1.1);
-    }}
-    .complete-message {{
+    }
+    .complete-message {
         position: fixed;
         top: 50%;
         left: 50%;
@@ -632,25 +632,25 @@ st.markdown("""
         transition: all 0.4s ease;
         box-shadow: 0 12px 24px rgba(0,0,0,0.3);
         text-align: center;
-    }}
-    .complete-message.show {{
+    }
+    .complete-message.show {
         opacity: 1;
         transform: translate(-50%, -50%) scale(1.1);
-    }}
-    canvas {{
+    }
+    canvas {
         position: absolute;
         top: 0;
         left: 0;
         z-index: 1;
         touch-action: none;
         pointer-events: none;
-    }}
-    .instruction {{
+    }
+    .instruction {
         text-align: center;
         color: #666;
         font-size: 14px;
         margin: 10px 0;
-    }}
+    }
     </style>
 """, unsafe_allow_html=True)
 
