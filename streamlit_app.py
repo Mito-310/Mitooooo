@@ -603,7 +603,6 @@ st.markdown("""
         transform: translate(-50%, -50%);
         background: linear-gradient(#4CAF50, #45a049);
         color: white;
-        border-radius: 15px;
         font-size: 20px;
         font-weight: bold;
         z-index: 1000;
