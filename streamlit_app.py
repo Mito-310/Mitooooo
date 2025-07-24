@@ -594,8 +594,8 @@ elif st.session_state.game_state == 'game':
     </script>
     </body>
     </html>
-st.markdown(
-    """ 
+st.markdown("""
+    <style> 
     .success-message {{
         position: fixed;
         top: 50%;
@@ -651,7 +651,7 @@ st.markdown(
         font-size: 14px;
         margin: 10px 0;
     }}
-        </style>
+    </style>
 """, unsafe_allow_html=True
 )
     </head>
