@@ -621,7 +621,7 @@ st.markdown("""
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        background: linear-gradient(135deg, #2196F3, #1976D2);
+        background: linear-gradient(#2196F3, #1976D2);
         color: white;
         padding: 40px 50px;
         border-radius: 20px;
