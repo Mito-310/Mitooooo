@@ -657,7 +657,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
-    """</head>
+"""</head>
     <body>
     <div id="selected-word">単語を作ってください</div>
     <div id="target-words">{target_display}</div>
