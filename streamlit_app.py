@@ -596,6 +596,7 @@ elif st.session_state.game_state == 'game':
     </html>
 
     <style>
+    """
 st.markdown("""
     .success-message {
         position: fixed;
