@@ -596,20 +596,22 @@ elif st.session_state.game_state == 'game':
     </html>
 st.markdown("""
     <style> 
-    .success-message {{
+    .success-message {
         position: fixed;
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
         background: linear-gradient(#4CAF50, #45a049);
         color: white;
+        padding: 25px 35px;
+        border-radius: 15px;
         font-size: 20px;
         font-weight: bold;
         z-index: 1000;
         opacity: 0;
         transition: all 0.4s ease;
         box-shadow: 0 8px 16px rgba(0,0,0,0.2);
-    }}
+    }
     .success-message.show {{
         opacity: 1;
         transform: translate(-50%, -50%) scale(1.1);
