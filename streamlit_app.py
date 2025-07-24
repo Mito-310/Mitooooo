@@ -360,19 +360,23 @@ elif st.session_state.game_state == 'game':
                 st.write(f"{status} {word}")
     
     # 進行状況
-    # 安全に初期化
+# セッションステートから取得（安全に）
 found_words = st.session_state.get("found_words", [])
 target_words = st.session_state.get("target_words", [])
 
-# 割り算前に 0 チェック
-if target_words:
-    progress = len(found_words) / len(target_words)
-else:
-    progress = 0.0  # 分母が0なら進捗は0%
+# 長さの取得
+num_found = len(found_words)
+num_total = len(target_words)
 
-# 表示（進捗バーは 0.0〜1.0）
+# 安全な進捗値の計算
+if num_total > 0:
+    progress = min(num_found / num_total, 1.0)  # 1.0 を超えないように制限
+else:
+    progress = 0.0  # デフォルト
+
+# 表示
 st.progress(progress)
-st.write(f"進行状況: {len(found_words)} / {len(target_words)} 単語")
+st.write(f"進行状況: {num_found} / {num_total} 単語")
 
     
     # 目標単語の表示
