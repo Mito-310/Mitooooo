@@ -595,8 +595,8 @@ elif st.session_state.game_state == 'game':
     </body>
     </html>
 
+    <style>
 st.markdown("""
-    <style> 
     .success-message {
         position: fixed;
         top: 50%;
@@ -652,7 +652,7 @@ st.markdown("""
         font-size: 14px;
         margin: 10px 0;
     }
-    </style>
+
 """, unsafe_allow_html=True)
 
 
@@ -965,6 +965,7 @@ st.markdown("""
         updateSelectedWord();
         drawLine();
 
+    </style>
     </script>
     </body>
     </html>
