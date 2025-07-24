@@ -270,7 +270,7 @@ if st.session_state.game_state == 'title':
     # STARTボタン
     col1, col2, col3 = st.columns([1, 1, 1])
     with col2:
-        if st.button("🎮 START", key="start_button", use_container_width=True):
+        if st.button("START", key="start_button", use_container_width=True):
             st.session_state.current_stage = 1
             st.session_state.target_words = STAGES[1]['words']
             st.session_state.found_words = []
@@ -328,28 +328,28 @@ elif st.session_state.game_state == 'game':
     # ヘッダー
     col1, col2, col3 = st.columns([1, 2, 1])
     with col1:
-        if st.button("⬅️ タイトルに戻る"):
+        if st.button("⬅タイトルに戻る"):
             st.session_state.game_state = 'title'
             st.rerun()
     with col2:
         st.header(current_stage_info['name'])
     with col3:
-        if st.button("🔄 リセット"):
+        if st.button("リセット"):
             st.session_state.found_words = []
             st.rerun()
     
     # サイドバーでシャッフルと文字切り替え
     with st.sidebar:
-        if st.button("🔀 シャッフル"):
+        if st.button("シャッフル"):
             random.shuffle(st.session_state.letter_order)
             st.rerun()
         
-        if st.button("🔤 大文字⇄小文字"):
+        if st.button("大文字⇄小文字"):
             st.session_state.is_lowercase = not st.session_state.is_lowercase
             st.rerun()
         
         # ヒント機能
-        st.subheader("💡 ヒント")
+        st.subheader("ヒント")
         st.write(f"問題文: {current_stage_info['problem_text']}")
         
         # 単語リストの表示（折りたたみ式）
@@ -362,7 +362,7 @@ elif st.session_state.game_state == 'game':
     # 進行状況
     progress = len(st.session_state.found_words) / len(st.session_state.target_words)
     st.progress(progress)
-    st.write(f"📊 進行状況: {len(st.session_state.found_words)} / {len(st.session_state.target_words)} 単語")
+    st.write(f"進行状況: {len(st.session_state.found_words)} / {len(st.session_state.target_words)} 単語")
     
     # 目標単語の表示
     sorted_words = sorted(st.session_state.target_words)
@@ -404,7 +404,7 @@ elif st.session_state.game_state == 'game':
 
     # 単語を見つけた時のStreamlit側での処理
     if st.session_state.found_words and len(st.session_state.found_words) == len(st.session_state.target_words):
-        st.success("🎉 ステージクリア！おめでとうございます！")
+        st.success("ステージクリア！おめでとうございます！")
         
         # 次のステージボタン
         next_stage = st.session_state.current_stage + 1
@@ -579,8 +579,8 @@ elif st.session_state.game_state == 'game':
     <div id="selected-word">単語を作ってください</div>
     <div id="target-words">{target_display}</div>
     <div id="found-words">見つけた単語: {found_display}</div>
-    <div id="success-message" class="success-message">🎉 正解！</div>
-    <div id="complete-message" class="complete-message">🏆 ステージクリア！<br>おめでとうございます！</div>
+    <div id="success-message" class="success-message">正解！</div>
+    <div id="complete-message" class="complete-message">clear!<br>おめでとうございます！</div>
 
     <div class="instruction">文字をドラッグして単語を作ってください</div>
     
@@ -662,8 +662,8 @@ st.markdown("""
     <div id="selected-word">単語を作ってください</div>
     <div id="target-words">{target_display}</div>
     <div id="found-words">見つけた単語: {found_display}</div>
-    <div id="success-message" class="success-message">🎉 正解！</div>
-    <div id="complete-message" class="complete-message">🏆 ステージクリア！<br>おめでとうございます！</div>
+    <div id="success-message" class="success-message">正解！</div>
+    <div id="complete-message" class="complete-message">clear!<br>おめでとうございます！</div>
 
     <div class="instruction">文字をドラッグして単語を作ってください</div>
     
