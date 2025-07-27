@@ -1,46 +1,161 @@
 import streamlit as st
+import pandas as pd
 import random
 import math
 import streamlit.components.v1 as components
 
+# Excelファイルから問題を読み込む関数
+@st.cache_data
+def load_problems_from_excel(file_path):
+    """Excelファイルから問題を読み込む"""
+    try:
+        df = pd.read_excel(file_path)
+        problems = {}
+        
+        # 各行を処理して問題を作成
+        for index, row in df.iterrows():
+            stage_num = index + 1
+            problem_text = str(row['問題文']).strip()
+            
+            # 問題文から文字を抽出（重複を除去）
+            unique_letters = list(set(problem_text.upper().replace(' ', '')))
+            
+            # ①-⑳の列から単語を抽出
+            words = []
+            for col in df.columns[1:]:  # 問題文以外の列
+                if pd.notna(row[col]):
+                    word = str(row[col]).strip().upper()
+                    if word and word not in words:
+                        words.append(word)
+            
+            problems[stage_num] = {
+                'name': f'ステージ {stage_num}',
+                'problem_text': problem_text,
+                'letters': unique_letters,
+                'words': words
+            }
+        
+        return problems
+    except Exception as e:
+        st.error(f"Excelファイルの読み込みエラー: {e}")
+        return None
+
+# デフォルトの問題（Excelファイルが読み込めない場合の備え）
+DEFAULT_STAGES = {
+    1: {
+        'name': 'ステージ 1',
+        'problem_text': 'CATDOG',
+        'letters': ['C', 'A', 'T', 'D', 'O', 'G'],
+        'words': ['CAT', 'DOG', 'COD', 'TAG', 'GOD', 'COG']
+    },
+    2: {
+        'name': 'ステージ 2',
+        'problem_text': 'REDBLUE',
+        'letters': ['R', 'E', 'D', 'B', 'L', 'U'],
+        'words': ['RED', 'BLUE', 'BED', 'LED', 'RUB', 'BUG']
+    },
+    3: {
+        'name': 'ステージ 3',
+        'problem_text': 'BREADCAKE',
+        'letters': ['B', 'R', 'E', 'A', 'D', 'C', 'K'],
+        'words': ['BREAD', 'CAKE', 'DEAR', 'CARE', 'BEAR']
+    }
+}
+
 # 初期化
 if 'game_state' not in st.session_state:
-    st.session_state.game_state = 'title'  # 'title', 'stage_select', 'game'
+    st.session_state.game_state = 'title'
 if 'current_stage' not in st.session_state:
     st.session_state.current_stage = 1
 if 'target_words' not in st.session_state:
     st.session_state.target_words = []
 if 'found_words' not in st.session_state:
     st.session_state.found_words = []
+if 'stages' not in st.session_state:
+    st.session_state.stages = None
 
-# ステージ設定
-STAGES = {
-    1: {
-        'name': 'ステージ 1',
-        'letters': ['C', 'A', 'T', 'D', 'O', 'G'],
-        'words': ['CAT', 'DOG', 'COD', 'TAG', 'GOD', 'COG']
-    },
-    2: {
-        'name': 'ステージ 2',
-        'letters': ['R', 'E', 'D', 'B', 'L', 'U', 'E', 'G'],
-        'words': ['RED', 'BLUE', 'BED', 'LED', 'RUB', 'BUG', 'GEL', 'LEG']
-    },
-    3: {
-        'name': 'ステージ 3',
-        'letters': ['B', 'R', 'E', 'A', 'D', 'C', 'A', 'K', 'E', 'F', 'I', 'S'],
-        'words': ['BREAD', 'CAKE', 'FISH', 'RICE', 'BEEF', 'DESK', 'FIRE', 'SAKE', 'FACE', 'DEAR']
-    }
-}
+# Excelファイルから問題を読み込み
+if st.session_state.stages is None:
+    try:
+        loaded_stages = load_problems_from_excel('Book.xlsx')
+        if loaded_stages:
+            st.session_state.stages = loaded_stages
+            st.success(f"Excelファイルから{len(loaded_stages)}個のステージを読み込みました")
+        else:
+            st.session_state.stages = DEFAULT_STAGES
+            st.warning("Excelファイルの読み込みに失敗しました。デフォルトステージを使用します。")
+    except:
+        st.session_state.stages = DEFAULT_STAGES
+        st.warning("Book.xlsxが見つかりません。デフォルトステージを使用します。")
 
-# タイトル画面とステージ選択を統合
+STAGES = st.session_state.stages
+
+# ファイルアップロード機能
 if st.session_state.game_state == 'title':
-    # シンプルなスタイリング
+    st.sidebar.header("問題ファイルの管理")
+    
+    # ファイルアップロード
+    uploaded_file = st.sidebar.file_uploader(
+        "新しい問題ファイルをアップロード", 
+        type=['xlsx', 'xls'],
+        help="問題文列と①-⑳の回答列を含むExcelファイルをアップロードしてください"
+    )
+    
+    if uploaded_file is not None:
+        try:
+            # アップロードされたファイルから問題を読み込み
+            df = pd.read_excel(uploaded_file)
+            
+            # データの確認
+            st.sidebar.write("アップロードされたファイルの内容:")
+            st.sidebar.dataframe(df.head())
+            
+            if st.sidebar.button("この問題ファイルを使用"):
+                new_stages = {}
+                for index, row in df.iterrows():
+                    stage_num = index + 1
+                    problem_text = str(row['問題文']).strip()
+                    
+                    # 問題文から文字を抽出
+                    unique_letters = list(set(problem_text.upper().replace(' ', '')))
+                    
+                    # 回答列から単語を抽出
+                    words = []
+                    for col in df.columns[1:]:
+                        if pd.notna(row[col]):
+                            word = str(row[col]).strip().upper()
+                            if word and word not in words:
+                                words.append(word)
+                    
+                    new_stages[stage_num] = {
+                        'name': f'ステージ {stage_num}',
+                        'problem_text': problem_text,
+                        'letters': unique_letters,
+                        'words': words
+                    }
+                
+                st.session_state.stages = new_stages
+                STAGES = new_stages
+                st.sidebar.success(f"新しい問題ファイルから{len(new_stages)}個のステージを読み込みました！")
+                st.rerun()
+        
+        except Exception as e:
+            st.sidebar.error(f"ファイル読み込みエラー: {e}")
+    
+    # 現在の問題ファイル情報
+    st.sidebar.write(f"現在のステージ数: {len(STAGES)}")
+    if st.sidebar.button("デフォルトステージに戻す"):
+        st.session_state.stages = DEFAULT_STAGES
+        st.rerun()
+
+# タイトル画面
+if st.session_state.game_state == 'title':
+    # スタイリング
     st.markdown("""
     <style>
     .title-section {
         text-align: center;
         padding: 3rem 1rem;
-        border-bottom: 2px solid #e0e0e0;
         margin-bottom: 2rem;
     }
     
@@ -55,7 +170,41 @@ if st.session_state.game_state == 'title':
     .game-subtitle {
         font-size: 1.2rem;
         color: #666;
-        margin-bottom: 0;
+        margin-bottom: 2rem;
+    }
+    
+    .game-rules {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 1.5rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+        text-align: left;
+        margin-bottom: 2rem;
+    }
+    
+    .game-rules h3 {
+        color: #333;
+        margin-bottom: 1rem;
+        text-align: center;
+        font-size: 1.1rem;
+    }
+    
+    .game-rules ul {
+        margin: 0;
+        padding-left: 1.5rem;
+        color: #555;
+    }
+    
+    .game-rules li {
+        margin-bottom: 0.5rem;
+        line-height: 1.5;
+    }
+    
+    .game-rules p {
+        margin: 0.5rem 0;
+        color: #555;
+        line-height: 1.5;
     }
     
     .stage-section {
@@ -69,25 +218,12 @@ if st.session_state.game_state == 'title':
         border-bottom: 1px solid #e0e0e0;
     }
     
-    .stage-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 1.5rem;
-        margin-top: 2rem;
-    }
-    
     .stage-card {
         border: 1px solid #ddd;
         border-radius: 8px;
         padding: 1.5rem;
-        transition: all 0.2s ease;
+        margin-bottom: 1rem;
         background: #fafafa;
-    }
-    
-    .stage-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        border-color: #999;
     }
     
     .stage-title {
@@ -103,26 +239,13 @@ if st.session_state.game_state == 'title':
         margin-bottom: 1rem;
     }
     
-    .stage-button {
-        width: 100%;
-        background: #333;
-        color: white;
-        border: none;
-        padding: 0.75rem 1.5rem;
+    .problem-text {
+        background: #e8f4f8;
+        padding: 8px;
         border-radius: 4px;
-        font-size: 1rem;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-    
-    .stage-button:hover {
-        background: #555;
-        transform: translateY(-1px);
-    }
-    
-    .stage-button:active {
-        transform: translateY(0px);
+        font-family: monospace;
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -132,8 +255,25 @@ if st.session_state.game_state == 'title':
     <div class="title-section">
         <h1 class="game-title">WORD CONNECT</h1>
         <p class="game-subtitle">文字を繋げて単語を作ろう</p>
+        <div class="game-rules">
+            <h3>ゲームルール</h3>
+            <p>円形に配置された文字をドラッグして繋げて単語を作るゲームです</p>
+            <p>すべての目標単語を見つけるとステージクリア！</p>
+            <p>同じ文字を重複して使うことはできません</p>
+            <p>マウスまたはタッチで文字を選択してください</p>
+        </div>
     </div>
     """, unsafe_allow_html=True)
+    
+    # STARTボタン
+    col1, col2, col3 = st.columns([1, 1, 1])
+    with col2:
+        if st.button("START", key="start_button", use_container_width=True):
+            st.session_state.current_stage = 1
+            st.session_state.target_words = STAGES[1]['words']
+            st.session_state.found_words = []
+            st.session_state.game_state = 'game'
+            st.rerun()
     
     # ステージ選択セクション
     st.markdown("""
@@ -144,28 +284,33 @@ if st.session_state.game_state == 'title':
     </div>
     """, unsafe_allow_html=True)
     
-    # ステージカードのグリッド
-    cols = st.columns(3)
-    
-    for i, (stage_num, stage_info) in enumerate(STAGES.items()):
-        with cols[i % 3]:
-            with st.container():
-                st.markdown(f"""
-                <div class="stage-card">
-                    <div class="stage-title">{stage_info['name']}</div>
-                    <div class="stage-info">
-                        文字数: {len(stage_info['letters'])}個<br>
-                        単語数: {len(stage_info['words'])}個
+    # ステージカードを3列で表示
+    for i in range(0, len(STAGES), 3):
+        cols = st.columns(3)
+        for j in range(3):
+            stage_num = i + j + 1
+            if stage_num in STAGES:
+                stage_info = STAGES[stage_num]
+                with cols[j]:
+                    st.markdown(f"""
+                    <div class="stage-card">
+                        <div class="stage-title">{stage_info['name']}</div>
+                        <div class="stage-info">
+                            文字数: {len(stage_info['letters'])}個<br>
+                            単語数: {len(stage_info['words'])}個
+                        </div>
+                        <div class="problem-text">
+                            問題文: {stage_info['problem_text']}
+                        </div>
                     </div>
-                </div>
-                """, unsafe_allow_html=True)
-                
-                if st.button(f"プレイ開始", key=f"stage_{stage_num}", use_container_width=True):
-                    st.session_state.current_stage = stage_num
-                    st.session_state.target_words = STAGES[stage_num]['words']
-                    st.session_state.found_words = []
-                    st.session_state.game_state = 'game'
-                    st.rerun()
+                    """, unsafe_allow_html=True)
+                    
+                    if st.button(f"プレイ開始", key=f"stage_{stage_num}", use_container_width=True):
+                        st.session_state.current_stage = stage_num
+                        st.session_state.target_words = stage_info['words']
+                        st.session_state.found_words = []
+                        st.session_state.game_state = 'game'
+                        st.rerun()
     
     # ボタンのスタイルをカスタマイズ
     st.markdown("""
@@ -191,17 +336,22 @@ if st.session_state.game_state == 'title':
     .stButton > button:active {
         transform: translateY(0px) !important;
     }
+    
+    /* STARTボタンのスタイル */
+    .stButton[data-testid="start_button"] > button {
+        background: #4CAF50 !important;
+        font-size: 1.2rem !important;
+        font-weight: 600 !important;
+        height: 50px !important;
+        border-radius: 25px !important;
+        letter-spacing: 2px !important;
+    }
+    
+    .stButton[data-testid="start_button"] > button:hover {
+        background: #45a049 !important;
+    }
     </style>
     """, unsafe_allow_html=True)
-
-# ゲーム画面への遷移処理（ステージ選択画面は統合されたため削除）
-elif st.session_state.game_state == 'stage_select':
-    # この状態は使用されなくなったため、タイトルに戻す
-    st.session_state.game_state = 'title'
-    st.rerun()
-
-# ゲーム画面
-    # この処理は統合されたため不要
 
 # ゲーム画面
 elif st.session_state.game_state == 'game':
@@ -221,6 +371,9 @@ elif st.session_state.game_state == 'game':
         if st.button("リセット"):
             st.session_state.found_words = []
             st.rerun()
+    
+    # 問題文の表示
+    st.info(f"問題文: {current_stage_info['problem_text']}")
     
     # 進行状況
     progress = len(st.session_state.found_words) / len(st.session_state.target_words)
@@ -259,7 +412,7 @@ elif st.session_state.game_state == 'game':
         ''' for i, letter in enumerate(letters)
     ])
 
-    # シンプルなHTML + CSS + JavaScript
+    # HTML + CSS + JavaScript（元のコードと同じ）
     full_html = f"""
     <html>
     <head>
@@ -659,15 +812,4 @@ elif st.session_state.game_state == 'game':
     components.html(full_html, height=600)
     
     # ステージクリア判定
-    if len(st.session_state.found_words) == len(st.session_state.target_words):
-        st.balloons()
-        st.success("Stage Clear")
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("タイトルに戻る", use_container_width=True):
-                st.session_state.game_state = 'title'
-                st.rerun()
-        with col2:
-            if st.button("タイトルに戻る", use_container_width=True):
-                st.session_state.game_state = 'title'
-                st.rerun()
+    if len(st.session_state.found_words) : len(st.session)
