@@ -278,30 +278,33 @@ if st.session_state.game_state == 'title':
         <p class="game-subtitle">文字を繋げて単語を作ろう</p>
         <div class="game-rules">
             <h3>ゲームルール</h3>
-            <p class="rules-short">円形に配置された文字をドラッグして繋げて単語を作るゲームです</p>
     """, unsafe_allow_html=True)
     
-    # 展開/縮小ボタン
-    col1, col2, col3 = st.columns([1, 1, 1])
-    with col2:
-        if not st.session_state.rules_expanded:
-            if st.button("...（詳細を見る）", key="expand_rules"):
+    # ルールの表示
+    if not st.session_state.rules_expanded:
+        # 縮小表示 - インラインでクリック可能な...を表示
+        col1, col2 = st.columns([6, 1])
+        with col1:
+            st.markdown("""
+            <p class="rules-short">円形に配置された文字をドラッグして繋げて単語を作るゲームです</p>
+            """, unsafe_allow_html=True)
+        with col2:
+            if st.button("...", key="expand_rules", help="詳細を見る"):
                 st.session_state.rules_expanded = True
                 st.rerun()
-        else:
-            if st.button("▲（詳細を隠す）", key="collapse_rules"):
-                st.session_state.rules_expanded = False
-                st.rerun()
-    
-    # 詳細ルールの表示（展開時のみ）
-    if st.session_state.rules_expanded:
+    else:
+        # 展開表示
         st.markdown("""
-        <div style="max-width: 600px; margin: 0 auto; padding: 1.5rem; background: #f8f9fa; border-radius: 8px; text-align: left;">
-            <p>すべての目標単語を見つけるとステージクリア！</p>
-            <p>同じ文字を重複して使うことはできません</p>
-            <p>マウスまたはタッチで文字を選択してください</p>
-        </div>
+        <p>円形に配置された文字をドラッグして繋げて単語を作るゲームです</p>
+        <p>すべての目標単語を見つけるとステージクリア！</p>
+        <p>同じ文字を重複して使うことはできません</p>
+        <p>マウスまたはタッチで文字を選択してください</p>
         """, unsafe_allow_html=True)
+        
+        # 詳細を隠すボタン
+        if st.button("▲（詳細を隠す）", key="collapse_rules"):
+            st.session_state.rules_expanded = False
+            st.rerun()
     
     st.markdown("</div></div>", unsafe_allow_html=True)
     
@@ -387,7 +390,23 @@ if st.session_state.game_state == 'title':
     }
     
     /* 展開/縮小ボタンのスタイル */
-    .stButton[data-testid="expand_rules"] > button,
+    .stButton[data-testid="expand_rules"] > button {
+        background: transparent !important;
+        color: #4CAF50 !important;
+        border: none !important;
+        font-size: 1.2rem !important;
+        height: 30px !important;
+        width: 40px !important;
+        padding: 0 !important;
+        font-weight: bold !important;
+    }
+    
+    .stButton[data-testid="expand_rules"] > button:hover {
+        background: transparent !important;
+        color: #45a049 !important;
+        transform: none !important;
+    }
+    
     .stButton[data-testid="collapse_rules"] > button {
         background: transparent !important;
         color: #666 !important;
@@ -395,13 +414,14 @@ if st.session_state.game_state == 'title':
         font-size: 0.9rem !important;
         height: 35px !important;
         border-radius: 20px !important;
+        margin-top: 10px !important;
     }
     
-    .stButton[data-testid="expand_rules"] > button:hover,
     .stButton[data-testid="collapse_rules"] > button:hover {
         background: #f0f0f0 !important;
         color: #333 !important;
         border-color: #999 !important;
+        transform: none !important;
     }
     </style>
     """, unsafe_allow_html=True)
