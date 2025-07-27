@@ -73,6 +73,8 @@ if 'found_words' not in st.session_state:
     st.session_state.found_words = []
 if 'stages' not in st.session_state:
     st.session_state.stages = None
+if 'rules_expanded' not in st.session_state:
+    st.session_state.rules_expanded = False
 
 # Excelファイルから問題を読み込み
 if st.session_state.stages is None:
@@ -207,6 +209,25 @@ if st.session_state.game_state == 'title':
         line-height: 1.5;
     }
     
+    .rules-short {
+        margin: 0.5rem 0;
+        color: #555;
+        line-height: 1.5;
+    }
+    
+    .rules-expand {
+        color: #666;
+        font-size: 0.9rem;
+        cursor: pointer;
+        text-decoration: underline;
+        margin-top: 0.5rem;
+        display: inline-block;
+    }
+    
+    .rules-expand:hover {
+        color: #333;
+    }
+    
     .stage-section {
         padding: 2rem 1rem;
     }
@@ -257,13 +278,32 @@ if st.session_state.game_state == 'title':
         <p class="game-subtitle">文字を繋げて単語を作ろう</p>
         <div class="game-rules">
             <h3>ゲームルール</h3>
-            <p>円形に配置された文字をドラッグして繋げて単語を作るゲームです</p>
+            <p class="rules-short">円形に配置された文字をドラッグして繋げて単語を作るゲームです</p>
+    """, unsafe_allow_html=True)
+    
+    # 展開/縮小ボタン
+    col1, col2, col3 = st.columns([1, 1, 1])
+    with col2:
+        if not st.session_state.rules_expanded:
+            if st.button("...（詳細を見る）", key="expand_rules"):
+                st.session_state.rules_expanded = True
+                st.rerun()
+        else:
+            if st.button("▲（詳細を隠す）", key="collapse_rules"):
+                st.session_state.rules_expanded = False
+                st.rerun()
+    
+    # 詳細ルールの表示（展開時のみ）
+    if st.session_state.rules_expanded:
+        st.markdown("""
+        <div style="max-width: 600px; margin: 0 auto; padding: 1.5rem; background: #f8f9fa; border-radius: 8px; text-align: left;">
             <p>すべての目標単語を見つけるとステージクリア！</p>
             <p>同じ文字を重複して使うことはできません</p>
             <p>マウスまたはタッチで文字を選択してください</p>
         </div>
-    </div>
-    """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
+    
+    st.markdown("</div></div>", unsafe_allow_html=True)
     
     # STARTボタン
     col1, col2, col3 = st.columns([1, 1, 1])
@@ -344,6 +384,24 @@ if st.session_state.game_state == 'title':
     
     .stButton[data-testid="start_button"] > button:hover {
         background: #45a049 !important;
+    }
+    
+    /* 展開/縮小ボタンのスタイル */
+    .stButton[data-testid="expand_rules"] > button,
+    .stButton[data-testid="collapse_rules"] > button {
+        background: transparent !important;
+        color: #666 !important;
+        border: 1px solid #ccc !important;
+        font-size: 0.9rem !important;
+        height: 35px !important;
+        border-radius: 20px !important;
+    }
+    
+    .stButton[data-testid="expand_rules"] > button:hover,
+    .stButton[data-testid="collapse_rules"] > button:hover {
+        background: #f0f0f0 !important;
+        color: #333 !important;
+        border-color: #999 !important;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -806,4 +864,25 @@ elif st.session_state.game_state == 'game':
     components.html(full_html, height=600)
     
     # ステージクリア判定
-    if len(st.session_state.found_words) : len(st.session)
+    if len(st.session_state.found_words) == len(st.session_state.target_words):
+        st.success("🎉 ステージクリア！")
+        
+        col1, col2, col3 = st.columns([1, 1, 1])
+        
+        with col1:
+            if st.button("タイトルに戻る"):
+                st.session_state.game_state = 'title'
+                st.rerun()
+        
+        with col2:
+            if st.session_state.current_stage < len(STAGES):
+                if st.button("次のステージ"):
+                    st.session_state.current_stage += 1
+                    st.session_state.target_words = STAGES[st.session_state.current_stage]['words']
+                    st.session_state.found_words = []
+                    st.rerun()
+        
+        with col3:
+            if st.button("もう一度"):
+                st.session_state.found_words = []
+                st.rerun()
