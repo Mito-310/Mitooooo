@@ -280,33 +280,33 @@ if st.session_state.game_state == 'title':
             <h3>ゲームルール</h3>
     """, unsafe_allow_html=True)
     
-    # ルールの表示
-    if not st.session_state.rules_expanded:
-        # 縮小表示 - インラインでクリック可能な...を表示
-        col1, col2 = st.columns([6, 1])
-        with col1:
+        # ルールの表示
+        if not st.session_state.rules_expanded:
+            # 縮小表示 - インラインでクリック可能な...を表示
+            col1, col2 = st.columns([6, 1])
+            with col1:
+                st.markdown("""
+                <p class="rules-short">円形に配置された文字をドラッグして繋げて単語を作るゲームです</p>
+                """, unsafe_allow_html=True)
+            with col2:
+                if st.button("...", key="expand_rules", help="詳細を見る"):
+                    st.session_state.rules_expanded = True
+                    st.rerun()
+        else:
+            # 展開表示
             st.markdown("""
-            <p class="rules-short">円形に配置された文字をドラッグして繋げて単語を作るゲームです</p>
+            <p>円形に配置された文字をドラッグして繋げて単語を作るゲームです</p>
+            <p>すべての目標単語を見つけるとステージクリア！</p>
+            <p>同じ文字を重複して使うことはできません</p>
+            <p>マウスまたはタッチで文字を選択してください</p>
             """, unsafe_allow_html=True)
-        with col2:
-            if st.button("...", key="expand_rules", help="詳細を見る"):
-                st.session_state.rules_expanded = True
+            
+            # 詳細を隠すボタン
+            if st.button("▲（詳細を隠す）", key="collapse_rules"):
+                st.session_state.rules_expanded = False
                 st.rerun()
-    else:
-        # 展開表示
-        st.markdown("""
-        <p>円形に配置された文字をドラッグして繋げて単語を作るゲームです</p>
-        <p>すべての目標単語を見つけるとステージクリア！</p>
-        <p>同じ文字を重複して使うことはできません</p>
-        <p>マウスまたはタッチで文字を選択してください</p>
-        """, unsafe_allow_html=True)
         
-        # 詳細を隠すボタン
-        if st.button("▲（詳細を隠す）", key="collapse_rules"):
-            st.session_state.rules_expanded = False
-            st.rerun()
-    
-    st.markdown("</div></div>", unsafe_allow_html=True)
+        st.markdown("</div></div>", unsafe_allow_html=True)
     
     # STARTボタン
     col1, col2, col3 = st.columns([1, 1, 1])
