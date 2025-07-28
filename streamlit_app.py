@@ -4,6 +4,14 @@ import random
 import math
 import streamlit.components.v1 as components
 
+# ページ設定
+st.set_page_config(
+    page_title="Word Connect Game",
+    page_icon="🎮",
+    layout="centered",
+    initial_sidebar_state="auto"
+)
+
 # Excelファイルから問題を読み込む関数
 @st.cache_data
 def load_problems_from_excel(file_path):
@@ -312,7 +320,7 @@ if st.session_state.game_state == 'title':
                     <div class="stage-card">
                         <div class="stage-title">{stage_info['name']}</div>
                         <div class="stage-info">
-
+                        </div>
                     </div>
                     """, unsafe_allow_html=True)
                     
@@ -382,8 +390,6 @@ elif st.session_state.game_state == 'game':
         if st.button("リセット"):
             st.session_state.found_words = []
             st.rerun()
-    
-    
     
     # 進行状況
     progress = len(st.session_state.found_words) / len(st.session_state.target_words)
@@ -718,6 +724,30 @@ elif st.session_state.game_state == 'game':
             }}
         }}
 
+        function drawLine() {{
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (points.length < 2) return;
+
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+            
+            for (let i = 1; i < points.length; i++) {{
+                ctx.lineTo(points[i].x, points[i].y);
+            }}
+            
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            points.forEach(point => {{
+                ctx.beginPath();
+                ctx.arc(point.x, point.y, 2, 0, 2 * Math.PI);
+                ctx.fillStyle = '#333';
+                ctx.fill();
+            }});
+        }}
+
         // マウスイベント
         function handleMouseDown(event) {{
             event.preventDefault();
@@ -787,30 +817,6 @@ elif st.session_state.game_state == 'game':
             }}
         }}
 
-        function drawLine() {{
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            if (points.length < 2) return;
-
-            ctx.beginPath();
-            ctx.moveTo(points[0].x, points[0].y);
-            
-            for (let i = 1; i < points.length; i++) {{
-                ctx.lineTo(points[i].x, points[i].y);
-            }}
-            
-            ctx.strokeStyle = '#333';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-
-            points.forEach(point => {{
-                ctx.beginPath();
-                ctx.arc(point.x, point.y, 2, 0, 2 * Math.PI);
-                ctx.fillStyle = '#333';
-                ctx.fill();
-            }});
-        }}
-
         // イベントリスナーの設定
         container.addEventListener('mousedown', handleMouseDown);
         document.addEventListener('mousemove', handleMouseMove);
@@ -823,6 +829,16 @@ elif st.session_state.game_state == 'game':
         // 初期化
         updateSelectedWord();
         updateTargetDisplay();
+
+        // コンテキストメニューを無効化
+        document.addEventListener('contextmenu', function(e) {{
+            e.preventDefault();
+        }});
+
+        // テキスト選択を無効化
+        document.addEventListener('selectstart', function(e) {{
+            e.preventDefault();
+        }});
     </script>
     </body>
     </html>
@@ -835,16 +851,24 @@ elif st.session_state.game_state == 'game':
     if len(st.session_state.found_words) == len(st.session_state.target_words):
         st.success("ステージクリア！")
         
-        if st.session_state.current_stage < len(STAGES):
-            if st.button("次のステージへ"):
-                st.session_state.current_stage += 1
-                st.session_state.target_words = STAGES[st.session_state.current_stage]['words']
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            if st.button("もう一度プレイ"):
                 st.session_state.found_words = []
                 st.rerun()
-        else:
-            st.success("全ステージクリア！おめでとうございます！")
-            if st.button("最初から始める"):
-                st.session_state.current_stage = 1
-                st.session_state.target_words = STAGES[1]['words']
-                st.session_state.found_words = []
+        
+        with col2:
+            if st.session_state.current_stage < len(STAGES):
+                if st.button("次のステージ"):
+                    st.session_state.current_stage += 1
+                    st.session_state.target_words = STAGES[st.session_state.current_stage]['words']
+                    st.session_state.found_words = []
+                    st.rerun()
+            else:
+                st.write("全ステージクリア！")
+        
+        with col3:
+            if st.button("タイトルに戻る"):
+                st.session_state.game_state = 'title'
                 st.rerun()
