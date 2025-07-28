@@ -291,17 +291,21 @@ if st.session_state.game_state == 'title':
         if os.path.exists('image.PNG'):
             # デフォルトの画像を表示
             image = Image.open('image.PNG')
-            col1, col2, col3 = st.columns([1, 1, 1])
+            # より中央寄せのための列設定と大きなサイズで表示
+            col1, col2, col3 = st.columns([2, 3, 2])
             with col2:
-                st.image(image, width=120)
+                st.image(image, width=200, use_column_width=False)
         elif st.session_state.app_icon is not None:
             # アップロードされた画像を表示
-            col1, col2, col3 = st.columns([1, 1, 1])
+            col1, col2, col3 = st.columns([2, 3, 2])
             with col2:
-                st.image(st.session_state.app_icon, width=120)
+                st.image(st.session_state.app_icon, width=200, use_column_width=False)
     except Exception as e:
         # 画像表示でエラーが発生した場合は続行
         pass
+    
+    # 画像の下に少しスペースを追加
+    st.markdown("<br>", unsafe_allow_html=True)
     
     # タイトルとルール
     st.markdown("""
@@ -870,7 +874,7 @@ elif st.session_state.game_state == 'game':
     
     # ステージクリア判定
     if len(st.session_state.found_words) == len(st.session_state.target_words):
-        st.success("🎉 ステージクリア！")
+        st.success("ステージクリア！")
         
         if st.session_state.current_stage < len(STAGES):
             if st.button("次のステージへ"):
@@ -879,7 +883,7 @@ elif st.session_state.game_state == 'game':
                 st.session_state.found_words = []
                 st.rerun()
         else:
-            st.success("🏆 全ステージクリア！おめでとうございます！")
+            st.success("全ステージクリア！おめでとうございます！")
             if st.button("最初から始める"):
                 st.session_state.current_stage = 1
                 st.session_state.target_words = STAGES[1]['words']
