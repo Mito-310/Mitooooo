@@ -3,11 +3,6 @@ import pandas as pd
 import random
 import math
 import streamlit.components.v1 as components
-from PIL import Image
-
-
-image = Image.open('image.PNG',width=300)
-st.image(image)
 
 # Excelファイルから問題を読み込む関数
 @st.cache_data
@@ -155,13 +150,45 @@ if st.session_state.game_state == 'title':
 
 # タイトル画面
 if st.session_state.game_state == 'title':
+    # アイコン画像のアップロード機能（サイドバー）
+    st.sidebar.header("アプリアイコン設定")
+    uploaded_icon = st.sidebar.file_uploader(
+        "アプリアイコンをアップロード", 
+        type=['png', 'jpg', 'jpeg', 'gif'],
+        help="アプリのタイトル画面に表示するアイコン画像をアップロードしてください"
+    )
+    
+    # アイコンの表示設定を保存
+    if 'app_icon' not in st.session_state:
+        st.session_state.app_icon = None
+    
+    if uploaded_icon is not None:
+        st.session_state.app_icon = uploaded_icon
+        st.sidebar.success("アイコンが設定されました！")
+    
+    if st.sidebar.button("アイコンをリセット"):
+        st.session_state.app_icon = None
+        st.sidebar.info("アイコンがリセットされました")
+        st.rerun()
+    
     # スタイリング
     st.markdown("""
     <style>
     .title-section {
         text-align: center;
-        padding: 3rem 1rem;
+        padding: 2rem 1rem;
         margin-bottom: 2rem;
+    }
+    
+    .app-icon {
+        width: 120px;
+        height: 120px;
+        border-radius: 20px;
+        margin: 0 auto 1.5rem auto;
+        display: block;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        border: 3px solid #333;
+        object-fit: cover;
     }
     
     .game-title {
@@ -256,8 +283,52 @@ if st.session_state.game_state == 'title':
     """, unsafe_allow_html=True)
     
     # タイトルセクション
-    st.markdown("""
+    title_content = """
     <div class="title-section">
+    """
+    
+    # デフォルトアイコンまたはアップロードされたアイコンを表示
+    icon_displayed = False
+    
+    # まずデフォルトの画像を試す
+    try:
+        import base64
+        import os
+        
+        if os.path.exists('image.PNG'):
+            with open('image.PNG', 'rb') as f:
+                image_bytes = f.read()
+            
+            image_base64 = base64.b64encode(image_bytes).decode()
+            
+            title_content += f"""
+            <img src="data:image/png;base64,{image_base64}" class="app-icon" alt="Word Connect Icon">
+            """
+            icon_displayed = True
+    except Exception as e:
+        # ファイル読み込みエラーの場合は続行
+        pass
+    
+    # デフォルト画像が表示できない場合、アップロードされた画像を使用
+    if not icon_displayed and st.session_state.app_icon is not None:
+        try:
+            import base64
+            
+            # アップロードされた画像を読み込み
+            image_bytes = st.session_state.app_icon.getvalue()
+            image_base64 = base64.b64encode(image_bytes).decode()
+            
+            # 画像の形式を取得
+            file_extension = st.session_state.app_icon.type.split('/')[-1]
+            
+            title_content += f"""
+            <img src="data:image/{file_extension};base64,{image_base64}" class="app-icon" alt="App Icon">
+            """
+        except Exception as e:
+            # アップロード画像でもエラーの場合は画像なしで続行
+            pass
+    
+    title_content += """
         <h1 class="game-title">WORD CONNECT</h1>
         <p class="game-subtitle">文字を繋げて単語を作ろう</p>
         <div class="game-rules">
@@ -268,7 +339,9 @@ if st.session_state.game_state == 'title':
             <p>マウスまたはタッチで文字を選択してください</p>
         </div>
     </div>
-    """, unsafe_allow_html=True)
+    """
+    
+    st.markdown(title_content, unsafe_allow_html=True)
     
     # STARTボタン
     col1, col2, col3 = st.columns([1, 1, 1])
