@@ -6,7 +6,7 @@ import streamlit.components.v1 as components
 from PIL import Image
 
 
-image = Image.open('image.PNG',width=300)
+image = Image.open('image.PNG',width=300,use_container_width=True)
 st.image(image)
 
 # Excelファイルから問題を読み込む関数
