@@ -3,11 +3,6 @@ import pandas as pd
 import random
 import math
 import streamlit.components.v1 as components
-from PIL import Image
-
-
-image = Image.open('image.PNG')
-st.image(image)
 
 # Excelファイルから問題を読み込む関数
 @st.cache_data
@@ -155,13 +150,45 @@ if st.session_state.game_state == 'title':
 
 # タイトル画面
 if st.session_state.game_state == 'title':
+    # アイコン画像のアップロード機能（サイドバー）
+    st.sidebar.header("アプリアイコン設定")
+    uploaded_icon = st.sidebar.file_uploader(
+        "アプリアイコンをアップロード", 
+        type=['png', 'jpg', 'jpeg', 'gif'],
+        help="アプリのタイトル画面に表示するアイコン画像をアップロードしてください"
+    )
+    
+    # アイコンの表示設定を保存
+    if 'app_icon' not in st.session_state:
+        st.session_state.app_icon = None
+    
+    if uploaded_icon is not None:
+        st.session_state.app_icon = uploaded_icon
+        st.sidebar.success("アイコンが設定されました！")
+    
+    if st.sidebar.button("アイコンをリセット"):
+        st.session_state.app_icon = None
+        st.sidebar.info("アイコンがリセットされました")
+        st.rerun()
+    
     # スタイリング
     st.markdown("""
     <style>
     .title-section {
         text-align: center;
-        padding: 3rem 1rem;
+        padding: 2rem 1rem;
         margin-bottom: 2rem;
+    }
+    
+    .app-icon {
+        width: 120px;
+        height: 120px;
+        border-radius: 20px;
+        margin: 0 auto 1.5rem auto;
+        display: block;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        border: 3px solid #333;
+        object-fit: cover;
     }
     
     .game-title {
@@ -255,7 +282,28 @@ if st.session_state.game_state == 'title':
     </style>
     """, unsafe_allow_html=True)
     
-    # タイトルセクション
+    # タイトルセクション - 画像表示
+    # デフォルトアイコンまたはアップロードされたアイコンを表示
+    try:
+        from PIL import Image
+        import os
+        
+        if os.path.exists('image.PNG'):
+            # デフォルトの画像を表示
+            image = Image.open('image.PNG')
+            col1, col2, col3 = st.columns([1, 1, 1])
+            with col2:
+                st.image(image, width=120)
+        elif st.session_state.app_icon is not None:
+            # アップロードされた画像を表示
+            col1, col2, col3 = st.columns([1, 1, 1])
+            with col2:
+                st.image(st.session_state.app_icon, width=120)
+    except Exception as e:
+        # 画像表示でエラーが発生した場合は続行
+        pass
+    
+    # タイトルとルール
     st.markdown("""
     <div class="title-section">
         <h1 class="game-title">WORD CONNECT</h1>
@@ -822,7 +870,7 @@ elif st.session_state.game_state == 'game':
     
     # ステージクリア判定
     if len(st.session_state.found_words) == len(st.session_state.target_words):
-        st.success("ステージクリア！")
+        st.success("🎉 ステージクリア！")
         
         if st.session_state.current_stage < len(STAGES):
             if st.button("次のステージへ"):
@@ -831,7 +879,7 @@ elif st.session_state.game_state == 'game':
                 st.session_state.found_words = []
                 st.rerun()
         else:
-            st.success("全ステージクリア！おめでとうございます！")
+            st.success("🏆 全ステージクリア！おめでとうございます！")
             if st.button("最初から始める"):
                 st.session_state.current_stage = 1
                 st.session_state.target_words = STAGES[1]['words']
