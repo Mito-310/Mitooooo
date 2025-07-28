@@ -3,6 +3,11 @@ import pandas as pd
 import random
 import math
 import streamlit.components.v1 as components
+from PIL import Image
+
+
+image = Image.open('image.PNG')
+st.image(image)
 
 # Excelファイルから問題を読み込む関数
 @st.cache_data
