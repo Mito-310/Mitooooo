@@ -291,21 +291,18 @@ if st.session_state.game_state == 'title':
         if os.path.exists('image.PNG'):
             # デフォルトの画像を表示
             image = Image.open('image.PNG')
-            # より中央寄せのための列設定と大きなサイズで表示
+            # より中央寄せのための列設定と適度なサイズで表示
             col1, col2, col3 = st.columns([2, 3, 2])
             with col2:
-                st.image(image, width=200, use_column_width=False)
+                st.image(image, width=180, use_container_width=False)
         elif st.session_state.app_icon is not None:
             # アップロードされた画像を表示
             col1, col2, col3 = st.columns([2, 3, 2])
             with col2:
-                st.image(st.session_state.app_icon, width=200, use_column_width=False)
+                st.image(st.session_state.app_icon, width=180, use_container_width=False)
     except Exception as e:
         # 画像表示でエラーが発生した場合は続行
         pass
-    
-    # 画像の下に少しスペースを追加
-    st.markdown("<br>", unsafe_allow_html=True)
     
     # タイトルとルール
     st.markdown("""
