@@ -150,27 +150,6 @@ if st.session_state.game_state == 'title':
 
 # タイトル画面
 if st.session_state.game_state == 'title':
-    # アイコン画像のアップロード機能（サイドバー）
-    st.sidebar.header("アプリアイコン設定")
-    uploaded_icon = st.sidebar.file_uploader(
-        "アプリアイコンをアップロード", 
-        type=['png', 'jpg', 'jpeg', 'gif'],
-        help="アプリのタイトル画面に表示するアイコン画像をアップロードしてください"
-    )
-    
-    # アイコンの表示設定を保存
-    if 'app_icon' not in st.session_state:
-        st.session_state.app_icon = None
-    
-    if uploaded_icon is not None:
-        st.session_state.app_icon = uploaded_icon
-        st.sidebar.success("アイコンが設定されました！")
-    
-    if st.sidebar.button("アイコンをリセット"):
-        st.session_state.app_icon = None
-        st.sidebar.info("アイコンがリセットされました")
-        st.rerun()
-    
     # スタイリング
     st.markdown("""
     <style>
@@ -178,17 +157,6 @@ if st.session_state.game_state == 'title':
         text-align: center;
         padding: 2rem 1rem;
         margin-bottom: 2rem;
-    }
-    
-    .app-icon {
-        width: 120px;
-        height: 120px;
-        border-radius: 20px;
-        margin: 0 auto 1.5rem auto;
-        display: block;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        border: 3px solid #333;
-        object-fit: cover;
     }
     
     .game-title {
@@ -282,24 +250,18 @@ if st.session_state.game_state == 'title':
     </style>
     """, unsafe_allow_html=True)
     
-    # タイトルセクション - 画像表示
-    # デフォルトアイコンまたはアップロードされたアイコンを表示
+    # タイトルセクション - 画像表示（中央配置）
     try:
         from PIL import Image
         import os
         
         if os.path.exists('image.PNG'):
-            # デフォルトの画像を表示
+            # デフォルトの画像を中央に表示
             image = Image.open('image.PNG')
-            # より中央寄せのための列設定と適度なサイズで表示
-            col1, col2, col3 = st.columns([2, 3, 2])
+            # 完全中央配置のための設定
+            col1, col2, col3 = st.columns([1, 2, 1])
             with col2:
                 st.image(image, width=180, use_container_width=False)
-        elif st.session_state.app_icon is not None:
-            # アップロードされた画像を表示
-            col1, col2, col3 = st.columns([2, 3, 2])
-            with col2:
-                st.image(st.session_state.app_icon, width=180, use_container_width=False)
     except Exception as e:
         # 画像表示でエラーが発生した場合は続行
         pass
