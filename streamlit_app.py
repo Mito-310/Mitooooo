@@ -406,7 +406,7 @@ elif st.session_state.game_state == 'game':
         ''' for i, letter in enumerate(letters)
     ])
 
-    # HTML + CSS + JavaScript（元のコードと同じ）
+    # HTML + CSS + JavaScript（修正版）
     full_html = f"""
     <html>
     <head>
@@ -453,16 +453,26 @@ elif st.session_state.game_state == 'game':
             -webkit-touch-callout: none;
             -webkit-tap-highlight-color: transparent;
         }}
+        
+        /* 選択状態のスタイル（最優先） */
         .circle-button.selected {{
-            background: #333;
-            color: white;
+            background: #333 !important;
+            color: white !important;
+            border: 2px solid #333 !important;
         }}
-        .circle-button:hover {{
-            background: #f0f0f0;
+        
+        /* ホバー状態（選択されていない場合のみ） */
+        .circle-button:not(.selected):hover,
+        .circle-button:not(.selected).hover {{
+            background: #f0f0f0 !important;
         }}
-        .circle-button.hover {{
-            background: #f0f0f0;
+        
+        /* 通常状態 */
+        .circle-button:not(.selected) {{
+            background: white !important;
+            color: #333 !important;
         }}
+        
         #selected-word {{
             position: fixed;
             top: 0;
@@ -806,4 +816,19 @@ elif st.session_state.game_state == 'game':
     components.html(full_html, height=600)
     
     # ステージクリア判定
-    if len(st.session_state.found_words) : len(st.session)
+    if len(st.session_state.found_words) == len(st.session_state.target_words):
+        st.success("🎉 ステージクリア！")
+        
+        if st.session_state.current_stage < len(STAGES):
+            if st.button("次のステージへ"):
+                st.session_state.current_stage += 1
+                st.session_state.target_words = STAGES[st.session_state.current_stage]['words']
+                st.session_state.found_words = []
+                st.rerun()
+        else:
+            st.success("🏆 全ステージクリア！おめでとうございます！")
+            if st.button("最初から始める"):
+                st.session_state.current_stage = 1
+                st.session_state.target_words = STAGES[1]['words']
+                st.session_state.found_words = []
+                st.rerun()
