@@ -230,16 +230,57 @@ if st.session_state.game_state == 'title':
         border: 1px solid #ddd;
         border-radius: 8px;
         padding: 1.5rem;
-        margin-bottom: 1rem;
-        background: #fafafa;
-    }
-    
-    .stage-title {
-        font-size: 1.4rem;
-        font-weight: 600;
-        color: #333;
-        margin-bottom: 0.5rem;
-    }
+# タイトルセクション - 画像表示（中央配置）
+    try:
+        from PIL import Image
+        import os
+        import base64
+        from io import BytesIO
+        
+        if os.path.exists('image.PNG'):
+            # デフォルトの画像を中央に表示
+            image = Image.open('image.PNG')
+            
+            # 画像をbase64にエンコードしてHTMLで完全中央配置
+            buffered = BytesIO()
+            image.save(buffered, format="PNG")
+            img_str = base64.b64encode(buffered.getvalue()).decode()
+            
+            # より強力な中央配置CSS
+            st.markdown(f"""
+            <div style="
+                position: relative;
+                width: 100%;
+                height: 200px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                margin: 0 auto;
+                padding: 0;
+            ">
+                <img src="data:image/png;base64,{img_str}" 
+                     style="
+                         width: 180px;
+                         height: auto;
+                         display: block;
+                         position: absolute;
+                         left: 50%;
+                         top: 50%;
+                         transform: translate(-50%, -50%);
+                         max-width: 100%;
+                     ">
+            </div>
+            """, unsafe_allow_html=True)
+            
+    except Exception as e:
+        # 画像表示でエラーが発生した場合は続行
+        pass       
+        if os.path.exists('image.PNG'):
+            # デフォルトの画像を中央に表示
+            image = Image.open('image.PNG')
+            
+            # 画像をbase64にエンコードしてHTMLで完全中央配置
+ 
     
     .stage-info {
         color: #666;
