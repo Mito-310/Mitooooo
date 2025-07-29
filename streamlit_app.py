@@ -323,7 +323,7 @@ if st.session_state.game_state == 'title':
                 stage_info = STAGES[stage_num]
                 with cols[j]:
                     st.markdown(f'<div class="stage-info">{stage_info["name"]}</div>', unsafe_allow_html=True)
-                    if st.button(f"▶プレイ開始", key=f"stage_{stage_num}", use_container_width=True):
+                    if st.button(f"プレイ開始", key=f"stage_{stage_num}", use_container_width=True):
                         st.session_state.current_stage = stage_num
                         st.session_state.target_words = stage_info['words']
                         st.session_state.found_words = []
