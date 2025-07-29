@@ -533,9 +533,9 @@ elif st.session_state.game_state == 'game':
     <body>
     <div id="selected-word"></div>
     <div id="target-words">{target_display}</div>
-    <div id="found-words">🎯 見つけた単語: {found_display}</div>
-    <div id="success-message" class="success-message">🎉 正解！</div>
-    <div id="complete-message" class="complete-message">🏆 ステージクリア！</div>
+    <div id="found-words">見つけた単語: {found_display}</div>
+    <div id="success-message" class="success-message">正解！</div>
+    <div id="complete-message" class="complete-message">ステージクリア！</div>
 
     <div class="circle-container" id="circle-container">
         {button_html}
@@ -567,7 +567,7 @@ elif st.session_state.game_state == 'game':
             const currentWord = selectedLetters.join('');
             if (currentWord && targetWords.includes(currentWord) && !foundWords.includes(currentWord)) {{
                 foundWords.push(currentWord);
-                foundWordsDiv.textContent = '🎯 見つけた単語: ' + foundWords.join(', ');
+                foundWordsDiv.textContent = '見つけた単語: ' + foundWords.join(', ');
                 showSuccessMessage();
                 
                 if (foundWords.length === targetWords.length) {{
@@ -763,7 +763,7 @@ elif st.session_state.game_state == 'game':
                     st.session_state.found_words = []
                     st.rerun()
             else:
-                st.markdown("<div style='text-align: center; color: #4CAF50; font-weight: bold; font-size: 18px;'>🏆 全ステージクリア！</div>", unsafe_allow_html=True)
+                st.markdown("<div style='text-align: center; color: #4CAF50; font-weight: bold; font-size: 18px;'>全ステージクリア！</div>", unsafe_allow_html=True)
         
         with col3:
             if st.button("タイトルに戻る"):
