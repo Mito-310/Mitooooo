@@ -238,8 +238,19 @@ if st.session_state.game_state == 'title':
         from io import BytesIO
         
         if os.path.exists('image.PNG'):
-            # デフォルトの画像を中央に表示
             image = Image.open('image.PNG')
+            
+            # 画像をbase64にエンコード
+            buffered = BytesIO()
+            image.save(buffered, format="PNG")
+            img_str = base64.b64encode(buffered.getvalue()).decode()
+            
+            # HTMLで完全中央配置
+            st.markdown(f'<div style="text-align: center; margin: 20px 0;"><img src="data:image/png;base64,{img_str}" width="180" style="max-width: 100%;"></div>', unsafe_allow_html=True)
+            
+    except Exception as e:
+        # 画像表示でエラーが発生した場合は続行
+        pass
             
             # 画像をbase64にエンコードしてHTMLで完全中央配置
             buffered = BytesIO()
