@@ -339,11 +339,11 @@ elif st.session_state.game_state == 'game':
     # ヘッダー
     col1, col2, col3 = st.columns([1, 2, 1])
     with col1:
-        if st.button("⬅タイトルに戻る"):
+        if st.button("タイトルに戻る"):
             st.session_state.game_state = 'title'
             st.rerun()
     with col2:
-        st.markdown(f"<h2 style='text-align: center; color: #333; margin: 0;'>🎯 {current_stage_info['name']}</h2>", unsafe_allow_html=True)
+        st.markdown(f"<h2 style='text-align: center; color: #333; margin: 0;'>{current_stage_info['name']}</h2>", unsafe_allow_html=True)
     with col3:
         if st.button("リセット"):
             st.session_state.found_words = []
@@ -352,7 +352,7 @@ elif st.session_state.game_state == 'game':
     # 進行状況
     progress = len(st.session_state.found_words) / len(st.session_state.target_words)
     st.progress(progress)
-    st.markdown(f"<div style='text-align: center; color: #555; font-weight: 500; margin-bottom: 1rem;'>📊 進行状況: {len(st.session_state.found_words)} / {len(st.session_state.target_words)} 単語</div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='text-align: center; color: #555; font-weight: 500; margin-bottom: 1rem;'>進行状況: {len(st.session_state.found_words)} / {len(st.session_state.target_words)} 単語</div>", unsafe_allow_html=True)
     
     # 目標単語の表示
     sorted_words = sorted(st.session_state.target_words)
