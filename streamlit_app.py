@@ -12,6 +12,73 @@ st.set_page_config(
     initial_sidebar_state="auto"
 )
 
+# カスタムCSS
+st.markdown("""
+<style>
+/* タイトル画面のボタンスタイル */
+.stButton > button {
+    background-color: #333;
+    color: white;
+    border: 2px solid #333;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    height: 50px;
+}
+
+.stButton > button:hover {
+    background-color: #555;
+    border-color: #555;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.stButton > button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* プログレスバーの色調整 */
+.stProgress .st-bo {
+    background-color: #4CAF50;
+}
+
+/* サイドバーのスタイル調整 */
+.stSidebar .stButton > button {
+    background-color: #2196F3;
+    border-color: #2196F3;
+}
+
+.stSidebar .stButton > button:hover {
+    background-color: #1976D2;
+    border-color: #1976D2;
+}
+
+/* 戻るボタンとリセットボタンのスタイル */
+div[data-testid="column"] .stButton > button {
+    font-size: 14px;
+    padding: 0.4rem 0.8rem;
+    height: 40px;
+}
+
+/* SUCCESS/エラーメッセージの調整 */
+.stSuccess {
+    background-color: #E8F5E8;
+    border-left: 4px solid #4CAF50;
+}
+
+.stWarning {
+    background-color: #FFF8E1;
+    border-left: 4px solid #FF9800;
+}
+
+.stError {
+    background-color: #FFEBEE;
+    border-left: 4px solid #F44336;
+}
+</style>
+""", unsafe_allow_html=True)
+
 # Excelファイルから問題を読み込む関数
 @st.cache_data
 def load_problems_from_excel(file_path):
@@ -142,7 +209,7 @@ if st.session_state.game_state == 'title':
         except Exception as e:
             st.sidebar.error(f"ファイル読み込みエラー: {e}")
     
-    st.sidebar.write(f"現在のステージ数: {len(STAGES)}")
+    st.sidebar.write(f"🎯 現在のステージ数: **{len(STAGES)}**")
     if st.sidebar.button("デフォルトステージに戻す"):
         st.session_state.stages = DEFAULT_STAGES
         st.rerun()
@@ -161,21 +228,47 @@ if st.session_state.game_state == 'title':
         font-weight: 700;
         color: #333;
         margin-bottom: 1rem;
-        letter-spacing: 1px;
+        letter-spacing: 2px;
+        text-shadow: 1px 1px 3px rgba(0,0,0,0.1);
     }
     .game-subtitle {
-        font-size: 1.2rem;
-        color: #666;
+        font-size: 1.3rem;
+        color: #555;
         margin-bottom: 2rem;
+        font-weight: 400;
     }
     .game-rules {
         max-width: 600px;
         margin: 0 auto;
-        padding: 1.5rem;
-        background: #f8f9fa;
-        border-radius: 8px;
+        padding: 2rem;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-radius: 12px;
         text-align: left;
         margin-bottom: 2rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .game-rules h3 {
+        color: #333;
+        margin-bottom: 1rem;
+        font-size: 1.2rem;
+    }
+    .game-rules p {
+        color: #555;
+        line-height: 1.6;
+        margin-bottom: 0.8rem;
+    }
+    .stage-selection-title {
+        text-align: center;
+        color: #333;
+        margin: 2rem 0 1.5rem 0;
+        font-size: 1.8rem;
+        font-weight: 600;
+    }
+    .stage-info {
+        text-align: center;
+        margin-bottom: 0.5rem;
+        color: #555;
+        font-weight: 500;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -192,20 +285,20 @@ if st.session_state.game_state == 'title':
             buffered = BytesIO()
             image.save(buffered, format="PNG")
             img_str = base64.b64encode(buffered.getvalue()).decode()
-            st.markdown(f'<div style="text-align: center; margin: 20px 0;"><img src="data:image/png;base64,{img_str}" width="180" style="max-width: 100%;"></div>', unsafe_allow_html=True)
+            st.markdown(f'<div style="text-align: center; margin: 20px 0;"><img src="data:image/png;base64,{img_str}" width="200" style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"></div>', unsafe_allow_html=True)
     except:
         pass
     
     st.markdown("""
     <div class="title-section">
-        <h1 class="game-title">WORD CONNECT</h1>
+        <h1 class="game-title">🎮 WORD CONNECT</h1>
         <p class="game-subtitle">文字を繋げて単語を作ろう</p>
         <div class="game-rules">
             <h3>ゲームルール</h3>
-            <p>円形に配置された文字をドラッグして繋げて単語を作るゲームです</p>
-            <p>すべての目標単語を見つけるとステージクリア！</p>
-            <p>同じ文字を重複して使うことはできません</p>
-            <p>マウスまたはタッチで文字を選択してください</p>
+            <p> 円形に配置された文字をドラッグして繋げて単語を作るゲームです</p>
+            <p> すべての目標単語を見つけるとステージクリア！</p>
+            <p> 同じ文字を重複して使うことはできません</p>
+            <p> マウスまたはタッチで文字を選択してください</p>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -221,7 +314,7 @@ if st.session_state.game_state == 'title':
             st.rerun()
     
     # ステージ選択
-    st.markdown("<h2 style='text-align: center; color: #333;'>ステージ選択</h2>", unsafe_allow_html=True)
+    st.markdown('<h2 class="stage-selection-title">ステージ選択</h2>', unsafe_allow_html=True)
     
     for i in range(0, len(STAGES), 3):
         cols = st.columns(3)
@@ -230,8 +323,8 @@ if st.session_state.game_state == 'title':
             if stage_num in STAGES:
                 stage_info = STAGES[stage_num]
                 with cols[j]:
-                    st.markdown(f"**{stage_info['name']}**")
-                    if st.button(f"プレイ開始", key=f"stage_{stage_num}", use_container_width=True):
+                    st.markdown(f'<div class="stage-info">{stage_info["name"]}</div>', unsafe_allow_html=True)
+                    if st.button(f"▶プレイ開始", key=f"stage_{stage_num}", use_container_width=True):
                         st.session_state.current_stage = stage_num
                         st.session_state.target_words = stage_info['words']
                         st.session_state.found_words = []
@@ -251,7 +344,7 @@ elif st.session_state.game_state == 'game':
             st.session_state.game_state = 'title'
             st.rerun()
     with col2:
-        st.header(current_stage_info['name'])
+        st.markdown(f"<h2 style='text-align: center; color: #333; margin: 0;'>🎯 {current_stage_info['name']}</h2>", unsafe_allow_html=True)
     with col3:
         if st.button("リセット"):
             st.session_state.found_words = []
@@ -260,7 +353,7 @@ elif st.session_state.game_state == 'game':
     # 進行状況
     progress = len(st.session_state.found_words) / len(st.session_state.target_words)
     st.progress(progress)
-    st.write(f"進行状況: {len(st.session_state.found_words)} / {len(st.session_state.target_words)} 単語")
+    st.markdown(f"<div style='text-align: center; color: #555; font-weight: 500; margin-bottom: 1rem;'>📊 進行状況: {len(st.session_state.found_words)} / {len(st.session_state.target_words)} 単語</div>", unsafe_allow_html=True)
     
     # 目標単語の表示
     sorted_words = sorted(st.session_state.target_words)
@@ -271,9 +364,9 @@ elif st.session_state.game_state == 'game':
         boxes_html = ""
         for letter in word:
             if is_found:
-                boxes_html += f'<span style="display: inline-block; width: 20px; height: 20px; border: 1px solid #333; background: #4CAF50; color: white; text-align: center; line-height: 18px; margin: 1px; font-size: 12px;">{letter}</span>'
+                boxes_html += f'<span style="display: inline-block; width: 22px; height: 22px; border: 1px solid #4CAF50; background: #4CAF50; color: white; text-align: center; line-height: 20px; margin: 1px; font-size: 12px; font-weight: bold; border-radius: 2px;">{letter}</span>'
             else:
-                boxes_html += f'<span style="display: inline-block; width: 20px; height: 20px; border: 1px solid #333; background: white; text-align: center; line-height: 18px; margin: 1px;"></span>'
+                boxes_html += f'<span style="display: inline-block; width: 22px; height: 22px; border: 1px solid #ddd; background: white; text-align: center; line-height: 20px; margin: 1px; border-radius: 2px;"></span>'
         target_boxes_html.append(f'<div style="display: inline-block; margin: 5px;">{boxes_html}</div>')
     
     target_display = ' '.join(target_boxes_html)
@@ -304,22 +397,24 @@ elif st.session_state.game_state == 'game':
             user-select: none;
             touch-action: none;
             overflow: hidden;
+            background: #fafafa;
         }}
         .circle-container {{
             position: relative;
             width: 300px;
             height: 300px;
             margin: 150px auto 40px auto;
-            border: 2px solid #ccc;
+            border: 3px solid #ddd;
             border-radius: 50%;
-            background: #f9f9f9;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
         }}
         .circle-button {{
             position: absolute;
             width: 50px;
             height: 50px;
             border-radius: 50%;
-            background: white;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
             color: #333;
             font-size: 18px;
             font-weight: bold;
@@ -330,13 +425,18 @@ elif st.session_state.game_state == 'game':
             align-items: center;
             transition: all 0.2s ease;
             touch-action: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }}
         .circle-button.selected {{
-            background: #333 !important;
+            background: linear-gradient(135deg, #333 0%, #555 100%) !important;
             color: white !important;
+            transform: scale(1.1);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         }}
         .circle-button:not(.selected):hover {{
-            background: #f0f0f0 !important;
+            background: linear-gradient(135deg, #f0f0f0 0%, #e9ecef 100%) !important;
+            transform: scale(1.05);
+            box-shadow: 0 3px 6px rgba(0,0,0,0.15);
         }}
         #selected-word {{
             position: fixed;
@@ -344,78 +444,83 @@ elif st.session_state.game_state == 'game':
             left: 0;
             width: 100%;
             text-align: center;
-            font-size: 24px;
+            font-size: 26px;
             font-weight: bold;
-            padding: 10px;
+            padding: 12px;
             letter-spacing: 4px;
             min-height: 40px;
             color: #333;
-            background: white;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
             z-index: 999;
-            border-bottom: 1px solid #ccc;
+            border-bottom: 2px solid #e9ecef;
         }}
         #target-words {{
             position: fixed;
-            top: 60px;
+            top: 64px;
             left: 0;
             width: 100%;
             text-align: center;
             font-size: 14px;
-            padding: 10px;
+            padding: 12px;
             color: #666;
             background: #f9f9f9;
             z-index: 998;
-            border-bottom: 1px solid #ccc;
+            border-bottom: 1px solid #ddd;
         }}
         #found-words {{
             position: fixed;
-            top: 110px;
+            top: 118px;
             left: 0;
             width: 100%;
             text-align: center;
-            font-size: 12px;
-            padding: 5px;
+            font-size: 13px;
+            padding: 8px;
             color: #333;
             background: #f0f0f0;
             z-index: 997;
-            border-bottom: 1px solid #ccc;
+            border-bottom: 1px solid #ddd;
             min-height: 20px;
+            font-weight: 500;
         }}
         .success-message {{
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: #4CAF50;
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
             color: white;
-            padding: 20px;
-            border-radius: 5px;
+            padding: 20px 30px;
+            border-radius: 8px;
             font-size: 18px;
             font-weight: bold;
             z-index: 1000;
             opacity: 0;
             transition: all 0.3s ease;
+            box-shadow: 0 6px 12px rgba(76, 175, 80, 0.3);
         }}
         .success-message.show {{
             opacity: 1;
+            transform: translate(-50%, -50%) scale(1.1);
         }}
         .complete-message {{
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: #2196F3;
+            background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
             color: white;
-            padding: 30px;
-            border-radius: 5px;
+            padding: 30px 40px;
+            border-radius: 12px;
             font-size: 24px;
             font-weight: bold;
             z-index: 1001;
             opacity: 0;
             transition: all 0.3s ease;
+            box-shadow: 0 8px 16px rgba(33, 150, 243, 0.3);
         }}
         .complete-message.show {{
             opacity: 1;
+            transform: translate(-50%, -50%) scale(1.1);
         }}
         canvas {{
             position: absolute;
@@ -429,9 +534,9 @@ elif st.session_state.game_state == 'game':
     <body>
     <div id="selected-word"></div>
     <div id="target-words">{target_display}</div>
-    <div id="found-words">見つけた単語: {found_display}</div>
-    <div id="success-message" class="success-message">正解！</div>
-    <div id="complete-message" class="complete-message">ステージクリア！</div>
+    <div id="found-words">🎯 見つけた単語: {found_display}</div>
+    <div id="success-message" class="success-message">🎉 正解！</div>
+    <div id="complete-message" class="complete-message">🏆 ステージクリア！</div>
 
     <div class="circle-container" id="circle-container">
         {button_html}
@@ -463,7 +568,7 @@ elif st.session_state.game_state == 'game':
             const currentWord = selectedLetters.join('');
             if (currentWord && targetWords.includes(currentWord) && !foundWords.includes(currentWord)) {{
                 foundWords.push(currentWord);
-                foundWordsDiv.textContent = '見つけた単語: ' + foundWords.join(', ');
+                foundWordsDiv.textContent = '🎯 見つけた単語: ' + foundWords.join(', ');
                 showSuccessMessage();
                 
                 if (foundWords.length === targetWords.length) {{
@@ -542,12 +647,12 @@ elif st.session_state.game_state == 'game':
                 ctx.lineTo(points[i].x, points[i].y);
             }}
             ctx.strokeStyle = '#333';
-            ctx.lineWidth = 2;
+            ctx.lineWidth = 3;
             ctx.stroke();
 
             points.forEach(point => {{
                 ctx.beginPath();
-                ctx.arc(point.x, point.y, 2, 0, 2 * Math.PI);
+                ctx.arc(point.x, point.y, 3, 0, 2 * Math.PI);
                 ctx.fillStyle = '#333';
                 ctx.fill();
             }});
@@ -653,13 +758,13 @@ elif st.session_state.game_state == 'game':
         
         with col2:
             if st.session_state.current_stage < len(STAGES):
-                if st.button("次のステージ"):
+                if st.button("→次のステージ"):
                     st.session_state.current_stage += 1
                     st.session_state.target_words = STAGES[st.session_state.current_stage]['words']
                     st.session_state.found_words = []
                     st.rerun()
             else:
-                st.write("全ステージクリア！")
+                st.markdown("<div style='text-align: center; color: #4CAF50; font-weight: bold; font-size: 18px;'>🏆 全ステージクリア！</div>", unsafe_allow_html=True)
         
         with col3:
             if st.button("タイトルに戻る"):
