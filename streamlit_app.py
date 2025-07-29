@@ -208,7 +208,7 @@ if st.session_state.game_state == 'title':
         except Exception as e:
             st.sidebar.error(f"ファイル読み込みエラー: {e}")
     
-    st.sidebar.write(f"🎯 現在のステージ数: **{len(STAGES)}**")
+    st.sidebar.write(f"現在のステージ数: **{len(STAGES)}**")
     if st.sidebar.button("デフォルトステージに戻す"):
         st.session_state.stages = DEFAULT_STAGES
         st.rerun()
@@ -290,7 +290,7 @@ if st.session_state.game_state == 'title':
     
     st.markdown("""
     <div class="title-section">
-        <h1 class="game-title">🎮 WORD CONNECT</h1>
+        <h1 class="game-title">WORD CONNECT</h1>
         <p class="game-subtitle">文字を繋げて単語を作ろう</p>
         <div class="game-rules">
             <h3>ゲームルール</h3>
