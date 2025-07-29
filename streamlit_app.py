@@ -98,11 +98,10 @@ if st.session_state.stages is None:
 
 STAGES = st.session_state.stages
 
-# ファイルアップロード機能
+# ファイルアップロード機能（タイトル画面でのみ表示）
 if st.session_state.game_state == 'title':
     st.sidebar.header("問題ファイルの管理")
     
-    # ファイルアップロード
     uploaded_file = st.sidebar.file_uploader(
         "新しい問題ファイルをアップロード", 
         type=['xlsx', 'xls'],
@@ -111,10 +110,7 @@ if st.session_state.game_state == 'title':
     
     if uploaded_file is not None:
         try:
-            # アップロードされたファイルから問題を読み込み
             df = pd.read_excel(uploaded_file)
-            
-            # データの確認
             st.sidebar.write("アップロードされたファイルの内容:")
             st.sidebar.dataframe(df.head())
             
@@ -123,11 +119,8 @@ if st.session_state.game_state == 'title':
                 for index, row in df.iterrows():
                     stage_num = index + 1
                     problem_text = str(row['問題文']).strip()
-                    
-                    # 問題文から文字を抽出
                     unique_letters = list(set(problem_text.upper().replace(' ', '')))
                     
-                    # 回答列から単語を抽出
                     words = []
                     for col in df.columns[1:]:
                         if pd.notna(row[col]):
@@ -143,14 +136,12 @@ if st.session_state.game_state == 'title':
                     }
                 
                 st.session_state.stages = new_stages
-                STAGES = new_stages
                 st.sidebar.success(f"新しい問題ファイルから{len(new_stages)}個のステージを読み込みました！")
                 st.rerun()
         
         except Exception as e:
             st.sidebar.error(f"ファイル読み込みエラー: {e}")
     
-    # 現在の問題ファイル情報
     st.sidebar.write(f"現在のステージ数: {len(STAGES)}")
     if st.sidebar.button("デフォルトステージに戻す"):
         st.session_state.stages = DEFAULT_STAGES
@@ -158,7 +149,6 @@ if st.session_state.game_state == 'title':
 
 # タイトル画面
 if st.session_state.game_state == 'title':
-    # スタイリング
     st.markdown("""
     <style>
     .title-section {
@@ -166,7 +156,6 @@ if st.session_state.game_state == 'title':
         padding: 2rem 1rem;
         margin-bottom: 2rem;
     }
-    
     .game-title {
         font-size: 3rem;
         font-weight: 700;
@@ -174,13 +163,11 @@ if st.session_state.game_state == 'title':
         margin-bottom: 1rem;
         letter-spacing: 1px;
     }
-    
     .game-subtitle {
         font-size: 1.2rem;
         color: #666;
         margin-bottom: 2rem;
     }
-    
     .game-rules {
         max-width: 600px;
         margin: 0 auto;
@@ -190,47 +177,10 @@ if st.session_state.game_state == 'title':
         text-align: left;
         margin-bottom: 2rem;
     }
+    </style>
+    """, unsafe_allow_html=True)
     
-    .game-rules h3 {
-        color: #333;
-        margin-bottom: 1rem;
-        text-align: center;
-        font-size: 1.1rem;
-    }
-    
-    .game-rules ul {
-        margin: 0;
-        padding-left: 1.5rem;
-        color: #555;
-    }
-    
-    .game-rules li {
-        margin-bottom: 0.5rem;
-        line-height: 1.5;
-    }
-    
-    .game-rules p {
-        margin: 0.5rem 0;
-        color: #555;
-        line-height: 1.5;
-    }
-    
-    .stage-section {
-        padding: 2rem 1rem;
-    }
-    
-    .stage-header {
-        text-align: center;
-        margin-bottom: 2rem;
-        padding-bottom: 1rem;
-        border-bottom: 1px solid #e0e0e0;
-    }
-    
-    .stage-card {
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        padding: 1.5rem;
-# タイトルセクション - 画像表示（中央配置）
+    # 画像表示（利用可能な場合）
     try:
         from PIL import Image
         import os
@@ -239,94 +189,13 @@ if st.session_state.game_state == 'title':
         
         if os.path.exists('image.PNG'):
             image = Image.open('image.PNG')
-            
-            # 画像をbase64にエンコード
             buffered = BytesIO()
             image.save(buffered, format="PNG")
             img_str = base64.b64encode(buffered.getvalue()).decode()
-            
-            # HTMLで完全中央配置
             st.markdown(f'<div style="text-align: center; margin: 20px 0;"><img src="data:image/png;base64,{img_str}" width="180" style="max-width: 100%;"></div>', unsafe_allow_html=True)
-            
-    except Exception as e:
-        # 画像表示でエラーが発生した場合は続行
-        pass
-            
-            # 画像をbase64にエンコードしてHTMLで完全中央配置
-            buffered = BytesIO()
-            image.save(buffered, format="PNG")
-            img_str = base64.b64encode(buffered.getvalue()).decode()
-            
-            # より強力な中央配置CSS
-            st.markdown(f"""
-            <div style="
-                position: relative;
-                width: 100%;
-                height: 200px;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                margin: 0 auto;
-                padding: 0;
-            ">
-                <img src="data:image/png;base64,{img_str}" 
-                     style="
-                         width: 180px;
-                         height: auto;
-                         display: block;
-                         position: absolute;
-                         left: 50%;
-                         top: 50%;
-                         transform: translate(-50%, -50%);
-                         max-width: 100%;
-                     ">
-            </div>
-            """, unsafe_allow_html=True)
-            
-    except Exception as e:
-        # 画像表示でエラーが発生した場合は続行
-        pass       
-        if os.path.exists('image.PNG'):
-            # デフォルトの画像を中央に表示
-            image = Image.open('image.PNG')
-            
-            # 画像をbase64にエンコードしてHTMLで完全中央配置
- 
-    
-    .stage-info {
-        color: #666;
-        font-size: 0.9rem;
-        margin-bottom: 1rem;
-    }
-    
-    .problem-text {
-        background: #e8f4f8;
-        padding: 8px;
-        border-radius: 4px;
-        font-family: monospace;
-        font-size: 0.9rem;
-        margin-bottom: 1rem;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-    
-    # タイトルセクション - 画像表示（中央配置）
-    try:
-        from PIL import Image
-        import os
-        
-        if os.path.exists('image.PNG'):
-            # デフォルトの画像を中央に表示
-            image = Image.open('image.PNG')
-            # 完全中央配置のための設定
-            col1, col2, col3 = st.columns([1, 2, 1])
-            with col2:
-                st.image(image, width=180, use_container_width=False)
-    except Exception as e:
-        # 画像表示でエラーが発生した場合は続行
+    except:
         pass
     
-    # タイトルとルール
     st.markdown("""
     <div class="title-section">
         <h1 class="game-title">WORD CONNECT</h1>
@@ -351,16 +220,9 @@ if st.session_state.game_state == 'title':
             st.session_state.game_state = 'game'
             st.rerun()
     
-    # ステージ選択セクション
-    st.markdown("""
-    <div class="stage-section">
-        <div class="stage-header">
-            <h2 style="color: #333; margin: 0;">ステージ選択</h2>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    # ステージ選択
+    st.markdown("<h2 style='text-align: center; color: #333;'>ステージ選択</h2>", unsafe_allow_html=True)
     
-    # ステージカードを3列で表示
     for i in range(0, len(STAGES), 3):
         cols = st.columns(3)
         for j in range(3):
@@ -368,61 +230,13 @@ if st.session_state.game_state == 'title':
             if stage_num in STAGES:
                 stage_info = STAGES[stage_num]
                 with cols[j]:
-                    st.markdown(f"""
-                    <div class="stage-card">
-                        <div class="stage-title">{stage_info['name']}</div>
-                        <div class="stage-info">
-                        </div>
-                    </div>
-                    """, unsafe_allow_html=True)
-                    
+                    st.markdown(f"**{stage_info['name']}**")
                     if st.button(f"プレイ開始", key=f"stage_{stage_num}", use_container_width=True):
                         st.session_state.current_stage = stage_num
                         st.session_state.target_words = stage_info['words']
                         st.session_state.found_words = []
                         st.session_state.game_state = 'game'
                         st.rerun()
-    
-    # ボタンのスタイルをカスタマイズ
-    st.markdown("""
-    <style>
-    .stButton > button {
-        background: #333 !important;
-        color: white !important;
-        border: none !important;
-        padding: 0.75rem 1.5rem !important;
-        border-radius: 4px !important;
-        font-size: 1rem !important;
-        font-weight: 500 !important;
-        transition: all 0.2s ease !important;
-        width: 100% !important;
-        height: 45px !important;
-    }
-    
-    .stButton > button:hover {
-        background: #555 !important;
-        transform: translateY(-1px) !important;
-    }
-    
-    .stButton > button:active {
-        transform: translateY(0px) !important;
-    }
-    
-    /* STARTボタンのスタイル */
-    .stButton[data-testid="start_button"] > button {
-        background: #4CAF50 !important;
-        font-size: 1.2rem !important;
-        font-weight: 600 !important;
-        height: 50px !important;
-        border-radius: 25px !important;
-        letter-spacing: 2px !important;
-    }
-    
-    .stButton[data-testid="start_button"] > button:hover {
-        background: #45a049 !important;
-    }
-    </style>
-    """, unsafe_allow_html=True)
 
 # ゲーム画面
 elif st.session_state.game_state == 'game':
@@ -463,11 +277,9 @@ elif st.session_state.game_state == 'game':
         target_boxes_html.append(f'<div style="display: inline-block; margin: 5px;">{boxes_html}</div>')
     
     target_display = ' '.join(target_boxes_html)
-    
-    # 見つけた単語の表示
     found_display = ', '.join(st.session_state.found_words) if st.session_state.found_words else 'なし'
     
-    # 円形に並べるボタンのHTMLを生成
+    # 円形ボタンのHTML生成
     button_html = ''.join([
         f'''
         <div class="circle-button" id="button_{i}"
@@ -480,7 +292,7 @@ elif st.session_state.game_state == 'game':
         ''' for i, letter in enumerate(letters)
     ])
 
-    # HTML + CSS + JavaScript（修正版）
+    # HTMLゲーム部分
     full_html = f"""
     <html>
     <head>
@@ -490,12 +302,7 @@ elif st.session_state.game_state == 'game':
             margin: 0;
             font-family: Arial, sans-serif;
             user-select: none;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
             touch-action: none;
-            -webkit-touch-callout: none;
-            -webkit-tap-highlight-color: transparent;
             overflow: hidden;
         }}
         .circle-container {{
@@ -505,7 +312,6 @@ elif st.session_state.game_state == 'game':
             margin: 150px auto 40px auto;
             border: 2px solid #ccc;
             border-radius: 50%;
-            touch-action: none;
             background: #f9f9f9;
         }}
         .circle-button {{
@@ -524,29 +330,14 @@ elif st.session_state.game_state == 'game':
             align-items: center;
             transition: all 0.2s ease;
             touch-action: none;
-            -webkit-touch-callout: none;
-            -webkit-tap-highlight-color: transparent;
         }}
-        
-        /* 選択状態のスタイル（最優先） */
         .circle-button.selected {{
             background: #333 !important;
             color: white !important;
-            border: 2px solid #333 !important;
         }}
-        
-        /* ホバー状態（選択されていない場合のみ） */
-        .circle-button:not(.selected):hover,
-        .circle-button:not(.selected).hover {{
+        .circle-button:not(.selected):hover {{
             background: #f0f0f0 !important;
         }}
-        
-        /* 通常状態 */
-        .circle-button:not(.selected) {{
-            background: white !important;
-            color: #333 !important;
-        }}
-        
         #selected-word {{
             position: fixed;
             top: 0;
@@ -556,14 +347,12 @@ elif st.session_state.game_state == 'game':
             font-size: 24px;
             font-weight: bold;
             padding: 10px;
-            user-select: none;
             letter-spacing: 4px;
             min-height: 40px;
             color: #333;
             background: white;
             z-index: 999;
             border-bottom: 1px solid #ccc;
-            touch-action: none;
         }}
         #target-words {{
             position: fixed;
@@ -573,12 +362,10 @@ elif st.session_state.game_state == 'game':
             text-align: center;
             font-size: 14px;
             padding: 10px;
-            user-select: none;
             color: #666;
             background: #f9f9f9;
             z-index: 998;
             border-bottom: 1px solid #ccc;
-            touch-action: none;
         }}
         #found-words {{
             position: fixed;
@@ -588,12 +375,10 @@ elif st.session_state.game_state == 'game':
             text-align: center;
             font-size: 12px;
             padding: 5px;
-            user-select: none;
             color: #333;
             background: #f0f0f0;
             z-index: 997;
             border-bottom: 1px solid #ccc;
-            touch-action: none;
             min-height: 20px;
         }}
         .success-message {{
@@ -637,7 +422,6 @@ elif st.session_state.game_state == 'game':
             top: 0;
             left: 0;
             z-index: 1;
-            touch-action: none;
             pointer-events: none;
         }}
         </style>
@@ -661,7 +445,6 @@ elif st.session_state.game_state == 'game':
         let points = [];
         let targetWords = {st.session_state.target_words};
         let foundWords = {st.session_state.found_words};
-        let currentHoverButton = null;
 
         const selectedWordDiv = document.getElementById('selected-word');
         const targetWordsDiv = document.getElementById('target-words');
@@ -676,22 +459,11 @@ elif st.session_state.game_state == 'game':
             selectedWordDiv.textContent = selectedLetters.join('');
         }}
 
-        function updateTargetDisplay() {{
-            const targetBoxes = targetWords.map(word => {{
-                const isFound = foundWords.includes(word);
-                const boxes = isFound ? word.split('').join(' ') : '□'.repeat(word.length).split('').join(' ');
-                const color = isFound ? '#4CAF50' : '#666';
-                return `<span style="color: ${{color}};">${{boxes}}</span>`;
-            }});
-            targetWordsDiv.innerHTML = targetBoxes.join(' | ');
-        }}
-
         function checkCorrectWord() {{
             const currentWord = selectedLetters.join('');
             if (currentWord && targetWords.includes(currentWord) && !foundWords.includes(currentWord)) {{
                 foundWords.push(currentWord);
                 foundWordsDiv.textContent = '見つけた単語: ' + foundWords.join(', ');
-                updateTargetDisplay();
                 showSuccessMessage();
                 
                 if (foundWords.length === targetWords.length) {{
@@ -699,7 +471,6 @@ elif st.session_state.game_state == 'game':
                         showCompleteMessage();
                     }}, 1000);
                 }}
-                
                 return true;
             }}
             return false;
@@ -722,9 +493,10 @@ elif st.session_state.game_state == 'game':
         function getButtonCenterPosition(button) {{
             const rect = button.getBoundingClientRect();
             const containerRect = container.getBoundingClientRect();
-            const centerX = rect.left - containerRect.left + rect.width / 2;
-            const centerY = rect.top - containerRect.top + rect.height / 2;
-            return {{ x: centerX, y: centerY }};
+            return {{
+                x: rect.left - containerRect.left + rect.width / 2,
+                y: rect.top - containerRect.top + rect.height / 2
+            }};
         }}
 
         function resetSelection() {{
@@ -733,9 +505,7 @@ elif st.session_state.game_state == 'game':
             points = [];
             document.querySelectorAll('.circle-button').forEach(button => {{
                 button.classList.remove('selected');
-                button.classList.remove('hover');
             }});
-            currentHoverButton = null;
             updateSelectedWord();
             drawLine();
         }}
@@ -762,32 +532,15 @@ elif st.session_state.game_state == 'game':
             return null;
         }}
 
-        function handleHover(button) {{
-            if (button !== currentHoverButton) {{
-                if (currentHoverButton && !selectedButtons.includes(currentHoverButton)) {{
-                    currentHoverButton.classList.remove('hover');
-                }}
-                
-                if (button && !selectedButtons.includes(button)) {{
-                    button.classList.add('hover');
-                }}
-                
-                currentHoverButton = button;
-            }}
-        }}
-
         function drawLine() {{
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-
             if (points.length < 2) return;
 
             ctx.beginPath();
             ctx.moveTo(points[0].x, points[0].y);
-            
             for (let i = 1; i < points.length; i++) {{
                 ctx.lineTo(points[i].x, points[i].y);
             }}
-            
             ctx.strokeStyle = '#333';
             ctx.lineWidth = 2;
             ctx.stroke();
@@ -807,19 +560,17 @@ elif st.session_state.game_state == 'game':
             const button = event.target.closest('.circle-button');
             if (button) {{
                 selectButton(button);
-                handleHover(button);
             }}
         }}
 
         function handleMouseMove(event) {{
             event.preventDefault();
-            const button = getButtonAtPosition(event.clientX, event.clientY);
+            if (!isDragging) return;
             
-            if (isDragging && button) {{
+            const button = getButtonAtPosition(event.clientX, event.clientY);
+            if (button) {{
                 selectButton(button);
             }}
-            
-            handleHover(button);
         }}
 
         function handleMouseUp(event) {{
@@ -841,7 +592,6 @@ elif st.session_state.game_state == 'game':
             const button = getButtonAtPosition(touch.clientX, touch.clientY);
             if (button) {{
                 selectButton(button);
-                handleHover(button);
             }}
         }}
 
@@ -851,10 +601,8 @@ elif st.session_state.game_state == 'game':
             
             const touch = event.touches[0];
             const button = getButtonAtPosition(touch.clientX, touch.clientY);
-            
             if (button) {{
                 selectButton(button);
-                handleHover(button);
             }}
         }}
 
@@ -869,7 +617,7 @@ elif st.session_state.game_state == 'game':
             }}
         }}
 
-        // イベントリスナーの設定
+        // イベントリスナー設定
         container.addEventListener('mousedown', handleMouseDown);
         document.addEventListener('mousemove', handleMouseMove);
         document.addEventListener('mouseup', handleMouseUp);
@@ -880,23 +628,16 @@ elif st.session_state.game_state == 'game':
 
         // 初期化
         updateSelectedWord();
-        updateTargetDisplay();
 
-        // コンテキストメニューを無効化
-        document.addEventListener('contextmenu', function(e) {{
-            e.preventDefault();
-        }});
-
-        // テキスト選択を無効化
-        document.addEventListener('selectstart', function(e) {{
-            e.preventDefault();
-        }});
+        // コンテキストメニューとテキスト選択を無効化
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('selectstart', e => e.preventDefault());
     </script>
     </body>
     </html>
     """
 
-    # Streamlitの表示
+    # HTMLを表示
     components.html(full_html, height=600)
     
     # ステージクリア判定
