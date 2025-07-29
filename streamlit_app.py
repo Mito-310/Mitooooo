@@ -7,7 +7,6 @@ import streamlit.components.v1 as components
 # ページ設定
 st.set_page_config(
     page_title="Word Connect Game",
-    page_icon="🎮",
     layout="centered",
     initial_sidebar_state="auto"
 )
