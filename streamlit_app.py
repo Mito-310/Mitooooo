@@ -760,6 +760,213 @@ elif st.session_state.game_state == 'game':
         container.addEventListener('touchmove', handleTouchMove, {{passive: false}});
         container.addEventListener('touchend', handleTouchEnd, {{passive: false}});
 
+        <script>
+        let isDragging = false;
+        let selectedLetters = [];
+        let selectedButtons = [];
+        let points = [];
+        let targetWords = {st.session_state.target_words};
+        let foundWords = {st.session_state.found_words};
+
+        const selectedWordDiv = document.getElementById('selected-word');
+        const targetWordsDiv = document.getElementById('target-words');
+        const successMessageDiv = document.getElementById('success-message');
+        const completeMessageDiv = document.getElementById('complete-message');
+        const container = document.getElementById('circle-container');
+        const canvas = document.getElementById('lineCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function updateSelectedWord() {{
+            selectedWordDiv.textContent = selectedLetters.join('');
+        }}
+
+        function updateTargetWordsDisplay() {{
+            let targetBoxesHtml = [];
+            let sortedWords = targetWords.slice().sort();
+            
+            for (let word of sortedWords) {{
+                let isFound = foundWords.includes(word);
+                let boxesHtml = "";
+                for (let letter of word) {{
+                    if (isFound) {{
+                        boxesHtml += '<span style="display: inline-block; width: 26px; height: 26px; border: 1px solid #4CAF50; background: #4CAF50; color: white; text-align: center; line-height: 24px; margin: 1px; font-size: 14px; font-weight: bold; border-radius: 3px;">' + letter + '</span>';
+                    }} else {{
+                        boxesHtml += '<span style="display: inline-block; width: 26px; height: 26px; border: 1px solid #ddd; background: white; text-align: center; line-height: 24px; margin: 1px; border-radius: 3px;"></span>';
+                    }}
+                }}
+                targetBoxesHtml.push('<div style="display: inline-block; margin: 6px;">' + boxesHtml + '</div>');
+            }}
+            
+            targetWordsDiv.innerHTML = targetBoxesHtml.join(' ');
+        }}
+
+        function checkCorrectWord() {{
+            const currentWord = selectedLetters.join('');
+            if (currentWord && targetWords.includes(currentWord) && !foundWords.includes(currentWord)) {{
+                foundWords.push(currentWord);
+                updateTargetWordsDisplay();
+                showSuccessMessage();
+                
+                if (foundWords.length === targetWords.length) {{
+                    setTimeout(() => {{
+                        showCompleteMessage();
+                    }}, 1000);
+                }}
+                return true;
+            }}
+            return false;
+        }}
+
+        function showSuccessMessage() {{
+            successMessageDiv.classList.add('show');
+            setTimeout(() => {{
+                successMessageDiv.classList.remove('show');
+            }}, 1500);
+        }}
+
+        function showCompleteMessage() {{
+            completeMessageDiv.classList.add('show');
+            setTimeout(() => {{
+                completeMessageDiv.classList.remove('show');
+            }}, 2500);
+        }}
+
+        function getButtonCenterPosition(button) {{
+            const rect = button.getBoundingClientRect();
+            const containerRect = container.getBoundingClientRect();
+            return {{
+                x: rect.left - containerRect.left + rect.width / 2,
+                y: rect.top - containerRect.top + rect.height / 2
+            }};
+        }}
+
+        function resetSelection() {{
+            selectedLetters = [];
+            selectedButtons = [];
+            points = [];
+            document.querySelectorAll('.circle-button').forEach(button => {{
+                button.classList.remove('selected');
+            }});
+            updateSelectedWord();
+            drawLine();
+        }}
+
+        function selectButton(button) {{
+            if (!selectedButtons.includes(button)) {{
+                button.classList.add('selected');
+                selectedLetters.push(button.dataset.letter);
+                selectedButtons.push(button);
+                points.push(getButtonCenterPosition(button));
+                updateSelectedWord();
+                drawLine();
+            }}
+        }}
+
+        function getButtonAtPosition(x, y) {{
+            const buttons = document.querySelectorAll('.circle-button');
+            for (let button of buttons) {{
+                const rect = button.getBoundingClientRect();
+                if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {{
+                    return button;
+                }}
+            }}
+            return null;
+        }}
+
+        function drawLine() {{
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (points.length < 2) return;
+
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+            for (let i = 1; i < points.length; i++) {{
+                ctx.lineTo(points[i].x, points[i].y);
+            }}
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            points.forEach(point => {{
+                ctx.beginPath();
+                ctx.arc(point.x, point.y, 3, 0, 2 * Math.PI);
+                ctx.fillStyle = '#333';
+                ctx.fill();
+            }});
+        }}
+
+        // マウスイベント
+        function handleMouseDown(event) {{
+            event.preventDefault();
+            isDragging = true;
+            const button = event.target.closest('.circle-button');
+            if (button) {{
+                selectButton(button);
+            }}
+        }}
+
+        function handleMouseMove(event) {{
+            event.preventDefault();
+            if (!isDragging) return;
+            
+            const button = getButtonAtPosition(event.clientX, event.clientY);
+            if (button) {{
+                selectButton(button);
+            }}
+        }}
+
+        function handleMouseUp(event) {{
+            event.preventDefault();
+            if (isDragging) {{
+                isDragging = false;
+                const isCorrect = checkCorrectWord();
+                setTimeout(() => {{
+                    resetSelection();
+                }}, isCorrect ? 1000 : 200);
+            }}
+        }}
+
+        // タッチイベント
+        function handleTouchStart(event) {{
+            event.preventDefault();
+            isDragging = true;
+            const touch = event.touches[0];
+            const button = getButtonAtPosition(touch.clientX, touch.clientY);
+            if (button) {{
+                selectButton(button);
+            }}
+        }}
+
+        function handleTouchMove(event) {{
+            event.preventDefault();
+            if (!isDragging) return;
+            
+            const touch = event.touches[0];
+            const button = getButtonAtPosition(touch.clientX, touch.clientY);
+            if (button) {{
+                selectButton(button);
+            }}
+        }}
+
+        function handleTouchEnd(event) {{
+            event.preventDefault();
+            if (isDragging) {{
+                isDragging = false;
+                const isCorrect = checkCorrectWord();
+                setTimeout(() => {{
+                    resetSelection();
+                }}, isCorrect ? 1000 : 200);
+            }}
+        }}
+
+        // イベントリスナー設定
+        container.addEventListener('mousedown', handleMouseDown);
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+
+        container.addEventListener('touchstart', handleTouchStart, {{passive: false}});
+        container.addEventListener('touchmove', handleTouchMove, {{passive: false}});
+        container.addEventListener('touchend', handleTouchEnd, {{passive: false}});
+
         // 初期化
         updateSelectedWord();
         updateTargetWordsDisplay();
