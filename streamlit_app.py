@@ -742,3 +742,6 @@ elif st.session_state.game_state == 'game':
         </script>
     </body>
     </html>"""
+
+    # HTMLを表示
+    components.html(full_html, height=600)
