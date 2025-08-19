@@ -361,12 +361,12 @@ elif st.session_state.game_state == 'game':
     for word in sorted_words:
         is_found = word in st.session_state.found_words
         boxes_html = ""
-        for letter in word:
+                        for letter in word:
             if is_found:
-                boxes_html += f'<span style="display: inline-block; width: 22px; height: 22px; border: 1px solid #4CAF50; background: #4CAF50; color: white; text-align: center; line-height: 20px; margin: 1px; font-size: 12px; font-weight: bold; border-radius: 2px;">{letter}</span>'
+                boxes_html += f'<span style="display: inline-block; width: 26px; height: 26px; border: 1px solid #4CAF50; background: #4CAF50; color: white; text-align: center; line-height: 24px; margin: 1px; font-size: 14px; font-weight: bold; border-radius: 3px;">{letter}</span>'
             else:
-                boxes_html += f'<span style="display: inline-block; width: 22px; height: 22px; border: 1px solid #ddd; background: white; text-align: center; line-height: 20px; margin: 1px; border-radius: 2px;"></span>'
-        target_boxes_html.append(f'<div style="display: inline-block; margin: 5px;">{boxes_html}</div>')
+                boxes_html += f'<span style="display: inline-block; width: 26px; height: 26px; border: 1px solid #ddd; background: white; text-align: center; line-height: 24px; margin: 1px; border-radius: 3px;"></span>'
+        target_boxes_html.append(f'<div style="display: inline-block; margin: 6px;">{boxes_html}</div>')
     
     target_display = ' '.join(target_boxes_html)
     
@@ -401,7 +401,7 @@ elif st.session_state.game_state == 'game':
             position: relative;
             width: 300px;
             height: 300px;
-            margin: 120px auto 40px auto;
+            margin: 180px auto 40px auto;
             border: 3px solid #ddd;
             border-radius: 50%;
             background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
@@ -458,8 +458,8 @@ elif st.session_state.game_state == 'game':
             left: 0;
             width: 100%;
             text-align: center;
-            font-size: 14px;
-            padding: 12px;
+            font-size: 16px;
+            padding: 15px;
             color: #666;
             background: #f9f9f9;
             z-index: 998;
@@ -554,12 +554,12 @@ elif st.session_state.game_state == 'game':
                 let boxesHtml = "";
                 for (let letter of word) {{
                     if (isFound) {{
-                        boxesHtml += '<span style="display: inline-block; width: 22px; height: 22px; border: 1px solid #4CAF50; background: #4CAF50; color: white; text-align: center; line-height: 20px; margin: 1px; font-size: 12px; font-weight: bold; border-radius: 2px;">' + letter + '</span>';
+                        boxesHtml += '<span style="display: inline-block; width: 26px; height: 26px; border: 1px solid #4CAF50; background: #4CAF50; color: white; text-align: center; line-height: 24px; margin: 1px; font-size: 14px; font-weight: bold; border-radius: 3px;">' + letter + '</span>';
                     }} else {{
-                        boxesHtml += '<span style="display: inline-block; width: 22px; height: 22px; border: 1px solid #ddd; background: white; text-align: center; line-height: 20px; margin: 1px; border-radius: 2px;"></span>';
+                        boxesHtml += '<span style="display: inline-block; width: 26px; height: 26px; border: 1px solid #ddd; background: white; text-align: center; line-height: 24px; margin: 1px; border-radius: 3px;"></span>';
                     }}
                 }}
-                targetBoxesHtml.push('<div style="display: inline-block; margin: 5px;">' + boxesHtml + '</div>');
+                targetBoxesHtml.push('<div style="display: inline-block; margin: 6px;">' + boxesHtml + '</div>');
             }}
             
             targetWordsDiv.innerHTML = targetBoxesHtml.join(' ');
