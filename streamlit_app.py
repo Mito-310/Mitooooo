@@ -361,7 +361,7 @@ elif st.session_state.game_state == 'game':
     for word in sorted_words:
         is_found = word in st.session_state.found_words
         boxes_html = ""
-                        for letter in word:
+        for letter in word:
             if is_found:
                 boxes_html += f'<span style="display: inline-block; width: 26px; height: 26px; border: 1px solid #4CAF50; background: #4CAF50; color: white; text-align: center; line-height: 24px; margin: 1px; font-size: 14px; font-weight: bold; border-radius: 3px;">{letter}</span>'
             else:
@@ -743,31 +743,4 @@ elif st.session_state.game_state == 'game':
     </body>
     </html>"""
 
-    # HTMLを表示
-    components.html(full_html, height=600)
-    
-    # ステージクリア判定
-    if len(st.session_state.found_words) == len(st.session_state.target_words):
-        st.success("ステージクリア！")
-        
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            if st.button("もう一度プレイ"):
-                st.session_state.found_words = []
-                st.rerun()
-        
-        with col2:
-            if st.session_state.current_stage < len(STAGES):
-                if st.button("→次のステージ"):
-                    st.session_state.current_stage += 1
-                    st.session_state.target_words = STAGES[st.session_state.current_stage]['words']
-                    st.session_state.found_words = []
-                    st.rerun()
-            else:
-                st.markdown("<div style='text-align: center; color: #4CAF50; font-weight: bold; font-size: 18px;'>全ステージクリア！</div>", unsafe_allow_html=True)
-        
-        with col3:
-            if st.button("タイトルに戻る"):
-                st.session_state.game_state = 'title'
-                st.rerun()
+    # HTML
