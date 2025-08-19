@@ -410,7 +410,9 @@ elif st.session_state.game_state == 'game':
         with col3:
             if st.button("タイトルに戻る"):
                 st.session_state.game_state = 'title'
-                st.rerun()ゲーム部分
+                st.rerun()
+
+
     full_html = f"""<!DOCTYPE html>
     <html>
     <head>
