@@ -412,7 +412,6 @@ elif st.session_state.game_state == 'game':
                 st.session_state.game_state = 'title'
                 st.rerun()
 
-
     full_html = f"""<!DOCTYPE html>
     <html>
     <head>
