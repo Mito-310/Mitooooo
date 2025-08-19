@@ -376,14 +376,41 @@ elif st.session_state.game_state == 'game':
         <div class="circle-button" id="button_{i}"
                 data-letter="{letter}"
                 data-index="{i}"
-                style="left: {150 + 120 * math.cos(2 * math.pi * i / num_letters - math.pi/2) - 25}px;
-                       top:  {150 + 120 * math.sin(2 * math.pi * i / num_letters - math.pi/2) - 25}px;">
+                style="left: {160 + 130 * math.cos(2 * math.pi * i / num_letters - math.pi/2) - 25}px;
+                       top:  {160 + 130 * math.sin(2 * math.pi * i / num_letters - math.pi/2) - 25}px;">
             {letter}
         </div>
         ''' for i, letter in enumerate(letters)
     ])
 
-    # HTMLゲーム部分
+    # HTMLを表示
+    components.html(full_html, height=600)
+    
+    # ステージクリア判定
+    if len(st.session_state.found_words) == len(st.session_state.target_words):
+        st.success("ステージクリア！")
+        
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            if st.button("もう一度プレイ"):
+                st.session_state.found_words = []
+                st.rerun()
+        
+        with col2:
+            if st.session_state.current_stage < len(STAGES):
+                if st.button("→次のステージ"):
+                    st.session_state.current_stage += 1
+                    st.session_state.target_words = STAGES[st.session_state.current_stage]['words']
+                    st.session_state.found_words = []
+                    st.rerun()
+            else:
+                st.markdown("<div style='text-align: center; color: #4CAF50; font-weight: bold; font-size: 18px;'>全ステージクリア！</div>", unsafe_allow_html=True)
+        
+        with col3:
+            if st.button("タイトルに戻る"):
+                st.session_state.game_state = 'title'
+                st.rerun()ゲーム部分
     full_html = f"""<!DOCTYPE html>
     <html>
     <head>
