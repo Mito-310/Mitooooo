@@ -354,7 +354,7 @@ elif st.session_state.game_state == 'game':
     st.progress(progress)
     st.markdown(f"<div style='text-align: center; color: #555; font-weight: 500; margin-bottom: 1rem;'>進行状況: {len(st.session_state.found_words)} / {len(st.session_state.target_words)} 単語</div>", unsafe_allow_html=True)
     
-    # 目標単語の表示
+    # 目標単語の表示（見つけた単語は緑で表示）
     sorted_words = sorted(st.session_state.target_words)
     target_boxes_html = []
     
@@ -369,7 +369,6 @@ elif st.session_state.game_state == 'game':
         target_boxes_html.append(f'<div style="display: inline-block; margin: 5px;">{boxes_html}</div>')
     
     target_display = ' '.join(target_boxes_html)
-    found_display = ', '.join(st.session_state.found_words) if st.session_state.found_words else 'なし'
     
     # 円形ボタンのHTML生成
     button_html = ''.join([
@@ -402,7 +401,7 @@ elif st.session_state.game_state == 'game':
             position: relative;
             width: 300px;
             height: 300px;
-            margin: 150px auto 40px auto;
+            margin: 120px auto 40px auto;
             border: 3px solid #ddd;
             border-radius: 50%;
             background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
@@ -466,21 +465,6 @@ elif st.session_state.game_state == 'game':
             z-index: 998;
             border-bottom: 1px solid #ddd;
         }}
-        #found-words {{
-            position: fixed;
-            top: 118px;
-            left: 0;
-            width: 100%;
-            text-align: center;
-            font-size: 13px;
-            padding: 8px;
-            color: #333;
-            background: #f0f0f0;
-            z-index: 997;
-            border-bottom: 1px solid #ddd;
-            min-height: 20px;
-            font-weight: 500;
-        }}
         .success-message {{
             position: fixed;
             top: 50%;
@@ -533,7 +517,6 @@ elif st.session_state.game_state == 'game':
     <body>
     <div id="selected-word"></div>
     <div id="target-words">{target_display}</div>
-    <div id="found-words">見つけた単語: {found_display}</div>
     <div id="success-message" class="success-message">正解！</div>
     <div id="complete-message" class="complete-message">ステージクリア！</div>
 
@@ -552,7 +535,6 @@ elif st.session_state.game_state == 'game':
 
         const selectedWordDiv = document.getElementById('selected-word');
         const targetWordsDiv = document.getElementById('target-words');
-        const foundWordsDiv = document.getElementById('found-words');
         const successMessageDiv = document.getElementById('success-message');
         const completeMessageDiv = document.getElementById('complete-message');
         const container = document.getElementById('circle-container');
@@ -563,11 +545,31 @@ elif st.session_state.game_state == 'game':
             selectedWordDiv.textContent = selectedLetters.join('');
         }}
 
+        function updateTargetWordsDisplay() {{
+            let targetBoxesHtml = [];
+            let sortedWords = targetWords.slice().sort();
+            
+            for (let word of sortedWords) {{
+                let isFound = foundWords.includes(word);
+                let boxesHtml = "";
+                for (let letter of word) {{
+                    if (isFound) {{
+                        boxesHtml += `<span style="display: inline-block; width: 22px; height: 22px; border: 1px solid #4CAF50; background: #4CAF50; color: white; text-align: center; line-height: 20px; margin: 1px; font-size: 12px; font-weight: bold; border-radius: 2px;">${{letter}}</span>`;
+                    }} else {{
+                        boxesHtml += `<span style="display: inline-block; width: 22px; height: 22px; border: 1px solid #ddd; background: white; text-align: center; line-height: 20px; margin: 1px; border-radius: 2px;"></span>`;
+                    }}
+                }}
+                targetBoxesHtml.push(`<div style="display: inline-block; margin: 5px;">${{boxesHtml}}</div>`);
+            }}
+            
+            targetWordsDiv.innerHTML = targetBoxesHtml.join(' ');
+        }}
+
         function checkCorrectWord() {{
             const currentWord = selectedLetters.join('');
             if (currentWord && targetWords.includes(currentWord) && !foundWords.includes(currentWord)) {{
                 foundWords.push(currentWord);
-                foundWordsDiv.textContent = '見つけた単語: ' + foundWords.join(', ');
+                updateTargetWordsDisplay();
                 showSuccessMessage();
                 
                 if (foundWords.length === targetWords.length) {{
@@ -732,6 +734,7 @@ elif st.session_state.game_state == 'game':
 
         // 初期化
         updateSelectedWord();
+        updateTargetWordsDisplay();
 
         // コンテキストメニューとテキスト選択を無効化
         document.addEventListener('contextmenu', e => e.preventDefault());
@@ -740,32 +743,3 @@ elif st.session_state.game_state == 'game':
     </body>
     </html>
     """
-
-    # HTMLを表示
-    components.html(full_html, height=600)
-    
-    # ステージクリア判定
-    if len(st.session_state.found_words) == len(st.session_state.target_words):
-        st.success("ステージクリア！")
-        
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            if st.button("もう一度プレイ"):
-                st.session_state.found_words = []
-                st.rerun()
-        
-        with col2:
-            if st.session_state.current_stage < len(STAGES):
-                if st.button("→次のステージ"):
-                    st.session_state.current_stage += 1
-                    st.session_state.target_words = STAGES[st.session_state.current_stage]['words']
-                    st.session_state.found_words = []
-                    st.rerun()
-            else:
-                st.markdown("<div style='text-align: center; color: #4CAF50; font-weight: bold; font-size: 18px;'>全ステージクリア！</div>", unsafe_allow_html=True)
-        
-        with col3:
-            if st.button("タイトルに戻る"):
-                st.session_state.game_state = 'title'
-                st.rerun()
