@@ -376,8 +376,8 @@ elif st.session_state.game_state == 'game':
         <div class="circle-button" id="button_{i}"
                 data-letter="{letter}"
                 data-index="{i}"
-                style="left: {160 + 115 * math.cos(2 * math.pi * i / num_letters - math.pi/2) - 30}px;
-                       top:  {160 + 115 * math.sin(2 * math.pi * i / num_letters - math.pi/2) - 30}px;">
+                style="left: {160 + 120 * math.cos(2 * math.pi * i / num_letters - math.pi/2) - 25}px;
+                       top:  {160 + 120 * math.sin(2 * math.pi * i / num_letters - math.pi/2) - 25}px;">
             {letter}
         </div>
         ''' for i, letter in enumerate(letters)
@@ -409,12 +409,12 @@ elif st.session_state.game_state == 'game':
         }}
         .circle-button {{
             position: absolute;
-            width: 60px;
-            height: 60px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
             color: #333;
-            font-size: 20px;
+            font-size: 18px;
             font-weight: bold;
             border: 2px solid #333;
             cursor: pointer;
@@ -631,9 +631,22 @@ elif st.session_state.game_state == 'game':
             const buttons = document.querySelectorAll('.circle-button');
             for (let button of buttons) {{
                 const rect = button.getBoundingClientRect();
-                // 当たり判定の範囲を拡張（10px余裕を持たせる）
-                if (x >= rect.left - 10 && x <= rect.right + 10 && 
-                    y >= rect.top - 10 && y <= rect.bottom + 10) {{
+                const containerRect = container.getBoundingClientRect();
+                
+                // コンテナ基準の座標に変換
+                const relativeX = x - containerRect.left;
+                const relativeY = y - containerRect.top;
+                const buttonCenterX = rect.left - containerRect.left + rect.width / 2;
+                const buttonCenterY = rect.top - containerRect.top + rect.height / 2;
+                
+                // ボタン中心からの距離を計算して当たり判定を行う
+                const distance = Math.sqrt(
+                    Math.pow(relativeX - buttonCenterX, 2) + 
+                    Math.pow(relativeY - buttonCenterY, 2)
+                );
+                
+                // 半径35px以内なら当たり判定（元の25px + 10px余裕）
+                if (distance <= 35) {{
                     return button;
                 }}
             }}
