@@ -376,8 +376,8 @@ elif st.session_state.game_state == 'game':
         <div class="circle-button" id="button_{i}"
                 data-letter="{letter}"
                 data-index="{i}"
-                style="left: {160 + 130 * math.cos(2 * math.pi * i / num_letters - math.pi/2) - 25}px;
-                       top:  {160 + 130 * math.sin(2 * math.pi * i / num_letters - math.pi/2) - 25}px;">
+                style="left: {160 + 120 * math.cos(2 * math.pi * i / num_letters - math.pi/2) - 25}px;
+                       top:  {160 + 120 * math.sin(2 * math.pi * i / num_letters - math.pi/2) - 25}px;">
             {letter}
         </div>
         ''' for i, letter in enumerate(letters)
@@ -399,9 +399,9 @@ elif st.session_state.game_state == 'game':
         }}
         .circle-container {{
             position: relative;
-            width: 300px;
-            height: 300px;
-            margin: 180px auto 40px auto;
+            width: 320px;
+            height: 320px;
+            margin: 160px auto 40px auto;
             border: 3px solid #ddd;
             border-radius: 50%;
             background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
@@ -522,7 +522,7 @@ elif st.session_state.game_state == 'game':
 
         <div class="circle-container" id="circle-container">
             {button_html}
-            <canvas id="lineCanvas" width="300" height="300"></canvas>
+            <canvas id="lineCanvas" width="320" height="320"></canvas>
         </div>
 
         <script>
