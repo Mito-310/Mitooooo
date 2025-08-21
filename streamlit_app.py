@@ -431,6 +431,7 @@ elif st.session_state.game_state == 'game':
             transform: scale(1.15);
             box-shadow: 0 6px 12px rgba(0,0,0,0.3);
             border: 2px solid #1a1a1a;
+            transition: all 0.1s ease;
         }}
         .circle-button:not(.selected):hover {{
             background: linear-gradient(135deg, #f0f0f0 0%, #e9ecef 100%) !important;
@@ -615,12 +616,18 @@ elif st.session_state.game_state == 'game':
 
         function selectButton(button) {{
             if (!selectedButtons.includes(button)) {{
+                // 即座にクラスを追加（背景黒、文字白）
                 button.classList.add('selected');
+                button.classList.remove('hover');
+                
                 selectedLetters.push(button.dataset.letter);
                 selectedButtons.push(button);
                 points.push(getButtonCenterPosition(button));
                 updateSelectedWord();
                 drawLine();
+                
+                // 強制的に再描画を促す
+                button.offsetHeight;
             }}
         }}
 
@@ -628,6 +635,8 @@ elif st.session_state.game_state == 'game':
             document.querySelectorAll('.circle-button').forEach(button => {{
                 button.classList.remove('selected');
                 button.classList.remove('hover');
+                // 強制的に再描画を促す
+                button.offsetHeight;
             }});
             selectedLetters = [];
             selectedButtons = [];
