@@ -610,15 +610,7 @@ elif st.session_state.game_state == 'game':
         }}
 
         function resetSelection() {{
-            selectedLetters = [];
-            selectedButtons = [];
-            points = [];
-            document.querySelectorAll('.circle-button').forEach(button => {{
-                button.classList.remove('selected');
-                button.classList.remove('hover');
-            }});
-            updateSelectedWord();
-            drawLine();
+            clearAllSelections();
         }}
 
         function selectButton(button) {{
@@ -630,6 +622,18 @@ elif st.session_state.game_state == 'game':
                 updateSelectedWord();
                 drawLine();
             }}
+        }}
+
+        function clearAllSelections() {{
+            document.querySelectorAll('.circle-button').forEach(button => {{
+                button.classList.remove('selected');
+                button.classList.remove('hover');
+            }});
+            selectedLetters = [];
+            selectedButtons = [];
+            points = [];
+            updateSelectedWord();
+            drawLine();
         }}
 
         function getButtonAtPosition(clientX, clientY) {{
@@ -694,6 +698,9 @@ elif st.session_state.game_state == 'game':
         function handleMouseDown(event) {{
             event.preventDefault();
             isDragging = true;
+            // まず全ての選択をクリア
+            clearAllSelections();
+            
             const button = getButtonAtPosition(event.clientX, event.clientY);
             if (button) {{
                 selectButton(button);
@@ -719,8 +726,10 @@ elif st.session_state.game_state == 'game':
             if (isDragging) {{
                 isDragging = false;
                 const isCorrect = checkCorrectWord();
+                
+                // 単語チェック後に選択をリセット
                 setTimeout(() => {{
-                    resetSelection();
+                    clearAllSelections();
                 }}, isCorrect ? 1000 : 200);
             }}
             // ホバー状態をクリア
@@ -733,6 +742,9 @@ elif st.session_state.game_state == 'game':
         function handleTouchStart(event) {{
             event.preventDefault();
             isDragging = true;
+            // まず全ての選択をクリア
+            clearAllSelections();
+            
             const touch = event.touches[0];
             const button = getButtonAtPosition(touch.clientX, touch.clientY);
             if (button) {{
@@ -757,7 +769,7 @@ elif st.session_state.game_state == 'game':
                 isDragging = false;
                 const isCorrect = checkCorrectWord();
                 setTimeout(() => {{
-                    resetSelection();
+                    clearAllSelections();
                 }}, isCorrect ? 1000 : 200);
             }}
         }}
