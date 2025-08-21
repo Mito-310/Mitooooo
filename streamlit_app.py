@@ -552,7 +552,7 @@ elif st.session_state.game_state == 'game':
         
         <!-- ヒントボタンをJavaScriptで処理 -->
         <div style="position: fixed; top: 10px; right: 10px; z-index: 1000;">
-            <button onclick="showHint()" style="padding: 8px 16px; background: #2196F3; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">ヒント</button>
+            <button onclick="showHint()" style="padding: 8px 16px; background: #333; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; transition: all 0.2s ease;" onmouseover="this.style.background='#555'" onmouseout="this.style.background='#333'">ヒント</button>
         </div>
 
         <div class="circle-container" id="circle-container">
