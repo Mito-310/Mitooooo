@@ -362,23 +362,8 @@ elif st.session_state.game_state == 'game':
             st.session_state.show_hints = {}
             st.rerun()
     with col4:
-        # まだ見つかっていない単語があるかチェック
-        unfound_words = [word for word in st.session_state.target_words if word not in st.session_state.found_words]
-        remaining_hints = [word for word in unfound_words if word not in st.session_state.hints_used]
-        
-        # 正解した単語のヒント表示をクリア
-        for found_word in st.session_state.found_words:
-            if found_word in st.session_state.show_hints:
-                del st.session_state.show_hints[found_word]
-        
-        if st.button("ヒント", use_container_width=True, disabled=(len(remaining_hints) == 0)):
-            if remaining_hints:
-                # ランダムに1つの単語の最初の文字をヒントとして表示
-                import random
-                hint_word = random.choice(remaining_hints)
-                st.session_state.hints_used.append(hint_word)
-                st.session_state.show_hints[hint_word] = hint_word[0]
-                st.rerun()
+        # ヒント機能はJavaScriptで処理するため、このボタンは表示しない
+        st.markdown('<div style="height: 42px;"></div>', unsafe_allow_html=True)
     
     # 進行状況
     progress = len(st.session_state.found_words) / len(st.session_state.target_words)
@@ -564,6 +549,11 @@ elif st.session_state.game_state == 'game':
         <div id="target-words">{target_display}</div>
         <div id="success-message" class="success-message">正解！</div>
         <div id="complete-message" class="complete-message">ステージクリア！</div>
+        
+        <!-- ヒントボタンをJavaScriptで処理 -->
+        <div style="position: fixed; top: 10px; right: 10px; z-index: 1000;">
+            <button onclick="showHint()" style="padding: 8px 16px; background: #2196F3; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">ヒント</button>
+        </div>
 
         <div class="circle-container" id="circle-container">
             <canvas id="lineCanvas" width="320" height="320"></canvas>
@@ -633,6 +623,20 @@ elif st.session_state.game_state == 'game':
                 return true;
             }}
             return false;
+        }}
+        
+        function showHint() {{
+            // まだ見つかっていない単語を取得
+            let unfoundWords = targetWords.filter(word => !foundWords.includes(word));
+            let availableHints = unfoundWords.filter(word => !showHints.hasOwnProperty(word));
+            
+            if (availableHints.length > 0) {{
+                // ランダムに1つの単語を選択
+                let randomIndex = Math.floor(Math.random() * availableHints.length);
+                let hintWord = availableHints[randomIndex];
+                showHints[hintWord] = hintWord[0];
+                updateTargetWordsDisplay();
+            }}
         }}
 
         function showSuccessMessage() {{
