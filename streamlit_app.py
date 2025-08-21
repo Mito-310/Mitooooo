@@ -23,6 +23,7 @@ st.markdown("""
     font-weight: 600;
     transition: all 0.3s ease;
     height: 50px;
+}
 
 .stButton > button:hover {
     background-color: #555;
@@ -435,6 +436,11 @@ elif st.session_state.game_state == 'game':
             transform: scale(1.05);
             box-shadow: 0 3px 6px rgba(0,0,0,0.15);
         }}
+        .circle-button.hover {{
+            background: linear-gradient(135deg, #f0f0f0 0%, #e9ecef 100%) !important;
+            transform: scale(1.05);
+            box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+        }}
         #selected-word {{
             position: fixed;
             top: 0;
@@ -608,6 +614,7 @@ elif st.session_state.game_state == 'game':
             points = [];
             document.querySelectorAll('.circle-button').forEach(button => {{
                 button.classList.remove('selected');
+                button.classList.remove('hover');
             }});
             updateSelectedWord();
             drawLine();
@@ -629,6 +636,13 @@ elif st.session_state.game_state == 'game':
             let closestButton = null;
             let closestDistance = Infinity;
             
+            // 以前のホバー状態をクリア
+            buttons.forEach(button => {{
+                if (!button.classList.contains('selected')) {{
+                    button.classList.remove('hover');
+                }}
+            }});
+            
             for (let button of buttons) {{
                 const rect = button.getBoundingClientRect();
                 const buttonCenterX = rect.left + rect.width / 2;
@@ -644,6 +658,11 @@ elif st.session_state.game_state == 'game':
                     closestDistance = distance;
                     closestButton = button;
                 }}
+            }}
+            
+            // 最も近いボタンにホバー効果を適用
+            if (closestButton && !closestButton.classList.contains('selected')) {{
+                closestButton.classList.add('hover');
             }}
             
             return closestButton;
@@ -682,11 +701,15 @@ elif st.session_state.game_state == 'game':
 
         function handleMouseMove(event) {{
             event.preventDefault();
-            if (!isDragging) return;
             
-            const button = getButtonAtPosition(event.clientX, event.clientY);
-            if (button) {{
-                selectButton(button);
+            if (isDragging) {{
+                const button = getButtonAtPosition(event.clientX, event.clientY);
+                if (button) {{
+                    selectButton(button);
+                }}
+            }} else {{
+                // ドラッグ中でない時も視覚的フィードバックを提供
+                getButtonAtPosition(event.clientX, event.clientY);
             }}
         }}
 
@@ -699,6 +722,10 @@ elif st.session_state.game_state == 'game':
                     resetSelection();
                 }}, isCorrect ? 1000 : 200);
             }}
+            // ホバー状態をクリア
+            document.querySelectorAll('.circle-button').forEach(button => {{
+                button.classList.remove('hover');
+            }});
         }}
 
         // タッチイベント
