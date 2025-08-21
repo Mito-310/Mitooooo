@@ -362,17 +362,23 @@ elif st.session_state.game_state == 'game':
             st.session_state.show_hints = {}
             st.rerun()
     with col4:
-        if st.button("ヒント", use_container_width=True):
-            # まだ見つかっていない単語があるかチェック
-            unfound_words = [word for word in st.session_state.target_words if word not in st.session_state.found_words]
-            if unfound_words:
+        # まだ見つかっていない単語があるかチェック
+        unfound_words = [word for word in st.session_state.target_words if word not in st.session_state.found_words]
+        remaining_hints = [word for word in unfound_words if word not in st.session_state.hints_used]
+        
+        # 正解した単語のヒント表示をクリア
+        for found_word in st.session_state.found_words:
+            if found_word in st.session_state.show_hints:
+                del st.session_state.show_hints[found_word]
+        
+        if st.button("ヒント", use_container_width=True, disabled=(len(remaining_hints) == 0)):
+            if remaining_hints:
                 # ランダムに1つの単語の最初の文字をヒントとして表示
                 import random
-                hint_word = random.choice(unfound_words)
-                if hint_word not in st.session_state.hints_used:
-                    st.session_state.hints_used.append(hint_word)
-                    st.session_state.show_hints[hint_word] = hint_word[0]
-                    st.rerun()
+                hint_word = random.choice(remaining_hints)
+                st.session_state.hints_used.append(hint_word)
+                st.session_state.show_hints[hint_word] = hint_word[0]
+                st.rerun()
     
     # 進行状況
     progress = len(st.session_state.found_words) / len(st.session_state.target_words)
