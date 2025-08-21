@@ -23,7 +23,6 @@ st.markdown("""
     font-weight: 600;
     transition: all 0.3s ease;
     height: 50px;
-}
 
 .stButton > button:hover {
     background-color: #555;
@@ -625,27 +624,29 @@ elif st.session_state.game_state == 'game':
             }}
         }}
 
-        function getButtonAtPosition(x, y) {{
+        function getButtonAtPosition(clientX, clientY) {{
             const buttons = document.querySelectorAll('.circle-button');
+            let closestButton = null;
+            let closestDistance = Infinity;
+            
             for (let button of buttons) {{
                 const rect = button.getBoundingClientRect();
-                const containerRect = container.getBoundingClientRect();
-                
-                const relativeX = x - containerRect.left;
-                const relativeY = y - containerRect.top;
-                const buttonCenterX = rect.left - containerRect.left + rect.width / 2;
-                const buttonCenterY = rect.top - containerRect.top + rect.height / 2;
+                const buttonCenterX = rect.left + rect.width / 2;
+                const buttonCenterY = rect.top + rect.height / 2;
                 
                 const distance = Math.sqrt(
-                    Math.pow(relativeX - buttonCenterX, 2) + 
-                    Math.pow(relativeY - buttonCenterY, 2)
+                    Math.pow(clientX - buttonCenterX, 2) + 
+                    Math.pow(clientY - buttonCenterY, 2)
                 );
                 
-                if (distance <= 35) {{
-                    return button;
+                // 当たり判定の範囲を広げる（40px）
+                if (distance <= 40 && distance < closestDistance) {{
+                    closestDistance = distance;
+                    closestButton = button;
                 }}
             }}
-            return null;
+            
+            return closestButton;
         }}
 
         function drawLine() {{
@@ -673,7 +674,7 @@ elif st.session_state.game_state == 'game':
         function handleMouseDown(event) {{
             event.preventDefault();
             isDragging = true;
-            const button = event.target.closest('.circle-button');
+            const button = getButtonAtPosition(event.clientX, event.clientY);
             if (button) {{
                 selectButton(button);
             }}
@@ -734,13 +735,14 @@ elif st.session_state.game_state == 'game':
         }}
 
         // イベントリスナー設定
-        container.addEventListener('mousedown', handleMouseDown);
+        // ドキュメント全体にイベントリスナーを設定して、より確実に捉える
+        document.addEventListener('mousedown', handleMouseDown);
         document.addEventListener('mousemove', handleMouseMove);
         document.addEventListener('mouseup', handleMouseUp);
 
-        container.addEventListener('touchstart', handleTouchStart, {{passive: false}});
-        container.addEventListener('touchmove', handleTouchMove, {{passive: false}});
-        container.addEventListener('touchend', handleTouchEnd, {{passive: false}});
+        document.addEventListener('touchstart', handleTouchStart, {{passive: false}});
+        document.addEventListener('touchmove', handleTouchMove, {{passive: false}});
+        document.addEventListener('touchend', handleTouchEnd, {{passive: false}});
 
         // 初期化
         updateSelectedWord();
@@ -749,6 +751,13 @@ elif st.session_state.game_state == 'game':
         // コンテキストメニューとテキスト選択を無効化
         document.addEventListener('contextmenu', e => e.preventDefault());
         document.addEventListener('selectstart', e => e.preventDefault());
+        
+        // デバッグ用：ボタンの位置を確認
+        console.log('Buttons initialized:');
+        document.querySelectorAll('.circle-button').forEach((button, index) => {{
+            const rect = button.getBoundingClientRect();
+            console.log(`Button ${{index}}: ${{button.dataset.letter}} at (${{rect.left + rect.width/2}}, ${{rect.top + rect.height/2}})`);
+        }});
         </script>
     </body>
     </html>
