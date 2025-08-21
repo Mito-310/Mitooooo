@@ -382,8 +382,9 @@ elif st.session_state.game_state == 'game':
         ''' for i, letter in enumerate(letters)
     ])
 
-    # 完全なHTMLを生成 - 修正版
-    full_html = f"""<!DOCTYPE html>
+    # HTMLを表示
+    components.html(f"""
+    <!DOCTYPE html>
     <html>
     <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
@@ -450,7 +451,6 @@ elif st.session_state.game_state == 'game':
             background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
             z-index: 999;
             border-bottom: 2px solid #e9ecef;
-            box-sizing: border-box;
         }}
         #target-words {{
             position: fixed;
@@ -464,8 +464,6 @@ elif st.session_state.game_state == 'game':
             background: #f9f9f9;
             z-index: 998;
             border-bottom: 1px solid #ddd;
-            box-sizing: border-box;
-            line-height: 1;
         }}
         .success-message {{
             position: fixed;
@@ -481,7 +479,6 @@ elif st.session_state.game_state == 'game':
             z-index: 1000;
             opacity: 0;
             transition: all 0.3s ease;
-            box-shadow: 0 6px 12px rgba(76, 175, 80, 0.3);
         }}
         .success-message.show {{
             opacity: 1;
@@ -501,7 +498,6 @@ elif st.session_state.game_state == 'game':
             z-index: 1001;
             opacity: 0;
             transition: all 0.3s ease;
-            box-shadow: 0 8px 16px rgba(33, 150, 243, 0.3);
         }}
         .complete-message.show {{
             opacity: 1;
@@ -514,33 +510,6 @@ elif st.session_state.game_state == 'game':
             z-index: 1;
             pointer-events: none;
         }}
-        /* 次のステージボタン */
-        .next-stage-button {{
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
-            color: white;
-            padding: 15px 25px;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            z-index: 1002;
-            opacity: 0;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
-        }}
-        .next-stage-button.show {{
-            opacity: 1;
-        }}
-        .next-stage-button:hover {{
-            background: linear-gradient(135deg, #45a049 0%, #388e3c 100%);
-            transform: translateX(-50%) translateY(-2px);
-            box-shadow: 0 6px 12px rgba(76, 175, 80, 0.4);
-        }}
         </style>
     </head>
     <body>
@@ -548,7 +517,6 @@ elif st.session_state.game_state == 'game':
         <div id="target-words">{target_display}</div>
         <div id="success-message" class="success-message">正解！</div>
         <div id="complete-message" class="complete-message">ステージクリア！</div>
-        <button id="next-stage-button" class="next-stage-button">次のステージへ</button>
 
         <div class="circle-container" id="circle-container">
             {button_html}
@@ -562,14 +530,11 @@ elif st.session_state.game_state == 'game':
         let points = [];
         let targetWords = {st.session_state.target_words};
         let foundWords = {st.session_state.found_words};
-        let currentStage = {st.session_state.current_stage};
-        let maxStage = {len(STAGES)};
 
         const selectedWordDiv = document.getElementById('selected-word');
         const targetWordsDiv = document.getElementById('target-words');
         const successMessageDiv = document.getElementById('success-message');
         const completeMessageDiv = document.getElementById('complete-message');
-        const nextStageButton = document.getElementById('next-stage-button');
         const container = document.getElementById('circle-container');
         const canvas = document.getElementById('lineCanvas');
         const ctx = canvas.getContext('2d');
@@ -608,11 +573,6 @@ elif st.session_state.game_state == 'game':
                 if (foundWords.length === targetWords.length) {{
                     setTimeout(() => {{
                         showCompleteMessage();
-                        if (currentStage < maxStage) {{
-                            setTimeout(() => {{
-                                nextStageButton.classList.add('show');
-                            }}, 2000);
-                        }}
                     }}, 1000);
                 }}
                 return true;
@@ -646,21 +606,67 @@ elif st.session_state.game_state == 'game':
         function resetSelection() {{
             selectedLetters = [];
             selectedButtons = [];
+            points = [];
+            document.querySelectorAll('.circle-button').forEach(button => {{
+                button.classList.remove('selected');
+            }});
+            updateSelectedWord();
+            drawLine();
+        }}
+
+        function selectButton(button) {{
+            if (!selectedButtons.includes(button)) {{
+                button.classList.add('selected');
+                selectedLetters.push(button.dataset.letter);
+                selectedButtons.push(button);
+                points.push(getButtonCenterPosition(button));
+                updateSelectedWord();
+                drawLine();
+            }}
+        }}
+
+        function getButtonAtPosition(x, y) {{
+            const buttons = document.querySelectorAll('.circle-button');
+            for (let button of buttons) {{
+                const rect = button.getBoundingClientRect();
+                const containerRect = container.getBoundingClientRect();
+                
+                const relativeX = x - containerRect.left;
+                const relativeY = y - containerRect.top;
+                const buttonCenterX = rect.left - containerRect.left + rect.width / 2;
+                const buttonCenterY = rect.top - containerRect.top + rect.height / 2;
+                
+                const distance = Math.sqrt(
+                    Math.pow(relativeX - buttonCenterX, 2) + 
+                    Math.pow(relativeY - buttonCenterY, 2)
+                );
+                
+                if (distance <= 35) {{
+                    return button;
+                }}
+            }}
+            return null;
+        }}
+
+        function drawLine() {{
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (points.length < 2) return;
+
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+            for (let i = 1; i < points.length; i++) {{
+                ctx.lineTo(points[i].x, points[i].y);
+            }}
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
             points.forEach(point => {{
                 ctx.beginPath();
                 ctx.arc(point.x, point.y, 3, 0, 2 * Math.PI);
                 ctx.fillStyle = '#333';
                 ctx.fill();
             }});
-        }}
-
-        // 次のステージに進む関数
-        function goToNextStage() {{
-            // Streamlitに次のステージに進むことを通知
-            window.parent.postMessage({{
-                type: 'next_stage',
-                stage: currentStage + 1
-            }}, '*');
         }}
 
         // マウスイベント
@@ -736,9 +742,6 @@ elif st.session_state.game_state == 'game':
         container.addEventListener('touchmove', handleTouchMove, {{passive: false}});
         container.addEventListener('touchend', handleTouchEnd, {{passive: false}});
 
-        // 次のステージボタンのクリックイベント
-        nextStageButton.addEventListener('click', goToNextStage);
-
         // 初期化
         updateSelectedWord();
         updateTargetWordsDisplay();
@@ -748,10 +751,8 @@ elif st.session_state.game_state == 'game':
         document.addEventListener('selectstart', e => e.preventDefault());
         </script>
     </body>
-    </html>"""
-
-    # HTMLを表示
-    components.html(full_html, height=600)
+    </html>
+    """, height=600)
 
     # 次のステージへの遷移処理
     if len(st.session_state.found_words) == len(st.session_state.target_words):
@@ -773,59 +774,4 @@ elif st.session_state.game_state == 'game':
                     st.session_state.game_state = 'title'
                     st.session_state.current_stage = 1
                     st.session_state.found_words = []
-                    st.rerun() = [];
-            document.querySelectorAll('.circle-button').forEach(button => {{
-                button.classList.remove('selected');
-            }});
-            updateSelectedWord();
-            drawLine();
-        }}
-
-        function selectButton(button) {{
-            if (!selectedButtons.includes(button)) {{
-                button.classList.add('selected');
-                selectedLetters.push(button.dataset.letter);
-                selectedButtons.push(button);
-                points.push(getButtonCenterPosition(button));
-                updateSelectedWord();
-                drawLine();
-            }}
-        }}
-
-        function getButtonAtPosition(x, y) {{
-            const buttons = document.querySelectorAll('.circle-button');
-            for (let button of buttons) {{
-                const rect = button.getBoundingClientRect();
-                const containerRect = container.getBoundingClientRect();
-                
-                const relativeX = x - containerRect.left;
-                const relativeY = y - containerRect.top;
-                const buttonCenterX = rect.left - containerRect.left + rect.width / 2;
-                const buttonCenterY = rect.top - containerRect.top + rect.height / 2;
-                
-                const distance = Math.sqrt(
-                    Math.pow(relativeX - buttonCenterX, 2) + 
-                    Math.pow(relativeY - buttonCenterY, 2)
-                );
-                
-                if (distance <= 35) {{
-                    return button;
-                }}
-            }}
-            return null;
-        }}
-
-        function drawLine() {{
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            if (points.length < 2) return;
-
-            ctx.beginPath();
-            ctx.moveTo(points[0].x, points[0].y);
-            for (let i = 1; i < points.length; i++) {{
-                ctx.lineTo(points[i].x, points[i].y);
-            }}
-            ctx.strokeStyle = '#333';
-            ctx.lineWidth = 3;
-            ctx.stroke();
-
-            points
+                    st.rerun()
