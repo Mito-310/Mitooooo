@@ -350,7 +350,11 @@ elif st.session_state.game_state == 'game':
             st.session_state.game_state = 'title'
             st.rerun()
     with col2:
-        st.markdown(f"<h2 style='text-align: center; color: #333; margin: 0;'>{current_stage_info['name']}</h2>", unsafe_allow_html=True)
+        st.markdown(f"""
+        <div style="display: flex; justify-content: center; align-items: center; height: 50px;">
+            <h2 style="text-align: center; color: #333; margin: 0; line-height: 1.2;">{current_stage_info['name']}</h2>
+        </div>
+        """, unsafe_allow_html=True)
     with col3:
         if st.button("リセット", use_container_width=True):
             st.session_state.found_words = []
