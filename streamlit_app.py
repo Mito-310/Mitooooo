@@ -147,6 +147,10 @@ if 'found_words' not in st.session_state:
     st.session_state.found_words = []
 if 'stages' not in st.session_state:
     st.session_state.stages = None
+if 'hints_used' not in st.session_state:
+    st.session_state.hints_used = []
+if 'show_hints' not in st.session_state:
+    st.session_state.show_hints = {}
 
 # Excelファイルから問題を読み込み
 if st.session_state.stages is None:
@@ -308,6 +312,8 @@ if st.session_state.game_state == 'title':
             st.session_state.current_stage = 1
             st.session_state.target_words = STAGES[1]['words']
             st.session_state.found_words = []
+            st.session_state.hints_used = []
+            st.session_state.show_hints = {}
             st.session_state.game_state = 'game'
             st.rerun()
     
@@ -326,6 +332,8 @@ if st.session_state.game_state == 'title':
                         st.session_state.current_stage = stage_num
                         st.session_state.target_words = stage_info['words']
                         st.session_state.found_words = []
+                        st.session_state.hints_used = []
+                        st.session_state.show_hints = {}
                         st.session_state.game_state = 'game'
                         st.rerun()
 
@@ -344,26 +352,48 @@ elif st.session_state.game_state == 'game':
     with col2:
         st.markdown(f"<h2 style='text-align: center; color: #333; margin: 0;'>{current_stage_info['name']}</h2>", unsafe_allow_html=True)
     with col3:
-        if st.button("リセット"):
-            st.session_state.found_words = []
-            st.rerun()
+        col3_1, col3_2 = st.columns(2)
+        with col3_1:
+            if st.button("リセット"):
+                st.session_state.found_words = []
+                st.session_state.hints_used = []
+                st.session_state.show_hints = {}
+                st.rerun()
+        with col3_2:
+            if st.button("ヒント"):
+                # まだ見つかっていない単語があるかチェック
+                unfound_words = [word for word in st.session_state.target_words if word not in st.session_state.found_words]
+                if unfound_words:
+                    # ランダムに1つの単語の最初の文字をヒントとして表示
+                    import random
+                    hint_word = random.choice(unfound_words)
+                    if hint_word not in st.session_state.hints_used:
+                        st.session_state.hints_used.append(hint_word)
+                        st.session_state.show_hints[hint_word] = hint_word[0]
+                        st.rerun()
     
     # 進行状況
     progress = len(st.session_state.found_words) / len(st.session_state.target_words)
     st.progress(progress)
     st.markdown(f"<div style='text-align: center; color: #555; font-weight: 500; margin-bottom: 1rem;'>進行状況: {len(st.session_state.found_words)} / {len(st.session_state.target_words)} 単語</div>", unsafe_allow_html=True)
     
-    # 目標単語の表示（見つけた単語は文字を表示）
+    # 目標単語の表示（見つけた単語は文字を表示、ヒントがある場合は最初の文字を表示）
     sorted_words = sorted(st.session_state.target_words)
     target_boxes_html = []
     
     for word in sorted_words:
         is_found = word in st.session_state.found_words
+        has_hint = word in st.session_state.show_hints
         boxes_html = ""
-        for letter in word:
+        for i, letter in enumerate(word):
             if is_found:
+                # 正解済みの単語は全文字表示
                 boxes_html += f'<span style="display: inline-block; width: 26px; height: 26px; border: 1px solid #333; background: white; color: #333; text-align: center; line-height: 26px; margin: 1px; font-size: 14px; font-weight: bold; border-radius: 3px; vertical-align: top;">{letter}</span>'
+            elif has_hint and i == 0:
+                # ヒントがある場合は最初の文字をオレンジで表示
+                boxes_html += f'<span style="display: inline-block; width: 26px; height: 26px; border: 1px solid #FF9800; background: #FFF8E1; color: #FF9800; text-align: center; line-height: 26px; margin: 1px; font-size: 14px; font-weight: bold; border-radius: 3px; vertical-align: top;">{letter}</span>'
             else:
+                # 通常の空白枠
                 boxes_html += f'<span style="display: inline-block; width: 26px; height: 26px; border: 1px solid #ddd; background: white; text-align: center; line-height: 26px; margin: 1px; border-radius: 3px; vertical-align: top;"></span>'
         target_boxes_html.append(f'<div style="display: inline-block; margin: 6px; vertical-align: top;">{boxes_html}</div>')
     
@@ -539,6 +569,7 @@ elif st.session_state.game_state == 'game':
         let points = [];
         let targetWords = {st.session_state.target_words};
         let foundWords = {st.session_state.found_words};
+        let showHints = {st.session_state.show_hints};
 
         const selectedWordDiv = document.getElementById('selected-word');
         const targetWordsDiv = document.getElementById('target-words');
@@ -558,11 +589,18 @@ elif st.session_state.game_state == 'game':
             
             for (let word of sortedWords) {{
                 let isFound = foundWords.includes(word);
+                let hasHint = showHints.hasOwnProperty(word);
                 let boxesHtml = "";
-                for (let letter of word) {{
+                for (let i = 0; i < word.length; i++) {{
+                    let letter = word[i];
                     if (isFound) {{
+                        // 正解済みの単語は全文字表示
                         boxesHtml += '<span style="display: inline-block; width: 26px; height: 26px; border: 1px solid #333; background: white; color: #333; text-align: center; line-height: 26px; margin: 1px; font-size: 14px; font-weight: bold; border-radius: 3px; vertical-align: top;">' + letter + '</span>';
+                    }} else if (hasHint && i === 0) {{
+                        // ヒントがある場合は最初の文字をオレンジで表示
+                        boxesHtml += '<span style="display: inline-block; width: 26px; height: 26px; border: 1px solid #FF9800; background: #FFF8E1; color: #FF9800; text-align: center; line-height: 26px; margin: 1px; font-size: 14px; font-weight: bold; border-radius: 3px; vertical-align: top;">' + letter + '</span>';
                     }} else {{
+                        // 通常の空白枠
                         boxesHtml += '<span style="display: inline-block; width: 26px; height: 26px; border: 1px solid #ddd; background: white; text-align: center; line-height: 26px; margin: 1px; border-radius: 3px; vertical-align: top;"></span>';
                     }}
                 }}
@@ -824,6 +862,8 @@ elif st.session_state.game_state == 'game':
                     next_stage_info = STAGES[st.session_state.current_stage]
                     st.session_state.target_words = next_stage_info['words']
                     st.session_state.found_words = []
+                    st.session_state.hints_used = []
+                    st.session_state.show_hints = {}
                     st.rerun()
         else:
             st.balloons()
@@ -834,4 +874,6 @@ elif st.session_state.game_state == 'game':
                     st.session_state.game_state = 'title'
                     st.session_state.current_stage = 1
                     st.session_state.found_words = []
+                    st.session_state.hints_used = []
+                    st.session_state.show_hints = {}
                     st.rerun()
