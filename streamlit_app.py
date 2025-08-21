@@ -424,6 +424,7 @@ elif st.session_state.game_state == 'game':
             transition: all 0.2s ease;
             touch-action: none;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            z-index: 10; /* ボタンを線より前面に */
         }}
         .circle-button.selected {{
             background: linear-gradient(135deg, #2c2c2c 0%, #1a1a1a 100%) !important;
@@ -432,6 +433,7 @@ elif st.session_state.game_state == 'game':
             box-shadow: 0 6px 12px rgba(0,0,0,0.3);
             border: 2px solid #1a1a1a;
             transition: all 0.1s ease;
+            z-index: 10; /* 選択時も前面に */
         }}
         .circle-button:not(.selected):hover {{
             background: linear-gradient(135deg, #f0f0f0 0%, #e9ecef 100%) !important;
@@ -514,7 +516,7 @@ elif st.session_state.game_state == 'game':
             position: absolute;
             top: 0;
             left: 0;
-            z-index: 1;
+            z-index: 1; /* 線を背面に（ボタンのz-index: 10より小さく） */
             pointer-events: none;
         }}
         </style>
@@ -526,8 +528,8 @@ elif st.session_state.game_state == 'game':
         <div id="complete-message" class="complete-message">ステージクリア！</div>
 
         <div class="circle-container" id="circle-container">
-            {button_html}
             <canvas id="lineCanvas" width="320" height="320"></canvas>
+            {button_html}
         </div>
 
         <script>
