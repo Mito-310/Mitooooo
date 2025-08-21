@@ -344,33 +344,31 @@ elif st.session_state.game_state == 'game':
     num_letters = len(letters)
     
     # ヘッダー
-    col1, col2, col3 = st.columns([1, 2, 1])
+    col1, col2, col3, col4 = st.columns([1, 3, 1, 1])
     with col1:
-        if st.button("タイトルに戻る"):
+        if st.button("タイトルに戻る", use_container_width=True):
             st.session_state.game_state = 'title'
             st.rerun()
     with col2:
         st.markdown(f"<h2 style='text-align: center; color: #333; margin: 0;'>{current_stage_info['name']}</h2>", unsafe_allow_html=True)
     with col3:
-        col3_1, col3_2 = st.columns(2)
-        with col3_1:
-            if st.button("リセット"):
-                st.session_state.found_words = []
-                st.session_state.hints_used = []
-                st.session_state.show_hints = {}
-                st.rerun()
-        with col3_2:
-            if st.button("ヒント"):
-                # まだ見つかっていない単語があるかチェック
-                unfound_words = [word for word in st.session_state.target_words if word not in st.session_state.found_words]
-                if unfound_words:
-                    # ランダムに1つの単語の最初の文字をヒントとして表示
-                    import random
-                    hint_word = random.choice(unfound_words)
-                    if hint_word not in st.session_state.hints_used:
-                        st.session_state.hints_used.append(hint_word)
-                        st.session_state.show_hints[hint_word] = hint_word[0]
-                        st.rerun()
+        if st.button("リセット", use_container_width=True):
+            st.session_state.found_words = []
+            st.session_state.hints_used = []
+            st.session_state.show_hints = {}
+            st.rerun()
+    with col4:
+        if st.button("ヒント", use_container_width=True):
+            # まだ見つかっていない単語があるかチェック
+            unfound_words = [word for word in st.session_state.target_words if word not in st.session_state.found_words]
+            if unfound_words:
+                # ランダムに1つの単語の最初の文字をヒントとして表示
+                import random
+                hint_word = random.choice(unfound_words)
+                if hint_word not in st.session_state.hints_used:
+                    st.session_state.hints_used.append(hint_word)
+                    st.session_state.show_hints[hint_word] = hint_word[0]
+                    st.rerun()
     
     # 進行状況
     progress = len(st.session_state.found_words) / len(st.session_state.target_words)
