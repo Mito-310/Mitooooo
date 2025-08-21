@@ -426,10 +426,11 @@ elif st.session_state.game_state == 'game':
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }}
         .circle-button.selected {{
-            background: linear-gradient(135deg, #333 0%, #555 100%) !important;
+            background: linear-gradient(135deg, #2c2c2c 0%, #1a1a1a 100%) !important;
             color: white !important;
-            transform: scale(1.1);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            transform: scale(1.15);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+            border: 2px solid #1a1a1a;
         }}
         .circle-button:not(.selected):hover {{
             background: linear-gradient(135deg, #f0f0f0 0%, #e9ecef 100%) !important;
