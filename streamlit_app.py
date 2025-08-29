@@ -231,7 +231,7 @@ if st.session_state.game_state == 'title':
     
     st.markdown("""
     <div class="title-section">
-        <h1 class="game-title">Ringlish</h1>
+        <h1 class="game-title">RINGLISH</h1>
         <p class="game-subtitle">文字を繋げて単語を作ろう</p>
         <div class="game-rules">
             <h3>ゲームルール</h3>
