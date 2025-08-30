@@ -60,27 +60,6 @@ div[data-testid="column"] .stButton > button {
     height: 40px;
 }
 
-/* ステージタイトルの中央揃え */
-.stage-title-container {
-    display: flex !important;
-    justify-content: center !important;
-    align-items: center !important;
-    width: 100% !important;
-    height: 50px !important;
-    text-align: center !important;
-}
-
-.stage-title {
-    color: #333 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    line-height: 1.2 !important;
-    font-size: 1.8rem !important;
-    font-weight: 600 !important;
-    text-align: center !important;
-    width: 100% !important;
-}
-
 /* SUCCESS/エラーメッセージの調整 */
 .stSuccess {
     background-color: #E8F5E8;
@@ -99,59 +78,61 @@ div[data-testid="column"] .stButton > button {
 </style>
 """, unsafe_allow_html=True)
 
-# デフォルトの8ステージ（同じ文字も異なるものとして扱う）
-def extract_unique_letters(text):
-    """文字列から重複を保持した形で文字を抽出する"""
-    return list(text.upper().replace(' ', ''))
+# Excelファイルから問題を読み込む関数
+@st.cache_data
+def load_problems_from_excel(file_path):
+    """Excelファイルから問題を読み込む"""
+    try:
+        df = pd.read_excel(file_path)
+        problems = {}
+        
+        # 各行を処理して問題を作成
+        for index, row in df.iterrows():
+            stage_num = index + 1
+            problem_text = str(row['問題文']).strip()
+            
+            # 問題文から文字を抽出（重複を除去）
+            unique_letters = list(set(problem_text.upper().replace(' ', '')))
+            
+            # ①-⑳の列から単語を抽出
+            words = []
+            for col in df.columns[1:]:  # 問題文以外の列
+                if pd.notna(row[col]):
+                    word = str(row[col]).strip().upper()
+                    if word and word not in words:
+                        words.append(word)
+            
+            problems[stage_num] = {
+                'name': f'ステージ {stage_num}',
+                'problem_text': problem_text,
+                'letters': unique_letters,
+                'words': words
+            }
+        
+        return problems
+    except Exception as e:
+        st.error(f"Excelファイルの読み込みエラー: {e}")
+        return None
 
+# デフォルトの問題（Excelファイルが読み込めない場合の備え）
 DEFAULT_STAGES = {
     1: {
         'name': 'ステージ 1',
-        'problem_text': 'practice',
-        'letters': extract_unique_letters('practice'),
-        'words': ['ACT', 'ART', 'PRICE', 'RACE', 'RICE', 'PRACTICE']
+        'problem_text': 'CATDOG',
+        'letters': ['C', 'A', 'T', 'D', 'O', 'G'],
+        'words': ['CAT', 'DOG', 'COD', 'TAG', 'GOD', 'COG']
     },
     2: {
-        'name': 'ステージ 2', 
-        'problem_text': 'however',
-        'letters': extract_unique_letters('however'),
-        'words': ['HOW', 'EVER', 'WHERE', 'HOWEVER']
+        'name': 'ステージ 2',
+        'problem_text': 'REDBLUE',
+        'letters': ['R', 'E', 'D', 'B', 'L', 'U'],
+        'words': ['RED', 'BLUE', 'BED', 'LED', 'RUB', 'BUG']
     },
     3: {
         'name': 'ステージ 3',
-        'problem_text': 'discover',
-        'letters': extract_unique_letters('discover'),
-        'words': ['COVER', 'CODE', 'DIVE', 'DISCOVER']
-    },
-    4: {
-        'name': 'ステージ 4',
-        'problem_text': 'surface',
-        'letters': extract_unique_letters('surface'),
-        'words': ['FACE', 'ACE', 'SURF', 'CAR', 'SURFACE']
-    },
-    5: {
-        'name': 'ステージ 5',
-        'problem_text': 'suggest',
-        'letters': extract_unique_letters('suggest'),
-        'words': ['SET', 'GET', 'GUESS', 'GUEST', 'SUGGEST']
-    },
-    6: {
-        'name': 'ステージ 6',
-        'problem_text': 'because',
-        'letters': extract_unique_letters('because'),
-        'words': ['CAUSE', 'USE', 'CASE', 'SEED', 'BECAUSE']
-    },
-    7: {
-        'name': 'ステージ 7',
-        'problem_text': 'graduate',
-        'letters': extract_unique_letters('graduate'),
-        'words': ['GATE', 'GET', 'DATE', 'RED', 'GRADE', 'GRADUATE']
-    },
-    8: {
-        'name': 'ステージ 8',
-        'problem_text': 'attractive',
-        'letters': extract_unique_letters('attractive'),
-        'words': ['ACT', 'RATE', 'RARE', 'ACTIVE', 'ATTRACT', 'ATTRACTIVE']
+        'problem_text': 'BREADCAKE',
+        'letters': ['B', 'R', 'E', 'A', 'D', 'C', 'K'],
+        'words': ['BREAD', 'CAKE', 'DEAR', 'CARE', 'BEAR']
     }
 }
 
@@ -164,12 +145,77 @@ if 'target_words' not in st.session_state:
     st.session_state.target_words = []
 if 'found_words' not in st.session_state:
     st.session_state.found_words = []
+if 'stages' not in st.session_state:
+    st.session_state.stages = None
 if 'hints_used' not in st.session_state:
     st.session_state.hints_used = []
 if 'show_hints' not in st.session_state:
     st.session_state.show_hints = {}
 
-STAGES = DEFAULT_STAGES
+# Excelファイルから問題を読み込み
+if st.session_state.stages is None:
+    try:
+        loaded_stages = load_problems_from_excel('Book.xlsx')
+        if loaded_stages:
+            st.session_state.stages = loaded_stages
+            st.success(f"Excelファイルから{len(loaded_stages)}個のステージを読み込みました")
+        else:
+            st.session_state.stages = DEFAULT_STAGES
+            st.warning("Excelファイルの読み込みに失敗しました。デフォルトステージを使用します。")
+    except:
+        st.session_state.stages = DEFAULT_STAGES
+        st.warning("Book.xlsxが見つかりません。デフォルトステージを使用します。")
+
+STAGES = st.session_state.stages
+
+# ファイルアップロード機能（タイトル画面でのみ表示）
+if st.session_state.game_state == 'title':
+    st.sidebar.header("問題ファイルの管理")
+    
+    uploaded_file = st.sidebar.file_uploader(
+        "新しい問題ファイルをアップロード", 
+        type=['xlsx', 'xls'],
+        help="問題文列と①-⑳の回答列を含むExcelファイルをアップロードしてください"
+    )
+    
+    if uploaded_file is not None:
+        try:
+            df = pd.read_excel(uploaded_file)
+            st.sidebar.write("アップロードされたファイルの内容:")
+            st.sidebar.dataframe(df.head())
+            
+            if st.sidebar.button("この問題ファイルを使用"):
+                new_stages = {}
+                for index, row in df.iterrows():
+                    stage_num = index + 1
+                    problem_text = str(row['問題文']).strip()
+                    unique_letters = list(set(problem_text.upper().replace(' ', '')))
+                    
+                    words = []
+                    for col in df.columns[1:]:
+                        if pd.notna(row[col]):
+                            word = str(row[col]).strip().upper()
+                            if word and word not in words:
+                                words.append(word)
+                    
+                    new_stages[stage_num] = {
+                        'name': f'ステージ {stage_num}',
+                        'problem_text': problem_text,
+                        'letters': unique_letters,
+                        'words': words
+                    }
+                
+                st.session_state.stages = new_stages
+                st.sidebar.success(f"新しい問題ファイルから{len(new_stages)}個のステージを読み込みました！")
+                st.rerun()
+        
+        except Exception as e:
+            st.sidebar.error(f"ファイル読み込みエラー: {e}")
+    
+    st.sidebar.write(f"現在のステージ数: **{len(STAGES)}**")
+    if st.sidebar.button("デフォルトステージに戻す"):
+        st.session_state.stages = DEFAULT_STAGES
+        st.rerun()
 
 # タイトル画面
 if st.session_state.game_state == 'title':
@@ -229,13 +275,29 @@ if st.session_state.game_state == 'title':
     </style>
     """, unsafe_allow_html=True)
     
+    # 画像表示（利用可能な場合）
+    try:
+        from PIL import Image
+        import os
+        import base64
+        from io import BytesIO
+        
+        if os.path.exists('image.PNG'):
+            image = Image.open('image.PNG')
+            buffered = BytesIO()
+            image.save(buffered, format="PNG")
+            img_str = base64.b64encode(buffered.getvalue()).decode()
+            st.markdown(f'<div style="text-align: center; margin: 20px 0;"><img src="data:image/png;base64,{img_str}" width="200" style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"></div>', unsafe_allow_html=True)
+    except:
+        pass
+    
     st.markdown("""
     <div class="title-section">
-        <h1 class="game-title">RINGLISH!</h1>
+        <h1 class="game-title">WORD CONNECT</h1>
         <p class="game-subtitle">文字を繋げて単語を作ろう</p>
         <div class="game-rules">
             <h3>ゲームルール</h3>
-            <p>リング状に配置された文字をドラッグして繋げて単語を作るゲームです</p>
+            <p>円形に配置された文字をドラッグして繋げて単語を作るゲームです</p>
             <p>すべての目標単語を見つけるとステージクリア！</p>
             <p>同じ文字を重複して使うことはできません</p>
             <p>マウスまたはタッチで文字を選択してください</p>
@@ -258,16 +320,14 @@ if st.session_state.game_state == 'title':
     # ステージ選択
     st.markdown('<h2 class="stage-selection-title">ステージ選択</h2>', unsafe_allow_html=True)
     
-    # 8つのステージを3列×3行で配置（8つ目は空白列）
-    for i in range(0, 8, 3):
+    for i in range(0, len(STAGES), 3):
         cols = st.columns(3)
         for j in range(3):
             stage_num = i + j + 1
-            if stage_num <= 8:
+            if stage_num in STAGES:
                 stage_info = STAGES[stage_num]
                 with cols[j]:
                     st.markdown(f'<div class="stage-info">{stage_info["name"]}</div>', unsafe_allow_html=True)
-                    st.markdown(f'<div class="stage-info">単語: "{stage_info["problem_text"]}"</div>', unsafe_allow_html=True)
                     if st.button(f"プレイ開始", key=f"stage_{stage_num}", use_container_width=True):
                         st.session_state.current_stage = stage_num
                         st.session_state.target_words = stage_info['words']
@@ -291,8 +351,8 @@ elif st.session_state.game_state == 'game':
             st.rerun()
     with col2:
         st.markdown(f"""
-        <div class="stage-title-container">
-            <h2 class="stage-title">{current_stage_info['name']}</h2>
+        <div style="display: flex; justify-content: center; align-items: center; height: 50px;">
+            <h2 style="text-align: center; color: #333; margin: 0; line-height: 1.2;">{current_stage_info['name']}</h2>
         </div>
         """, unsafe_allow_html=True)
     with col3:
@@ -302,8 +362,17 @@ elif st.session_state.game_state == 'game':
             st.session_state.show_hints = {}
             st.rerun()
     with col4:
-        # ヒント機能はJavaScriptで処理するため、このボタンは表示しない
-        st.markdown('<div style="height: 42px;"></div>', unsafe_allow_html=True)
+        if st.button("ヒント", use_container_width=True):
+            # まだ見つかっていない単語があるかチェック
+            unfound_words = [word for word in st.session_state.target_words if word not in st.session_state.found_words]
+            if unfound_words:
+                # ランダムに1つの単語の最初の文字をヒントとして表示
+                import random
+                hint_word = random.choice(unfound_words)
+                if hint_word not in st.session_state.hints_used:
+                    st.session_state.hints_used.append(hint_word)
+                    st.session_state.show_hints[hint_word] = hint_word[0]
+                    st.rerun()
     
     # 進行状況
     progress = len(st.session_state.found_words) / len(st.session_state.target_words)
@@ -387,7 +456,7 @@ elif st.session_state.game_state == 'game':
             transition: all 0.2s ease;
             touch-action: none;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            z-index: 10;
+            z-index: 10; /* ボタンを線より前面に */
         }}
         .circle-button.selected {{
             background: linear-gradient(135deg, #2c2c2c 0%, #1a1a1a 100%) !important;
@@ -396,7 +465,7 @@ elif st.session_state.game_state == 'game':
             box-shadow: 0 6px 12px rgba(0,0,0,0.3);
             border: 2px solid #1a1a1a;
             transition: all 0.1s ease;
-            z-index: 10;
+            z-index: 10; /* 選択時も前面に */
         }}
         .circle-button:not(.selected):hover {{
             background: linear-gradient(135deg, #f0f0f0 0%, #e9ecef 100%) !important;
@@ -479,7 +548,7 @@ elif st.session_state.game_state == 'game':
             position: absolute;
             top: 0;
             left: 0;
-            z-index: 1;
+            z-index: 1; /* 線を背面に（ボタンのz-index: 10より小さく） */
             pointer-events: none;
         }}
         </style>
@@ -489,11 +558,6 @@ elif st.session_state.game_state == 'game':
         <div id="target-words">{target_display}</div>
         <div id="success-message" class="success-message">正解！</div>
         <div id="complete-message" class="complete-message">ステージクリア！</div>
-        
-        <!-- ヒントボタンをJavaScriptで処理 -->
-        <div style="position: fixed; top: 10px; right: 10px; z-index: 1000;">
-            <button onclick="showHint()" style="padding: 8px 16px; background: #333; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; transition: all 0.2s ease;" onmouseover="this.style.background='#555'" onmouseout="this.style.background='#333'">ヒント</button>
-        </div>
 
         <div class="circle-container" id="circle-container">
             <canvas id="lineCanvas" width="320" height="320"></canvas>
@@ -564,20 +628,6 @@ elif st.session_state.game_state == 'game':
             }}
             return false;
         }}
-        
-        function showHint() {{
-            // まだ見つかっていない単語を取得
-            let unfoundWords = targetWords.filter(word => !foundWords.includes(word));
-            let availableHints = unfoundWords.filter(word => !showHints.hasOwnProperty(word));
-            
-            if (availableHints.length > 0) {{
-                // ランダムに1つの単語を選択
-                let randomIndex = Math.floor(Math.random() * availableHints.length);
-                let hintWord = availableHints[randomIndex];
-                showHints[hintWord] = true;
-                updateTargetWordsDisplay();
-            }}
-        }}
 
         function showSuccessMessage() {{
             successMessageDiv.classList.add('show');
@@ -590,151 +640,242 @@ elif st.session_state.game_state == 'game':
             completeMessageDiv.classList.add('show');
             setTimeout(() => {{
                 completeMessageDiv.classList.remove('show');
-            }}, 3000);
+            }}, 2500);
         }}
 
-        function clearSelection() {{
-            selectedLetters = [];
-            selectedButtons.forEach(button => button.classList.remove('selected'));
-            selectedButtons = [];
-            points = [];
-            drawLines();
-            updateSelectedWord();
+        function getButtonCenterPosition(button) {{
+            const rect = button.getBoundingClientRect();
+            const containerRect = container.getBoundingClientRect();
+            return {{
+                x: rect.left - containerRect.left + rect.width / 2,
+                y: rect.top - containerRect.top + rect.height / 2
+            }};
         }}
 
-        function drawLines() {{
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            if (points.length > 1) {{
-                ctx.strokeStyle = '#333';
-                ctx.lineWidth = 3;
-                ctx.lineCap = 'round';
-                ctx.beginPath();
-                ctx.moveTo(points[0].x, points[0].y);
-                for (let i = 1; i < points.length; i++) {{
-                    ctx.lineTo(points[i].x, points[i].y);
-                }}
-                ctx.stroke();
+        function resetSelection() {{
+            clearAllSelections();
+        }}
+
+        function selectButton(button) {{
+            if (!selectedButtons.includes(button)) {{
+                // 即座にクラスを追加（背景黒、文字白）
+                button.classList.add('selected');
+                button.classList.remove('hover');
+                
+                selectedLetters.push(button.dataset.letter);
+                selectedButtons.push(button);
+                points.push(getButtonCenterPosition(button));
+                updateSelectedWord();
+                drawLine();
+                
+                // 強制的に再描画を促す
+                button.offsetHeight;
             }}
         }}
 
-        // マウス/タッチイベントの処理
-        function startDrag(e) {{
-            e.preventDefault();
-            e.stopPropagation();
-            isDragging = true;
-            clearSelection();
+        function clearAllSelections() {{
+            document.querySelectorAll('.circle-button').forEach(button => {{
+                button.classList.remove('selected');
+                button.classList.remove('hover');
+                // 強制的に再描画を促す
+                button.offsetHeight;
+            }});
+            selectedLetters = [];
+            selectedButtons = [];
+            points = [];
+            updateSelectedWord();
+            drawLine();
         }}
 
-        function handleMove(e) {{
-            if (!isDragging) return;
-            e.preventDefault();
-            e.stopPropagation();
+        function getButtonAtPosition(clientX, clientY) {{
+            const buttons = document.querySelectorAll('.circle-button');
+            let closestButton = null;
+            let closestDistance = Infinity;
             
-            const rect = container.getBoundingClientRect();
-            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            const x = clientX - rect.left;
-            const y = clientY - rect.top;
-            
-            document.querySelectorAll('.circle-button').forEach(button => {{
-                const buttonRect = button.getBoundingClientRect();
-                const containerRect = container.getBoundingClientRect();
-                const buttonX = buttonRect.left - containerRect.left + 25;
-                const buttonY = buttonRect.top - containerRect.top + 25;
-                
-                const distance = Math.sqrt(Math.pow(x - buttonX, 2) + Math.pow(y - buttonY, 2));
-                if (distance < 35) {{
-                    const index = parseInt(button.dataset.index);
-                    if (!selectedButtons.includes(button)) {{
-                        button.classList.add('selected');
-                        selectedButtons.push(button);
-                        selectedLetters.push(button.dataset.letter);
-                        points.push({{x: buttonX, y: buttonY}});
-                        drawLines();
-                        updateSelectedWord();
-                    }}
+            // 以前のホバー状態をクリア
+            buttons.forEach(button => {{
+                if (!button.classList.contains('selected')) {{
+                    button.classList.remove('hover');
                 }}
+            }});
+            
+            for (let button of buttons) {{
+                const rect = button.getBoundingClientRect();
+                const buttonCenterX = rect.left + rect.width / 2;
+                const buttonCenterY = rect.top + rect.height / 2;
+                
+                const distance = Math.sqrt(
+                    Math.pow(clientX - buttonCenterX, 2) + 
+                    Math.pow(clientY - buttonCenterY, 2)
+                );
+                
+                // 当たり判定の範囲を広げる（40px）
+                if (distance <= 40 && distance < closestDistance) {{
+                    closestDistance = distance;
+                    closestButton = button;
+                }}
+            }}
+            
+            // 最も近いボタンにホバー効果を適用
+            if (closestButton && !closestButton.classList.contains('selected')) {{
+                closestButton.classList.add('hover');
+            }}
+            
+            return closestButton;
+        }}
+
+        function drawLine() {{
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (points.length < 2) return;
+
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+            for (let i = 1; i < points.length; i++) {{
+                ctx.lineTo(points[i].x, points[i].y);
+            }}
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            points.forEach(point => {{
+                ctx.beginPath();
+                ctx.arc(point.x, point.y, 3, 0, 2 * Math.PI);
+                ctx.fillStyle = '#333';
+                ctx.fill();
             }});
         }}
 
-        function endDrag(e) {{
-            if (!isDragging) return;
-            e.preventDefault();
-            e.stopPropagation();
-            isDragging = false;
+        // マウスイベント
+        function handleMouseDown(event) {{
+            event.preventDefault();
+            isDragging = true;
+            // まず全ての選択をクリア
+            clearAllSelections();
             
-            if (selectedLetters.length > 0) {{
-                const isCorrect = checkCorrectWord();
-                if (!isCorrect) {{
-                    // 間違いの場合、少し待ってからクリア
-                    setTimeout(() => {{
-                        clearSelection();
-                    }}, 500);
-                }} else {{
-                    // 正解の場合はすぐにクリア
-                    clearSelection();
+            const button = getButtonAtPosition(event.clientX, event.clientY);
+            if (button) {{
+                selectButton(button);
+            }}
+        }}
+
+        function handleMouseMove(event) {{
+            event.preventDefault();
+            
+            if (isDragging) {{
+                const button = getButtonAtPosition(event.clientX, event.clientY);
+                if (button) {{
+                    selectButton(button);
                 }}
             }} else {{
-                clearSelection();
+                // ドラッグ中でない時も視覚的フィードバックを提供
+                getButtonAtPosition(event.clientX, event.clientY);
             }}
         }}
 
-        // ボタンクリックイベント（個別のボタンクリック対応）
-        function handleButtonClick(e) {{
-            e.preventDefault();
-            e.stopPropagation();
-            if (isDragging) return;
-            
-            const button = e.target;
-            if (!selectedButtons.includes(button)) {{
-                const buttonRect = button.getBoundingClientRect();
-                const containerRect = container.getBoundingClientRect();
-                const buttonX = buttonRect.left - containerRect.left + 25;
-                const buttonY = buttonRect.top - containerRect.top + 25;
-                
-                button.classList.add('selected');
-                selectedButtons.push(button);
-                selectedLetters.push(button.dataset.letter);
-                points.push({{x: buttonX, y: buttonY}});
-                drawLines();
-                updateSelectedWord();
-            }}
-        }}
-
-        // 外側のクリック/タッチでクリア
-        function handleOutsideClick(e) {{
-            if (!container.contains(e.target) && !isDragging) {{
-                clearSelection();
-            }}
-        }}
-
-        // イベントリスナーの設定
-        container.addEventListener('mousedown', startDrag);
-        container.addEventListener('mousemove', handleMove);
-        container.addEventListener('mouseup', endDrag);
-        container.addEventListener('mouseleave', () => {{
+        function handleMouseUp(event) {{
+            event.preventDefault();
             if (isDragging) {{
-                endDrag({{preventDefault: () => {{}}, stopPropagation: () => {{}}}});
+                isDragging = false;
+                const isCorrect = checkCorrectWord();
+                
+                // 単語チェック後に選択をリセット
+                setTimeout(() => {{
+                    clearAllSelections();
+                }}, isCorrect ? 1000 : 200);
             }}
-        }});
+            // ホバー状態をクリア
+            document.querySelectorAll('.circle-button').forEach(button => {{
+                button.classList.remove('hover');
+            }});
+        }}
 
-        container.addEventListener('touchstart', startDrag);
-        container.addEventListener('touchmove', handleMove);
-        container.addEventListener('touchend', endDrag);
+        // タッチイベント
+        function handleTouchStart(event) {{
+            event.preventDefault();
+            isDragging = true;
+            // まず全ての選択をクリア
+            clearAllSelections();
+            
+            const touch = event.touches[0];
+            const button = getButtonAtPosition(touch.clientX, touch.clientY);
+            if (button) {{
+                selectButton(button);
+            }}
+        }}
 
-        // 各ボタンにクリックイベントを追加
-        document.querySelectorAll('.circle-button').forEach(button => {{
-            button.addEventListener('click', handleButtonClick);
-        }});
+        function handleTouchMove(event) {{
+            event.preventDefault();
+            if (!isDragging) return;
+            
+            const touch = event.touches[0];
+            const button = getButtonAtPosition(touch.clientX, touch.clientY);
+            if (button) {{
+                selectButton(button);
+            }}
+        }}
 
-        // 外側クリック検出
-        document.addEventListener('click', handleOutsideClick);
-        document.addEventListener('touchstart', handleOutsideClick);
+        function handleTouchEnd(event) {{
+            event.preventDefault();
+            if (isDragging) {{
+                isDragging = false;
+                const isCorrect = checkCorrectWord();
+                setTimeout(() => {{
+                    clearAllSelections();
+                }}, isCorrect ? 1000 : 200);
+            }}
+        }}
+
+        // イベントリスナー設定
+        // ドキュメント全体にイベントリスナーを設定して、より確実に捉える
+        document.addEventListener('mousedown', handleMouseDown);
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+
+        document.addEventListener('touchstart', handleTouchStart, {{passive: false}});
+        document.addEventListener('touchmove', handleTouchMove, {{passive: false}});
+        document.addEventListener('touchend', handleTouchEnd, {{passive: false}});
 
         // 初期化
         updateSelectedWord();
         updateTargetWordsDisplay();
+
+        // コンテキストメニューとテキスト選択を無効化
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('selectstart', e => e.preventDefault());
+        
+        // デバッグ用：ボタンの位置を確認
+        console.log('Buttons initialized:');
+        document.querySelectorAll('.circle-button').forEach((button, index) => {{
+            const rect = button.getBoundingClientRect();
+            console.log(`Button ${{index}}: ${{button.dataset.letter}} at (${{rect.left + rect.width/2}}, ${{rect.top + rect.height/2}})`);
+        }});
         </script>
     </body>
     </html>
-    """, height=800)
+    """, height=600)
+
+    # 次のステージへの遷移処理
+    if len(st.session_state.found_words) == len(st.session_state.target_words):
+        if st.session_state.current_stage < len(STAGES):
+            col1, col2, col3 = st.columns([1, 1, 1])
+            with col2:
+                if st.button("次のステージへ", key="next_stage_main", use_container_width=True):
+                    st.session_state.current_stage += 1
+                    next_stage_info = STAGES[st.session_state.current_stage]
+                    st.session_state.target_words = next_stage_info['words']
+                    st.session_state.found_words = []
+                    st.session_state.hints_used = []
+                    st.session_state.show_hints = {}
+                    st.rerun()
+        else:
+            st.balloons()
+            st.success("全ステージクリア！おめでとうございます！")
+            col1, col2, col3 = st.columns([1, 1, 1])
+            with col2:
+                if st.button("タイトルに戻る", key="back_to_title", use_container_width=True):
+                    st.session_state.game_state = 'title'
+                    st.session_state.current_stage = 1
+                    st.session_state.found_words = []
+                    st.session_state.hints_used = []
+                    st.session_state.show_hints = {}
+                    st.rerun()
