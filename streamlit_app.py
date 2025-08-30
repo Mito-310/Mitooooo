@@ -53,13 +53,6 @@ st.markdown("""
     border-color: #1976D2;
 }
 
-/* 戻るボタンとシャッフルボタンのスタイル */
-div[data-testid="column"] .stButton > button {
-    font-size: 14px;
-    padding: 0.4rem 0.8rem;
-    height: 40px;
-}
-
 /* SUCCESS/エラーメッセージの調整 */
 .stSuccess {
     background-color: #E8F5E8;
@@ -360,8 +353,8 @@ elif st.session_state.game_state == 'game':
     letters = st.session_state.shuffled_letters
     num_letters = len(letters)
     
-    # ヘッダー（4列レイアウトに変更してシャッフルボタンを追加）
-    col1, col2, col3, col4 = st.columns([1, 2, 1, 1])
+    # ヘッダー（3列レイアウト）
+    col1, col2, col3 = st.columns([1, 2, 1])
     with col1:
         if st.button("タイトルに戻る", use_container_width=True):
             st.session_state.game_state = 'title'
@@ -373,15 +366,12 @@ elif st.session_state.game_state == 'game':
         </div>
         """, unsafe_allow_html=True)
     with col3:
-        if st.button("🔀 シャッフル", key="shuffle_button", use_container_width=True, help="文字の配置をシャッフルします"):
-            # 現在の文字配列をシャッフル
+        if st.button("文字をシャッフル", key="shuffle_button", use_container_width=True, help="文字の配置をシャッフルします"):
+            # 現在の文字配列をシャッフル（正解した単語やヒントは保持）
             letters_copy = st.session_state.shuffled_letters.copy()
             random.shuffle(letters_copy)
             st.session_state.shuffled_letters = letters_copy
             st.rerun()
-    with col4:
-        # 空の列（バランスを保つため）
-        st.markdown('<div style="height: 42px;"></div>', unsafe_allow_html=True)
     
     # 進行状況
     progress = len(st.session_state.found_words) / len(st.session_state.target_words)
