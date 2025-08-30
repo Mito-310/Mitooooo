@@ -125,6 +125,24 @@ DEFAULT_STAGES = {
         'problem_text': 'suggest',
         'letters': ['S', 'U', 'G', 'G', 'E', 'S', 'T'],
         'words': ['SET', 'GET', 'GUESS', 'GUEST', 'SUGGEST']
+    },
+    6: {
+        'name': 'ステージ 6',
+        'problem_text': 'because',
+        'letters': ['B', 'E', 'C', 'A', 'U', 'S', 'E'],
+        'words': ['CAUSE', 'USE', 'CASE', 'SEED', 'BECAUSE']
+    },
+    7: {
+        'name': 'ステージ 7',
+        'problem_text': 'graduate',
+        'letters': ['G', 'R', 'A', 'D', 'U', 'A', 'T', 'E'],
+        'words': ['GATE', 'GET', 'DATE', 'RED', 'GRADE', 'GRADUATE']
+    },
+    8: {
+        'name': 'ステージ 8',
+        'problem_text': 'attractive',
+        'letters': ['A', 'T', 'T', 'R', 'A', 'C', 'T', 'I', 'V', 'E'],
+        'words': ['ACT', 'RATE', 'RARE', 'ACTIVE', 'ATTRACT', 'ATTRACTIVE']
     }
 }
 
