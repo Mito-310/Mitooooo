@@ -757,9 +757,9 @@ elif st.session_state.game_state == 'game':
 
     # 次のステージへの遷移処理
     if len(st.session_state.found_words) == len(st.session_state.target_words):
-        if st.session_state.current_stage < len(STAGES):
-            col1, col2, col3 = st.columns([1, 1, 1])
-            with col2:
+        col1, col2, col3 = st.columns([1, 1, 1])
+        with col2:
+            if st.session_state.current_stage < len(STAGES):
                 if st.button("次のステージへ", key="next_stage_main", use_container_width=True):
                     st.session_state.current_stage += 1
                     next_stage_info = STAGES[st.session_state.current_stage]
@@ -772,11 +772,9 @@ elif st.session_state.game_state == 'game':
                     random.shuffle(stage_letters)
                     st.session_state.shuffled_letters = stage_letters
                     st.rerun()
-        else:
-            st.balloons()
-            st.success("全ステージクリア！おめでとうございます！")
-            col1, col2, col3 = st.columns([1, 1, 1])
-            with col2:
+            else:
+                st.balloons()
+                st.success("全ステージクリア！おめでとうございます！")
                 if st.button("タイトルに戻る", key="back_to_title", use_container_width=True):
                     st.session_state.game_state = 'title'
                     st.session_state.current_stage = 1
