@@ -539,6 +539,12 @@ elif st.session_state.game_state == 'game':
                 if (foundWords.length === targetWords.length) {{
                     setTimeout(() => {{
                         showCompleteMessage();
+                        // ステージクリア状態をStreamlitに通知
+                        window.parent.postMessage({{
+                            type: 'stage_complete',
+                            stage: {st.session_state.current_stage},
+                            foundWords: foundWords
+                        }}, '*');
                     }}, 1000);
                 }}
                 return true;
@@ -755,12 +761,15 @@ elif st.session_state.game_state == 'game':
     </html>
     """, height=600)
 
-    # 次のステージへの遷移処理
-    if len(st.session_state.found_words) == len(st.session_state.target_words):
+    # ステージクリア状態の確認とボタン表示
+    stage_completed = len(st.session_state.found_words) == len(st.session_state.target_words)
+    
+    if stage_completed:
+        st.success("ステージクリア！")
         col1, col2, col3 = st.columns([1, 1, 1])
         with col2:
             if st.session_state.current_stage < len(STAGES):
-                if st.button("次のステージへ", key="next_stage_main", use_container_width=True):
+                if st.button("次のステージへ ", key="next_stage_main", use_container_width=True, type="primary"):
                     st.session_state.current_stage += 1
                     next_stage_info = STAGES[st.session_state.current_stage]
                     st.session_state.target_words = next_stage_info['words']
@@ -774,8 +783,8 @@ elif st.session_state.game_state == 'game':
                     st.rerun()
             else:
                 st.balloons()
-                st.success("全ステージクリア！おめでとうございます！")
-                if st.button("タイトルに戻る", key="back_to_title", use_container_width=True):
+                st.success("🏆 全ステージクリア！おめでとうございます！")
+                if st.button("タイトルに戻る", key="back_to_title", use_container_width=True, type="primary"):
                     st.session_state.game_state = 'title'
                     st.session_state.current_stage = 1
                     st.session_state.found_words = []
