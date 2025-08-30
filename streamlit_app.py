@@ -110,9 +110,9 @@ DEFAULT_STAGES = {
     },
     3: {
         'name': 'ステージ 3',
-        'problem_text': 'BREADCAKE',
-        'letters': ['B', 'R', 'E', 'A', 'D', 'C', 'K'],
-        'words': ['BREAD', 'CAKE', 'DEAR', 'CARE', 'BEAR']
+        'problem_text': 'discover',
+        'letters': ['D', 'I', 'S', 'C', 'O', 'V', 'E', 'R'],
+        'words': ['COVER', 'CODE', 'DIVE', 'DISCOVER']
     }
 }
 
