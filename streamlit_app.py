@@ -113,6 +113,18 @@ DEFAULT_STAGES = {
         'problem_text': 'discover',
         'letters': ['D', 'I', 'S', 'C', 'O', 'V', 'E', 'R'],
         'words': ['COVER', 'RIDE', 'DIVE', 'DISCOVER']
+    },
+    4: {
+        'name': 'ステージ 4',
+        'problem_text': 'surface',
+        'letters': ['S', 'U', 'R', 'F', 'A', 'C', 'E'],
+        'words': ['FACE', 'ACE', 'SURF', 'CAR', 'SURFACE']
+    },
+    5: {
+        'name': 'ステージ 5',
+        'problem_text': 'suggest',
+        'letters': ['S', 'U', 'G', 'G', 'E', 'S', 'T'],
+        'words': ['SET', 'GET', 'GUESS', 'GUEST', 'SUGGEST']
     }
 }
 
@@ -802,7 +814,7 @@ elif st.session_state.game_state == 'game':
                     st.rerun()
             else:
                 st.balloons()
-                st.success("🏆 全ステージクリア！おめでとうございます！")
+                st.success("全ステージクリア！おめでとうございます！")
                 if st.button("タイトルに戻る", key="back_to_title", use_container_width=True, type="primary"):
                     st.session_state.game_state = 'title'
                     st.session_state.current_stage = 1
