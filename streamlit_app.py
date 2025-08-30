@@ -321,7 +321,6 @@ if st.session_state.game_state == 'title':
             random.shuffle(stage_letters)
             st.session_state.shuffled_letters = stage_letters
             st.session_state.game_state = 'game'
-            st.success(f"文字をシャッフルしました: {stage_letters}")
             st.rerun()
     
     # ステージ選択
@@ -345,7 +344,6 @@ if st.session_state.game_state == 'title':
                         stage_letters = stage_info['letters'].copy()
                         random.shuffle(stage_letters)
                         st.session_state.shuffled_letters = stage_letters
-                        st.success(f"文字をシャッフルしました: {stage_letters}")
                         st.session_state.game_state = 'game'
                         st.rerun()
 
@@ -361,10 +359,6 @@ elif st.session_state.game_state == 'game':
     
     letters = st.session_state.shuffled_letters
     num_letters = len(letters)
-    
-    # デバッグ用：現在の文字配列を確認
-    st.write(f"デバッグ: 元の文字順 {current_stage_info['letters']}")
-    st.write(f"デバッグ: シャッフル後 {st.session_state.shuffled_letters}")
     
     # ヘッダー（4列レイアウトに変更してシャッフルボタンを追加）
     col1, col2, col3, col4 = st.columns([1, 2, 1, 1])
