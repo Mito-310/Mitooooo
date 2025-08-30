@@ -869,6 +869,194 @@ elif st.session_state.game_state == 'game':
         document.addEventListener('touchmove', handleTouchMove, {{passive: false}});
         document.addEventListener('touchend', handleTouchEnd, {{passive: false}});
 
+        // 初期化（Python側から最新の状態を読み込んで表示）
+        updateSelectedWord();
+        updateTargetWordsDisplay();
+
+        // コンテキストメニューとテキスト選択を無効化
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('selectstart', e => e.preventDefault());
+        
+        // デバッグ用：ボタンの位置を確認
+        console.log('Buttons initialized:');
+        document.querySelectorAll('.circle-button').forEach((button, index) => {{
+            const rect = button.getBoundingClientRect();
+            console.log(`Button ${{index}}: ${{button.dataset.letter}} at (${{rect.left + rect.width/2}}, ${{rect.top + rect.height/2}})`);
+        }});
+        </script>
+    </body>
+    </html>
+    """, height=600)getButtonCenterPosition(button));
+                updateSelectedWord();
+                drawLine();
+                
+                // 強制的に再描画を促す
+                button.offsetHeight;
+            }}
+        }}
+
+        function clearAllSelections() {{
+            document.querySelectorAll('.circle-button').forEach(button => {{
+                button.classList.remove('selected');
+                button.classList.remove('hover');
+                // 強制的に再描画を促す
+                button.offsetHeight;
+            }});
+            selectedLetters = [];
+            selectedButtons = [];
+            points = [];
+            updateSelectedWord();
+            drawLine();
+        }}
+
+        function getButtonAtPosition(clientX, clientY) {{
+            const buttons = document.querySelectorAll('.circle-button');
+            let closestButton = null;
+            let closestDistance = Infinity;
+            
+            // 以前のホバー状態をクリア
+            buttons.forEach(button => {{
+                if (!button.classList.contains('selected')) {{
+                    button.classList.remove('hover');
+                }}
+            }});
+            
+            for (let button of buttons) {{
+                const rect = button.getBoundingClientRect();
+                const buttonCenterX = rect.left + rect.width / 2;
+                const buttonCenterY = rect.top + rect.height / 2;
+                
+                const distance = Math.sqrt(
+                    Math.pow(clientX - buttonCenterX, 2) + 
+                    Math.pow(clientY - buttonCenterY, 2)
+                );
+                
+                // 当たり判定の範囲を広げる（40px）
+                if (distance <= 40 && distance < closestDistance) {{
+                    closestDistance = distance;
+                    closestButton = button;
+                }}
+            }}
+            
+            // 最も近いボタンにホバー効果を適用
+            if (closestButton && !closestButton.classList.contains('selected')) {{
+                closestButton.classList.add('hover');
+            }}
+            
+            return closestButton;
+        }}
+
+        function drawLine() {{
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (points.length < 2) return;
+
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+            for (let i = 1; i < points.length; i++) {{
+                ctx.lineTo(points[i].x, points[i].y);
+            }}
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            points.forEach(point => {{
+                ctx.beginPath();
+                ctx.arc(point.x, point.y, 3, 0, 2 * Math.PI);
+                ctx.fillStyle = '#333';
+                ctx.fill();
+            }});
+        }}
+
+        // マウスイベント
+        function handleMouseDown(event) {{
+            event.preventDefault();
+            isDragging = true;
+            // まず全ての選択をクリア
+            clearAllSelections();
+            
+            const button = getButtonAtPosition(event.clientX, event.clientY);
+            if (button) {{
+                selectButton(button);
+            }}
+        }}
+
+        function handleMouseMove(event) {{
+            event.preventDefault();
+            
+            if (isDragging) {{
+                const button = getButtonAtPosition(event.clientX, event.clientY);
+                if (button) {{
+                    selectButton(button);
+                }}
+            }} else {{
+                // ドラッグ中でない時も視覚的フィードバックを提供
+                getButtonAtPosition(event.clientX, event.clientY);
+            }}
+        }}
+
+        function handleMouseUp(event) {{
+            event.preventDefault();
+            if (isDragging) {{
+                isDragging = false;
+                const isCorrect = checkCorrectWord();
+                
+                // 単語チェック後に選択をリセット
+                setTimeout(() => {{
+                    clearAllSelections();
+                }}, isCorrect ? 1000 : 200);
+            }}
+            // ホバー状態をクリア
+            document.querySelectorAll('.circle-button').forEach(button => {{
+                button.classList.remove('hover');
+            }});
+        }}
+
+        // タッチイベント
+        function handleTouchStart(event) {{
+            event.preventDefault();
+            isDragging = true;
+            // まず全ての選択をクリア
+            clearAllSelections();
+            
+            const touch = event.touches[0];
+            const button = getButtonAtPosition(touch.clientX, touch.clientY);
+            if (button) {{
+                selectButton(button);
+            }}
+        }}
+
+        function handleTouchMove(event) {{
+            event.preventDefault();
+            if (!isDragging) return;
+            
+            const touch = event.touches[0];
+            const button = getButtonAtPosition(touch.clientX, touch.clientY);
+            if (button) {{
+                selectButton(button);
+            }}
+        }}
+
+        function handleTouchEnd(event) {{
+            event.preventDefault();
+            if (isDragging) {{
+                isDragging = false;
+                const isCorrect = checkCorrectWord();
+                setTimeout(() => {{
+                    clearAllSelections();
+                }}, isCorrect ? 1000 : 200);
+            }}
+        }}
+
+        // イベントリスナー設定
+        // ドキュメント全体にイベントリスナーを設定して、より確実に捉える
+        document.addEventListener('mousedown', handleMouseDown);
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+
+        document.addEventListener('touchstart', handleTouchStart, {{passive: false}});
+        document.addEventListener('touchmove', handleTouchMove, {{passive: false}});
+        document.addEventListener('touchend', handleTouchEnd, {{passive: false}});
+
         // 初期化
         updateSelectedWord();
         updateTargetWordsDisplay();
