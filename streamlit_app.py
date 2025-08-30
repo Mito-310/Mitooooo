@@ -346,7 +346,7 @@ elif st.session_state.game_state == 'game':
     # ヘッダー（3列レイアウトに変更）
     col1, col2, col3 = st.columns([1, 3, 1])
     with col1:
-        if st.button("タイトルに戻る", use_container_width=True):
+        if st.button("←", use_container_width=True):
             st.session_state.game_state = 'title'
             st.rerun()
     with col2:
