@@ -77,7 +77,7 @@ DEFAULT_STAGES = {
         'name': 'ステージ 1',
         'problem_text': 'practice',
         'letters': ['P', 'R', 'A', 'C', 'T', 'I', 'C', 'E'],
-        'words': ['ACT', 'ART', 'PRICE', 'RACE', 'RICE', 'PRACTICE']
+        'words': ['ACT', 'AIR', 'PRICE', 'RACE', 'RICE', 'PRACTICE']
     },
     2: {
         'name': 'ステージ 2',
