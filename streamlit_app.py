@@ -187,12 +187,14 @@ if st.session_state.game_state == 'title':
     
     st.markdown("""
     <div class="title-section">
-        <h1 class="game-title">RINGLISH! -リングリッシュ-</h1>
+        <h1 class="game-title">WORD CONNECT</h1>
+        <p class="game-subtitle">文字を繋げて単語を作ろう</p>
         <div class="game-rules">
             <h3>ゲームルール</h3>
-            <p>リング状に配置された文字をなぞって繋げて単語を作るゲームです</p>
+            <p>円形に配置された文字をドラッグして繋げて単語を作るゲームです</p>
             <p>すべての目標単語を見つけるとステージクリア！</p>
-            <p>最後のステージは、他のステージをクリアするまでプレイできません</p>
+            <p>同じ文字を重複して使うことはできません</p>
+            <p>マウスまたはタッチで文字を選択してください</p>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -212,6 +214,9 @@ if st.session_state.game_state == 'title':
             st.session_state.shuffled_letters = stage_letters
             st.session_state.game_state = 'game'
             st.rerun()
+    
+    # 区切り線
+    st.markdown('<hr style="border: none; height: 2px; background: linear-gradient(90deg, transparent 0%, #ddd 50%, transparent 100%); margin: 2rem 0;">', unsafe_allow_html=True)
     
     # ステージ選択
     st.markdown('<h2 class="stage-selection-title">ステージ選択</h2>', unsafe_allow_html=True)
