@@ -187,14 +187,12 @@ if st.session_state.game_state == 'title':
     
     st.markdown("""
     <div class="title-section">
-        <h1 class="game-title">WORD CONNECT</h1>
-        <p class="game-subtitle">文字を繋げて単語を作ろう</p>
+        <h1 class="game-title">RINGLISH! -リングリッシュ-</h1>
         <div class="game-rules">
             <h3>ゲームルール</h3>
-            <p>円形に配置された文字をドラッグして繋げて単語を作るゲームです</p>
+            <p>リング状に配置された文字をなぞって繋げて単語を作るゲームです</p>
             <p>すべての目標単語を見つけるとステージクリア！</p>
-            <p>同じ文字を重複して使うことはできません</p>
-            <p>マウスまたはタッチで文字を選択してください</p>
+            <p>最後のステージは、他のステージをクリアするまでプレイできません</p>
         </div>
     </div>
     """, unsafe_allow_html=True)
