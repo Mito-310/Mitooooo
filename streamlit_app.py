@@ -231,11 +231,11 @@ if st.session_state.game_state == 'title':
     
     st.markdown("""
     <div class="title-section">
-        <h1 class="game-title">RINGLISH!</h1>
+        <h1 class="game-title">WORD CONNECT</h1>
         <p class="game-subtitle">文字を繋げて単語を作ろう</p>
         <div class="game-rules">
             <h3>ゲームルール</h3>
-            <p>円形に配置された文字をなぞって繋げて単語を作るゲームです</p>
+            <p>円形に配置された文字をドラッグして繋げて単語を作るゲームです</p>
             <p>すべての目標単語を見つけるとステージクリア！</p>
             <p>同じ文字を重複して使うことはできません</p>
             <p>マウスまたはタッチで文字を選択してください</p>
@@ -267,6 +267,7 @@ if st.session_state.game_state == 'title':
                 stage_info = STAGES[stage_num]
                 with cols[j]:
                     st.markdown(f'<div class="stage-info">{stage_info["name"]}</div>', unsafe_allow_html=True)
+                    st.markdown(f'<div class="stage-info">単語: "{stage_info["problem_text"]}"</div>', unsafe_allow_html=True)
                     if st.button(f"プレイ開始", key=f"stage_{stage_num}", use_container_width=True):
                         st.session_state.current_stage = stage_num
                         st.session_state.target_words = stage_info['words']
@@ -619,6 +620,7 @@ elif st.session_state.game_state == 'game':
         // マウス/タッチイベントの処理
         function startDrag(e) {{
             e.preventDefault();
+            e.stopPropagation();
             isDragging = true;
             clearSelection();
         }}
@@ -626,6 +628,7 @@ elif st.session_state.game_state == 'game':
         function handleMove(e) {{
             if (!isDragging) return;
             e.preventDefault();
+            e.stopPropagation();
             
             const rect = container.getBoundingClientRect();
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
@@ -635,10 +638,12 @@ elif st.session_state.game_state == 'game':
             
             document.querySelectorAll('.circle-button').forEach(button => {{
                 const buttonRect = button.getBoundingClientRect();
-                const buttonX = buttonRect.left - rect.left + 25;
-                const buttonY = buttonRect.top - rect.top + 25;
+                const containerRect = container.getBoundingClientRect();
+                const buttonX = buttonRect.left - containerRect.left + 25;
+                const buttonY = buttonRect.top - containerRect.top + 25;
                 
-                if (Math.sqrt(Math.pow(x - buttonX, 2) + Math.pow(y - buttonY, 2)) < 30) {{
+                const distance = Math.sqrt(Math.pow(x - buttonX, 2) + Math.pow(y - buttonY, 2));
+                if (distance < 35) {{
                     const index = parseInt(button.dataset.index);
                     if (!selectedButtons.includes(button)) {{
                         button.classList.add('selected');
@@ -655,6 +660,7 @@ elif st.session_state.game_state == 'game':
         function endDrag(e) {{
             if (!isDragging) return;
             e.preventDefault();
+            e.stopPropagation();
             isDragging = false;
             
             if (selectedLetters.length > 0) {{
@@ -668,6 +674,37 @@ elif st.session_state.game_state == 'game':
                     // 正解の場合はすぐにクリア
                     clearSelection();
                 }}
+            }} else {{
+                clearSelection();
+            }}
+        }}
+
+        // ボタンクリックイベント（個別のボタンクリック対応）
+        function handleButtonClick(e) {{
+            e.preventDefault();
+            e.stopPropagation();
+            if (isDragging) return;
+            
+            const button = e.target;
+            if (!selectedButtons.includes(button)) {{
+                const buttonRect = button.getBoundingClientRect();
+                const containerRect = container.getBoundingClientRect();
+                const buttonX = buttonRect.left - containerRect.left + 25;
+                const buttonY = buttonRect.top - containerRect.top + 25;
+                
+                button.classList.add('selected');
+                selectedButtons.push(button);
+                selectedLetters.push(button.dataset.letter);
+                points.push({{x: buttonX, y: buttonY}});
+                drawLines();
+                updateSelectedWord();
+            }}
+        }}
+
+        // 外側のクリック/タッチでクリア
+        function handleOutsideClick(e) {{
+            if (!container.contains(e.target) && !isDragging) {{
+                clearSelection();
             }}
         }}
 
@@ -675,9 +712,24 @@ elif st.session_state.game_state == 'game':
         container.addEventListener('mousedown', startDrag);
         container.addEventListener('mousemove', handleMove);
         container.addEventListener('mouseup', endDrag);
+        container.addEventListener('mouseleave', () => {{
+            if (isDragging) {{
+                endDrag({{preventDefault: () => {{}}, stopPropagation: () => {{}}}});
+            }}
+        }});
+
         container.addEventListener('touchstart', startDrag);
         container.addEventListener('touchmove', handleMove);
         container.addEventListener('touchend', endDrag);
+
+        // 各ボタンにクリックイベントを追加
+        document.querySelectorAll('.circle-button').forEach(button => {{
+            button.addEventListener('click', handleButtonClick);
+        }});
+
+        // 外側クリック検出
+        document.addEventListener('click', handleOutsideClick);
+        document.addEventListener('touchstart', handleOutsideClick);
 
         // 初期化
         updateSelectedWord();
