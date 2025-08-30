@@ -471,7 +471,7 @@ elif st.session_state.game_state == 'game':
             transition: all 0.2s ease;
             touch-action: none;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            z-index: 10; /* ボタンを線より前面に */
+            z-index: 10;
         }}
         .circle-button.selected {{
             background: linear-gradient(135deg, #2c2c2c 0%, #1a1a1a 100%) !important;
@@ -480,7 +480,7 @@ elif st.session_state.game_state == 'game':
             box-shadow: 0 6px 12px rgba(0,0,0,0.3);
             border: 2px solid #1a1a1a;
             transition: all 0.1s ease;
-            z-index: 10; /* 選択時も前面に */
+            z-index: 10;
         }}
         .circle-button:not(.selected):hover {{
             background: linear-gradient(135deg, #f0f0f0 0%, #e9ecef 100%) !important;
@@ -563,7 +563,7 @@ elif st.session_state.game_state == 'game':
             position: absolute;
             top: 0;
             left: 0;
-            z-index: 1; /* 線を背面に（ボタンのz-index: 10より小さく） */
+            z-index: 1;
             pointer-events: none;
         }}
         </style>
@@ -574,7 +574,6 @@ elif st.session_state.game_state == 'game':
         <div id="success-message" class="success-message">正解！</div>
         <div id="complete-message" class="complete-message">ステージクリア！</div>
         
-        <!-- ヒントボタンをJavaScriptで処理 -->
         <div style="position: fixed; top: 10px; right: 10px; z-index: 1000;">
             <button onclick="showHint()" style="padding: 8px 16px; background: #333; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; transition: all 0.2s ease;" onmouseover="this.style.background='#555'" onmouseout="this.style.background='#333'">ヒント</button>
         </div>
@@ -589,8 +588,8 @@ elif st.session_state.game_state == 'game':
         let selectedLetters = [];
         let selectedButtons = [];
         let points = [];
-        let targetWords = {st.session_state.target_words};
-        let foundWords = {st.session_state.found_words};
+        let targetWords = {json.dumps(st.session_state.target_words)};
+        let foundWords = {json.dumps(st.session_state.found_words)};
         let showHints = {json.dumps(st.session_state.show_hints)};
 
         const selectedWordDiv = document.getElementById('selected-word');
@@ -616,13 +615,10 @@ elif st.session_state.game_state == 'game':
                 for (let i = 0; i < word.length; i++) {{
                     let letter = word[i];
                     if (isFound) {{
-                        // 正解済みの単語は全文字表示
                         boxesHtml += '<span style="display: inline-block; width: 26px; height: 26px; border: 1px solid #333; background: white; color: #333; text-align: center; line-height: 26px; margin: 1px; font-size: 14px; font-weight: bold; border-radius: 3px; vertical-align: top;">' + letter + '</span>';
                     }} else if (hasHint && i === 0) {{
-                        // ヒントがある場合は最初の文字をオレンジで表示
                         boxesHtml += '<span style="display: inline-block; width: 26px; height: 26px; border: 1px solid #FF9800; background: #FFF8E1; color: #FF9800; text-align: center; line-height: 26px; margin: 1px; font-size: 14px; font-weight: bold; border-radius: 3px; vertical-align: top;">' + letter + '</span>';
                     }} else {{
-                        // 通常の空白枠
                         boxesHtml += '<span style="display: inline-block; width: 26px; height: 26px; border: 1px solid #ddd; background: white; text-align: center; line-height: 26px; margin: 1px; border-radius: 3px; vertical-align: top;"></span>';
                     }}
                 }}
@@ -650,12 +646,10 @@ elif st.session_state.game_state == 'game':
         }}
         
         function showHint() {{
-            // まだ見つかっていない単語を取得
             let unfoundWords = targetWords.filter(word => !foundWords.includes(word));
             let availableHints = unfoundWords.filter(word => !showHints.hasOwnProperty(word));
             
             if (availableHints.length > 0) {{
-                // ランダムに1つの単語を選択
                 let randomIndex = Math.floor(Math.random() * availableHints.length);
                 let hintWord = availableHints[randomIndex];
                 showHints[hintWord] = hintWord[0];
@@ -686,13 +680,8 @@ elif st.session_state.game_state == 'game':
             }};
         }}
 
-        function resetSelection() {{
-            clearAllSelections();
-        }}
-
         function selectButton(button) {{
             if (!selectedButtons.includes(button)) {{
-                // 即座にクラスを追加（背景黒、文字白）
                 button.classList.add('selected');
                 button.classList.remove('hover');
                 
@@ -702,7 +691,6 @@ elif st.session_state.game_state == 'game':
                 updateSelectedWord();
                 drawLine();
                 
-                // 強制的に再描画を促す
                 button.offsetHeight;
             }}
         }}
@@ -711,7 +699,6 @@ elif st.session_state.game_state == 'game':
             document.querySelectorAll('.circle-button').forEach(button => {{
                 button.classList.remove('selected');
                 button.classList.remove('hover');
-                // 強制的に再描画を促す
                 button.offsetHeight;
             }});
             selectedLetters = [];
@@ -726,7 +713,6 @@ elif st.session_state.game_state == 'game':
             let closestButton = null;
             let closestDistance = Infinity;
             
-            // 以前のホバー状態をクリア
             buttons.forEach(button => {{
                 if (!button.classList.contains('selected')) {{
                     button.classList.remove('hover');
@@ -743,14 +729,12 @@ elif st.session_state.game_state == 'game':
                     Math.pow(clientY - buttonCenterY, 2)
                 );
                 
-                // 当たり判定の範囲を広げる（40px）
                 if (distance <= 40 && distance < closestDistance) {{
                     closestDistance = distance;
                     closestButton = button;
                 }}
             }}
             
-            // 最も近いボタンにホバー効果を適用
             if (closestButton && !closestButton.classList.contains('selected')) {{
                 closestButton.classList.add('hover');
             }}
@@ -779,11 +763,9 @@ elif st.session_state.game_state == 'game':
             }});
         }}
 
-        // マウスイベント
         function handleMouseDown(event) {{
             event.preventDefault();
             isDragging = true;
-            // まず全ての選択をクリア
             clearAllSelections();
             
             const button = getButtonAtPosition(event.clientX, event.clientY);
@@ -801,7 +783,6 @@ elif st.session_state.game_state == 'game':
                     selectButton(button);
                 }}
             }} else {{
-                // ドラッグ中でない時も視覚的フィードバックを提供
                 getButtonAtPosition(event.clientX, event.clientY);
             }}
         }}
@@ -812,22 +793,18 @@ elif st.session_state.game_state == 'game':
                 isDragging = false;
                 const isCorrect = checkCorrectWord();
                 
-                // 単語チェック後に選択をリセット
                 setTimeout(() => {{
                     clearAllSelections();
                 }}, isCorrect ? 1000 : 200);
             }}
-            // ホバー状態をクリア
             document.querySelectorAll('.circle-button').forEach(button => {{
                 button.classList.remove('hover');
             }});
         }}
 
-        // タッチイベント
         function handleTouchStart(event) {{
             event.preventDefault();
             isDragging = true;
-            // まず全ての選択をクリア
             clearAllSelections();
             
             const touch = event.touches[0];
@@ -859,8 +836,6 @@ elif st.session_state.game_state == 'game':
             }}
         }}
 
-        // イベントリスナー設定
-        // ドキュメント全体にイベントリスナーを設定して、より確実に捉える
         document.addEventListener('mousedown', handleMouseDown);
         document.addEventListener('mousemove', handleMouseMove);
         document.addEventListener('mouseup', handleMouseUp);
@@ -869,208 +844,11 @@ elif st.session_state.game_state == 'game':
         document.addEventListener('touchmove', handleTouchMove, {{passive: false}});
         document.addEventListener('touchend', handleTouchEnd, {{passive: false}});
 
-        // 初期化（Python側から最新の状態を読み込んで表示）
         updateSelectedWord();
         updateTargetWordsDisplay();
 
-        // コンテキストメニューとテキスト選択を無効化
         document.addEventListener('contextmenu', e => e.preventDefault());
         document.addEventListener('selectstart', e => e.preventDefault());
-        
-        // デバッグ用：ボタンの位置を確認
-        console.log('Buttons initialized:');
-        document.querySelectorAll('.circle-button').forEach((button, index) => {{
-            const rect = button.getBoundingClientRect();
-            console.log(`Button ${{index}}: ${{button.dataset.letter}} at (${{rect.left + rect.width/2}}, ${{rect.top + rect.height/2}})`);
-        }});
-        </script>
-    </body>
-    </html>
-    """, height=600)getButtonCenterPosition(button));
-                updateSelectedWord();
-                drawLine();
-                
-                // 強制的に再描画を促す
-                button.offsetHeight;
-            }}
-        }}
-
-        function clearAllSelections() {{
-            document.querySelectorAll('.circle-button').forEach(button => {{
-                button.classList.remove('selected');
-                button.classList.remove('hover');
-                // 強制的に再描画を促す
-                button.offsetHeight;
-            }});
-            selectedLetters = [];
-            selectedButtons = [];
-            points = [];
-            updateSelectedWord();
-            drawLine();
-        }}
-
-        function getButtonAtPosition(clientX, clientY) {{
-            const buttons = document.querySelectorAll('.circle-button');
-            let closestButton = null;
-            let closestDistance = Infinity;
-            
-            // 以前のホバー状態をクリア
-            buttons.forEach(button => {{
-                if (!button.classList.contains('selected')) {{
-                    button.classList.remove('hover');
-                }}
-            }});
-            
-            for (let button of buttons) {{
-                const rect = button.getBoundingClientRect();
-                const buttonCenterX = rect.left + rect.width / 2;
-                const buttonCenterY = rect.top + rect.height / 2;
-                
-                const distance = Math.sqrt(
-                    Math.pow(clientX - buttonCenterX, 2) + 
-                    Math.pow(clientY - buttonCenterY, 2)
-                );
-                
-                // 当たり判定の範囲を広げる（40px）
-                if (distance <= 40 && distance < closestDistance) {{
-                    closestDistance = distance;
-                    closestButton = button;
-                }}
-            }}
-            
-            // 最も近いボタンにホバー効果を適用
-            if (closestButton && !closestButton.classList.contains('selected')) {{
-                closestButton.classList.add('hover');
-            }}
-            
-            return closestButton;
-        }}
-
-        function drawLine() {{
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            if (points.length < 2) return;
-
-            ctx.beginPath();
-            ctx.moveTo(points[0].x, points[0].y);
-            for (let i = 1; i < points.length; i++) {{
-                ctx.lineTo(points[i].x, points[i].y);
-            }}
-            ctx.strokeStyle = '#333';
-            ctx.lineWidth = 3;
-            ctx.stroke();
-
-            points.forEach(point => {{
-                ctx.beginPath();
-                ctx.arc(point.x, point.y, 3, 0, 2 * Math.PI);
-                ctx.fillStyle = '#333';
-                ctx.fill();
-            }});
-        }}
-
-        // マウスイベント
-        function handleMouseDown(event) {{
-            event.preventDefault();
-            isDragging = true;
-            // まず全ての選択をクリア
-            clearAllSelections();
-            
-            const button = getButtonAtPosition(event.clientX, event.clientY);
-            if (button) {{
-                selectButton(button);
-            }}
-        }}
-
-        function handleMouseMove(event) {{
-            event.preventDefault();
-            
-            if (isDragging) {{
-                const button = getButtonAtPosition(event.clientX, event.clientY);
-                if (button) {{
-                    selectButton(button);
-                }}
-            }} else {{
-                // ドラッグ中でない時も視覚的フィードバックを提供
-                getButtonAtPosition(event.clientX, event.clientY);
-            }}
-        }}
-
-        function handleMouseUp(event) {{
-            event.preventDefault();
-            if (isDragging) {{
-                isDragging = false;
-                const isCorrect = checkCorrectWord();
-                
-                // 単語チェック後に選択をリセット
-                setTimeout(() => {{
-                    clearAllSelections();
-                }}, isCorrect ? 1000 : 200);
-            }}
-            // ホバー状態をクリア
-            document.querySelectorAll('.circle-button').forEach(button => {{
-                button.classList.remove('hover');
-            }});
-        }}
-
-        // タッチイベント
-        function handleTouchStart(event) {{
-            event.preventDefault();
-            isDragging = true;
-            // まず全ての選択をクリア
-            clearAllSelections();
-            
-            const touch = event.touches[0];
-            const button = getButtonAtPosition(touch.clientX, touch.clientY);
-            if (button) {{
-                selectButton(button);
-            }}
-        }}
-
-        function handleTouchMove(event) {{
-            event.preventDefault();
-            if (!isDragging) return;
-            
-            const touch = event.touches[0];
-            const button = getButtonAtPosition(touch.clientX, touch.clientY);
-            if (button) {{
-                selectButton(button);
-            }}
-        }}
-
-        function handleTouchEnd(event) {{
-            event.preventDefault();
-            if (isDragging) {{
-                isDragging = false;
-                const isCorrect = checkCorrectWord();
-                setTimeout(() => {{
-                    clearAllSelections();
-                }}, isCorrect ? 1000 : 200);
-            }}
-        }}
-
-        // イベントリスナー設定
-        // ドキュメント全体にイベントリスナーを設定して、より確実に捉える
-        document.addEventListener('mousedown', handleMouseDown);
-        document.addEventListener('mousemove', handleMouseMove);
-        document.addEventListener('mouseup', handleMouseUp);
-
-        document.addEventListener('touchstart', handleTouchStart, {{passive: false}});
-        document.addEventListener('touchmove', handleTouchMove, {{passive: false}});
-        document.addEventListener('touchend', handleTouchEnd, {{passive: false}});
-
-        // 初期化
-        updateSelectedWord();
-        updateTargetWordsDisplay();
-
-        // コンテキストメニューとテキスト選択を無効化
-        document.addEventListener('contextmenu', e => e.preventDefault());
-        document.addEventListener('selectstart', e => e.preventDefault());
-        
-        // デバッグ用：ボタンの位置を確認
-        console.log('Buttons initialized:');
-        document.querySelectorAll('.circle-button').forEach((button, index) => {{
-            const rect = button.getBoundingClientRect();
-            console.log(`Button ${{index}}: ${{button.dataset.letter}} at (${{rect.left + rect.width/2}}, ${{rect.top + rect.height/2}})`);
-        }});
         </script>
     </body>
     </html>
