@@ -794,7 +794,7 @@ elif st.session_state.game_state == 'game':
                     st.rerun()
             else:
                 st.balloons()
-                st.success("🏆 全ステージクリア！おめでとうございます！")
+                st.success("全ステージクリア！おめでとうございます！")
                 if st.button("タイトルに戻る", key="back_to_title", use_container_width=True, type="primary"):
                     st.session_state.game_state = 'title'
                     st.session_state.current_stage = 1
