@@ -366,6 +366,21 @@ elif st.session_state.game_state == 'game':
         </div>
         """, unsafe_allow_html=True)
     with col3:
+        # シャッフルボタンに黒背景のスタイルを適用
+        st.markdown("""
+        <style>
+        div[data-testid="column"]:nth-child(3) .stButton > button {
+            background-color: #333 !important;
+            color: white !important;
+            border: 2px solid #333 !important;
+        }
+        div[data-testid="column"]:nth-child(3) .stButton > button:hover {
+            background-color: #555 !important;
+            border-color: #555 !important;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+        
         if st.button("文字をシャッフル", key="shuffle_button", use_container_width=True, help="文字の配置をシャッフルします"):
             # 現在の文字配列をシャッフル（正解した単語やヒントは保持）
             letters_copy = st.session_state.shuffled_letters.copy()
@@ -575,7 +590,7 @@ elif st.session_state.game_state == 'game':
         let points = [];
         let targetWords = {st.session_state.target_words};
         let foundWords = {st.session_state.found_words};
-        let showHints = {st.session_state.show_hints};
+        let showHints = {JSON.dumps(st.session_state.show_hints)};
 
         const selectedWordDiv = document.getElementById('selected-word');
         const targetWordsDiv = document.getElementById('target-words');
