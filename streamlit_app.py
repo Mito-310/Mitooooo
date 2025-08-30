@@ -1,5 +1,4 @@
 import streamlit as st
-import pandas as pd
 import random
 import math
 import json
@@ -72,43 +71,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Excelファイルから問題を読み込む関数
-@st.cache_data
-def load_problems_from_excel(file_path):
-    """Excelファイルから問題を読み込む"""
-    try:
-        df = pd.read_excel(file_path)
-        problems = {}
-        
-        # 各行を処理して問題を作成
-        for index, row in df.iterrows():
-            stage_num = index + 1
-            problem_text = str(row['問題文']).strip()
-            
-            # 問題文から文字を抽出（重複を除去）
-            unique_letters = list(set(problem_text.upper().replace(' ', '')))
-            
-            # ①-⑳の列から単語を抽出
-            words = []
-            for col in df.columns[1:]:  # 問題文以外の列
-                if pd.notna(row[col]):
-                    word = str(row[col]).strip().upper()
-                    if word and word not in words:
-                        words.append(word)
-            
-            problems[stage_num] = {
-                'name': f'ステージ {stage_num}',
-                'problem_text': problem_text,
-                'letters': unique_letters,
-                'words': words
-            }
-        
-        return problems
-    except Exception as e:
-        st.error(f"Excelファイルの読み込みエラー: {e}")
-        return None
-
-# デフォルトの問題（Excelファイルが読み込めない場合の備え）
+# デフォルトの問題
 DEFAULT_STAGES = {
     1: {
         'name': 'ステージ 1',
@@ -139,8 +102,6 @@ if 'target_words' not in st.session_state:
     st.session_state.target_words = []
 if 'found_words' not in st.session_state:
     st.session_state.found_words = []
-if 'stages' not in st.session_state:
-    st.session_state.stages = None
 if 'hints_used' not in st.session_state:
     st.session_state.hints_used = []
 if 'show_hints' not in st.session_state:
@@ -148,70 +109,7 @@ if 'show_hints' not in st.session_state:
 if 'shuffled_letters' not in st.session_state:
     st.session_state.shuffled_letters = []
 
-# Excelファイルから問題を読み込み
-if st.session_state.stages is None:
-    try:
-        loaded_stages = load_problems_from_excel('Book.xlsx')
-        if loaded_stages:
-            st.session_state.stages = loaded_stages
-            st.success(f"Excelファイルから{len(loaded_stages)}個のステージを読み込みました")
-        else:
-            st.session_state.stages = DEFAULT_STAGES
-            st.warning("Excelファイルの読み込みに失敗しました。デフォルトステージを使用します。")
-    except:
-        st.session_state.stages = DEFAULT_STAGES
-        st.warning("Book.xlsxが見つかりません。デフォルトステージを使用します。")
-
-STAGES = st.session_state.stages
-
-# ファイルアップロード機能（タイトル画面でのみ表示）
-if st.session_state.game_state == 'title':
-    st.sidebar.header("問題ファイルの管理")
-    
-    uploaded_file = st.sidebar.file_uploader(
-        "新しい問題ファイルをアップロード", 
-        type=['xlsx', 'xls'],
-        help="問題文列と①-⑳の回答列を含むExcelファイルをアップロードしてください"
-    )
-    
-    if uploaded_file is not None:
-        try:
-            df = pd.read_excel(uploaded_file)
-            st.sidebar.write("アップロードされたファイルの内容:")
-            st.sidebar.dataframe(df.head())
-            
-            if st.sidebar.button("この問題ファイルを使用"):
-                new_stages = {}
-                for index, row in df.iterrows():
-                    stage_num = index + 1
-                    problem_text = str(row['問題文']).strip()
-                    unique_letters = list(set(problem_text.upper().replace(' ', '')))
-                    
-                    words = []
-                    for col in df.columns[1:]:
-                        if pd.notna(row[col]):
-                            word = str(row[col]).strip().upper()
-                            if word and word not in words:
-                                words.append(word)
-                    
-                    new_stages[stage_num] = {
-                        'name': f'ステージ {stage_num}',
-                        'problem_text': problem_text,
-                        'letters': unique_letters,
-                        'words': words
-                    }
-                
-                st.session_state.stages = new_stages
-                st.sidebar.success(f"新しい問題ファイルから{len(new_stages)}個のステージを読み込みました！")
-                st.rerun()
-        
-        except Exception as e:
-            st.sidebar.error(f"ファイル読み込みエラー: {e}")
-    
-    st.sidebar.write(f"現在のステージ数: **{len(STAGES)}**")
-    if st.sidebar.button("デフォルトステージに戻す"):
-        st.session_state.stages = DEFAULT_STAGES
-        st.rerun()
+STAGES = DEFAULT_STAGES
 
 # タイトル画面
 if st.session_state.game_state == 'title':
