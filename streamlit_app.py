@@ -301,8 +301,30 @@ if st.session_state.game_state == 'title':
                     # クリア済みの場合は緑色のボタンにチェックマークを追加
                     if is_cleared:
                         button_text = "✓ CLEAR"
-                        # クリア済みステージ用のCSSクラスを適用
-                        st.markdown('<div class="cleared-stage">', unsafe_allow_html=True)
+                        # インラインスタイルで直接緑色を適用
+                        st.markdown(f'''
+                        <style>
+                        div[data-testid="stButton"]:has(button:contains("✓ CLEAR")) > button {{
+                            background-color: #4CAF50 !important;
+                            border-color: #4CAF50 !important;
+                            color: white !important;
+                        }}
+                        div[data-testid="stButton"]:has(button:contains("✓ CLEAR")) > button:hover {{
+                            background-color: #45a049 !important;
+                            border-color: #45a049 !important;
+                        }}
+                        .cleared-stage-{stage_num} > button {{
+                            background-color: #4CAF50 !important;
+                            border-color: #4CAF50 !important;
+                            color: white !important;
+                        }}
+                        .cleared-stage-{stage_num} > button:hover {{
+                            background-color: #45a049 !important;
+                            border-color: #45a049 !important;
+                        }}
+                        </style>
+                        <div class="cleared-stage-{stage_num}">
+                        ''', unsafe_allow_html=True)
                         button_clicked = st.button(button_text, key=f"stage_{stage_num}", use_container_width=True)
                         st.markdown('</div>', unsafe_allow_html=True)
                     else:
