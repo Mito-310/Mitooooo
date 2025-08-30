@@ -91,6 +91,18 @@ st.markdown("""
     background-color: #FFEBEE;
     border-left: 4px solid #F44336;
 }
+
+/* クリア済みステージボタンのスタイル */
+.cleared-stage > button {
+    background-color: #4CAF50 !important;
+    border-color: #4CAF50 !important;
+    color: white !important;
+}
+
+.cleared-stage > button:hover {
+    background-color: #45a049 !important;
+    border-color: #45a049 !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -161,6 +173,8 @@ if 'show_hints' not in st.session_state:
     st.session_state.show_hints = {}
 if 'shuffled_letters' not in st.session_state:
     st.session_state.shuffled_letters = []
+if 'cleared_stages' not in st.session_state:
+    st.session_state.cleared_stages = set()
 
 STAGES = DEFAULT_STAGES
 
@@ -280,9 +294,22 @@ if st.session_state.game_state == 'title':
             stage_num = i + j + 1
             if stage_num in STAGES:
                 stage_info = STAGES[stage_num]
+                is_cleared = stage_num in st.session_state.cleared_stages
                 with cols[j]:
                     st.markdown(f'<div class="stage-info">{stage_info["name"]}</div>', unsafe_allow_html=True)
-                    if st.button("▶︎", key=f"stage_{stage_num}", use_container_width=True):
+                    
+                    # クリア済みの場合は緑色のボタンにチェックマークを追加
+                    if is_cleared:
+                        button_text = "✓ CLEAR"
+                        # クリア済みステージ用のCSSクラスを適用
+                        st.markdown('<div class="cleared-stage">', unsafe_allow_html=True)
+                        button_clicked = st.button(button_text, key=f"stage_{stage_num}", use_container_width=True)
+                        st.markdown('</div>', unsafe_allow_html=True)
+                    else:
+                        button_text = "▶︎"
+                        button_clicked = st.button(button_text, key=f"stage_{stage_num}", use_container_width=True)
+                    
+                    if button_clicked:
                         st.session_state.current_stage = stage_num
                         st.session_state.target_words = stage_info['words']
                         st.session_state.found_words = []
@@ -814,6 +841,10 @@ elif st.session_state.game_state == 'game':
     stage_completed = len(st.session_state.found_words) == len(st.session_state.target_words)
     
     if stage_completed:
+        # ステージクリア時に cleared_stages に追加
+        if st.session_state.current_stage not in st.session_state.cleared_stages:
+            st.session_state.cleared_stages.add(st.session_state.current_stage)
+        
         st.success("ステージクリア！")
         col1, col2, col3 = st.columns([1, 1, 1])
         with col2:
