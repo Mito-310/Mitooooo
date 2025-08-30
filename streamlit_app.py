@@ -278,13 +278,19 @@ elif st.session_state.game_state == 'game':
     letters = st.session_state.shuffled_letters
     num_letters = len(letters)
     
-    # ヘッダー（4列レイアウト）
-    col1, col2, col3, col4 = st.columns([1, 1, 2, 1])
+    # ヘッダー（3列レイアウト）
+    col1, col2, col3 = st.columns([1, 2, 1])
     with col1:
         if st.button("タイトルに戻る", key="back_to_title_header", use_container_width=True):
             st.session_state.game_state = 'title'
             st.rerun()
     with col2:
+        st.markdown(f"""
+        <div style="display: flex; justify-content: center; align-items: center; height: 50px;">
+            <h2 style="text-align: center; color: #333; margin: 0; line-height: 1.2;">{current_stage_info['name']}</h2>
+        </div>
+        """, unsafe_allow_html=True)
+    with col3:
         # 次のステージボタン（最後のステージでない場合のみ表示）
         if st.session_state.current_stage < len(STAGES):
             if st.button("次のステージへ", key="next_stage_header", use_container_width=True):
@@ -302,19 +308,6 @@ elif st.session_state.game_state == 'game':
         else:
             # 最後のステージの場合は空のスペース
             st.empty()
-    with col3:
-        st.markdown(f"""
-        <div style="display: flex; justify-content: center; align-items: center; height: 50px;">
-            <h2 style="text-align: center; color: #333; margin: 0; line-height: 1.2;">{current_stage_info['name']}</h2>
-        </div>
-        """, unsafe_allow_html=True)
-    with col4:
-        if st.button("シャッフル", key="shuffle_button", use_container_width=True, help="文字の配置をシャッフルします"):
-            # 現在の文字配列をシャッフル（正解した単語やヒントは保持）
-            letters_copy = st.session_state.shuffled_letters.copy()
-            random.shuffle(letters_copy)
-            st.session_state.shuffled_letters = letters_copy
-            st.rerun()
     
     # 進行状況
     progress = len(st.session_state.found_words) / len(st.session_state.target_words)
