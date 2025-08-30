@@ -53,7 +53,7 @@ st.markdown("""
     border-color: #1976D2;
 }
 
-/* 戻るボタンとリセットボタンのスタイル */
+/* 戻るボタンのスタイル */
 div[data-testid="column"] .stButton > button {
     font-size: 14px;
     padding: 0.4rem 0.8rem;
@@ -343,8 +343,8 @@ elif st.session_state.game_state == 'game':
     letters = current_stage_info['letters']
     num_letters = len(letters)
     
-    # ヘッダー
-    col1, col2, col3, col4 = st.columns([1, 3, 1, 1])
+    # ヘッダー（3列レイアウトに変更）
+    col1, col2, col3 = st.columns([1, 3, 1])
     with col1:
         if st.button("タイトルに戻る", use_container_width=True):
             st.session_state.game_state = 'title'
@@ -356,13 +356,7 @@ elif st.session_state.game_state == 'game':
         </div>
         """, unsafe_allow_html=True)
     with col3:
-        if st.button("リセット", use_container_width=True):
-            st.session_state.found_words = []
-            st.session_state.hints_used = []
-            st.session_state.show_hints = {}
-            st.rerun()
-    with col4:
-        # ヒント機能はJavaScriptで処理するため、このボタンは表示しない
+        # 空の列（バランスを保つため）
         st.markdown('<div style="height: 42px;"></div>', unsafe_allow_html=True)
     
     # 進行状況
