@@ -53,7 +53,7 @@ st.markdown("""
     border-color: #1976D2;
 }
 
-/* 戻るボタンのスタイル */
+/* 戻るボタンとシャッフルボタンのスタイル */
 div[data-testid="column"] .stButton > button {
     font-size: 14px;
     padding: 0.4rem 0.8rem;
@@ -151,6 +151,8 @@ if 'hints_used' not in st.session_state:
     st.session_state.hints_used = []
 if 'show_hints' not in st.session_state:
     st.session_state.show_hints = {}
+if 'shuffled_letters' not in st.session_state:
+    st.session_state.shuffled_letters = []
 
 # Excelファイルから問題を読み込み
 if st.session_state.stages is None:
@@ -314,7 +316,12 @@ if st.session_state.game_state == 'title':
             st.session_state.found_words = []
             st.session_state.hints_used = []
             st.session_state.show_hints = {}
+            # 文字をシャッフルして保存
+            stage_letters = STAGES[1]['letters'].copy()
+            random.shuffle(stage_letters)
+            st.session_state.shuffled_letters = stage_letters
             st.session_state.game_state = 'game'
+            st.success(f"文字をシャッフルしました: {stage_letters}")
             st.rerun()
     
     # ステージ選択
@@ -334,17 +341,33 @@ if st.session_state.game_state == 'title':
                         st.session_state.found_words = []
                         st.session_state.hints_used = []
                         st.session_state.show_hints = {}
+                        # 文字をシャッフルして保存
+                        stage_letters = stage_info['letters'].copy()
+                        random.shuffle(stage_letters)
+                        st.session_state.shuffled_letters = stage_letters
+                        st.success(f"文字をシャッフルしました: {stage_letters}")
                         st.session_state.game_state = 'game'
                         st.rerun()
 
 # ゲーム画面
 elif st.session_state.game_state == 'game':
     current_stage_info = STAGES[st.session_state.current_stage]
-    letters = current_stage_info['letters']
+    
+    # シャッフルされた文字配列を使用（初回の場合は作成）
+    if not st.session_state.shuffled_letters or len(st.session_state.shuffled_letters) != len(current_stage_info['letters']):
+        stage_letters = current_stage_info['letters'].copy()
+        random.shuffle(stage_letters)
+        st.session_state.shuffled_letters = stage_letters
+    
+    letters = st.session_state.shuffled_letters
     num_letters = len(letters)
     
-    # ヘッダー（3列レイアウトに変更）
-    col1, col2, col3 = st.columns([1, 3, 1])
+    # デバッグ用：現在の文字配列を確認
+    st.write(f"デバッグ: 元の文字順 {current_stage_info['letters']}")
+    st.write(f"デバッグ: シャッフル後 {st.session_state.shuffled_letters}")
+    
+    # ヘッダー（4列レイアウトに変更してシャッフルボタンを追加）
+    col1, col2, col3, col4 = st.columns([1, 2, 1, 1])
     with col1:
         if st.button("タイトルに戻る", use_container_width=True):
             st.session_state.game_state = 'title'
@@ -356,6 +379,13 @@ elif st.session_state.game_state == 'game':
         </div>
         """, unsafe_allow_html=True)
     with col3:
+        if st.button("🔀 シャッフル", key="shuffle_button", use_container_width=True, help="文字の配置をシャッフルします"):
+            # 現在の文字配列をシャッフル
+            letters_copy = st.session_state.shuffled_letters.copy()
+            random.shuffle(letters_copy)
+            st.session_state.shuffled_letters = letters_copy
+            st.rerun()
+    with col4:
         # 空の列（バランスを保つため）
         st.markdown('<div style="height: 42px;"></div>', unsafe_allow_html=True)
     
@@ -870,6 +900,10 @@ elif st.session_state.game_state == 'game':
                     st.session_state.found_words = []
                     st.session_state.hints_used = []
                     st.session_state.show_hints = {}
+                    # 新しいステージの文字をシャッフル
+                    stage_letters = next_stage_info['letters'].copy()
+                    random.shuffle(stage_letters)
+                    st.session_state.shuffled_letters = stage_letters
                     st.rerun()
         else:
             st.balloons()
@@ -882,4 +916,5 @@ elif st.session_state.game_state == 'game':
                     st.session_state.found_words = []
                     st.session_state.hints_used = []
                     st.session_state.show_hints = {}
+                    st.session_state.shuffled_letters = []
                     st.rerun()
