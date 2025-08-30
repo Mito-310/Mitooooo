@@ -349,7 +349,7 @@ elif st.session_state.game_state == 'game':
             position: relative;
             width: 320px;
             height: 320px;
-            margin: 160px auto 40px auto;
+            margin: 200px auto 40px auto;
             border: 3px solid #ddd;
             border-radius: 50%;
             background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
