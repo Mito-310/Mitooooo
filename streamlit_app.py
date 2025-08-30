@@ -393,20 +393,20 @@ elif st.session_state.game_state == 'game':
     st.progress(progress)
     st.markdown(f"<div style='text-align: center; color: #555; font-weight: 500; margin-bottom: 1rem;'>進行状況: {len(st.session_state.found_words)} / {len(st.session_state.target_words)} 単語</div>", unsafe_allow_html=True)
     
-    # 目標単語の表示（見つけた単語は文字を表示、ヒントがある場合は最初の文字を表示）
-    sorted_words = sorted(st.session_state.target_words)
+    # 目標単語の表示（文字数→アルファベット順でソート）
+    sorted_words = sorted(st.session_state.target_words, key=lambda x: (len(x), x))
     target_boxes_html = []
     
     for word in sorted_words:
         is_found = word in st.session_state.found_words
-        has_hint = word in st.session_state.show_hints
+        word_hints = st.session_state.show_hints.get(word, [])
         boxes_html = ""
         for i, letter in enumerate(word):
             if is_found:
                 # 正解済みの単語は全文字表示
                 boxes_html += f'<span style="display: inline-block; width: 26px; height: 26px; border: 1px solid #333; background: white; color: #333; text-align: center; line-height: 26px; margin: 1px; font-size: 14px; font-weight: bold; border-radius: 3px; vertical-align: top;">{letter}</span>'
-            elif has_hint and i == 0:
-                # ヒントがある場合は最初の文字をオレンジで表示
+            elif i in word_hints:
+                # ヒントがある文字をオレンジで表示
                 boxes_html += f'<span style="display: inline-block; width: 26px; height: 26px; border: 1px solid #FF9800; background: #FFF8E1; color: #FF9800; text-align: center; line-height: 26px; margin: 1px; font-size: 14px; font-weight: bold; border-radius: 3px; vertical-align: top;">{letter}</span>'
             else:
                 # 通常の空白枠
@@ -605,17 +605,23 @@ elif st.session_state.game_state == 'game':
 
         function updateTargetWordsDisplay() {{
             let targetBoxesHtml = [];
-            let sortedWords = targetWords.slice().sort();
+            let sortedWords = targetWords.slice().sort((a, b) => {{
+                // 文字数で比較、同じなら辞書順
+                if (a.length !== b.length) {{
+                    return a.length - b.length;
+                }}
+                return a.localeCompare(b);
+            }});
             
             for (let word of sortedWords) {{
                 let isFound = foundWords.includes(word);
-                let hasHint = showHints.hasOwnProperty(word);
+                let wordHints = showHints[word] || [];
                 let boxesHtml = "";
                 for (let i = 0; i < word.length; i++) {{
                     let letter = word[i];
                     if (isFound) {{
                         boxesHtml += '<span style="display: inline-block; width: 26px; height: 26px; border: 1px solid #333; background: white; color: #333; text-align: center; line-height: 26px; margin: 1px; font-size: 14px; font-weight: bold; border-radius: 3px; vertical-align: top;">' + letter + '</span>';
-                    }} else if (hasHint && i === 0) {{
+                    }} else if (wordHints.includes(i)) {{
                         boxesHtml += '<span style="display: inline-block; width: 26px; height: 26px; border: 1px solid #FF9800; background: #FFF8E1; color: #FF9800; text-align: center; line-height: 26px; margin: 1px; font-size: 14px; font-weight: bold; border-radius: 3px; vertical-align: top;">' + letter + '</span>';
                     }} else {{
                         boxesHtml += '<span style="display: inline-block; width: 26px; height: 26px; border: 1px solid #ddd; background: white; text-align: center; line-height: 26px; margin: 1px; border-radius: 3px; vertical-align: top;"></span>';
@@ -652,13 +658,36 @@ elif st.session_state.game_state == 'game':
         
         function showHint() {{
             let unfoundWords = targetWords.filter(word => !foundWords.includes(word));
-            let availableHints = unfoundWords.filter(word => !showHints.hasOwnProperty(word));
             
-            if (availableHints.length > 0) {{
-                let randomIndex = Math.floor(Math.random() * availableHints.length);
-                let hintWord = availableHints[randomIndex];
-                showHints[hintWord] = hintWord[0];
-                updateTargetWordsDisplay();
+            if (unfoundWords.length > 0) {{
+                // ランダムに単語を選択
+                let randomIndex = Math.floor(Math.random() * unfoundWords.length);
+                let hintWord = unfoundWords[randomIndex];
+                
+                // その単語の現在のヒント状況を確認
+                let currentHints = showHints[hintWord] || [];
+                
+                // 最後の文字以外で未解放の文字のインデックスを取得
+                let availablePositions = [];
+                for (let i = 0; i < hintWord.length - 1; i++) {{
+                    if (!currentHints.includes(i)) {{
+                        availablePositions.push(i);
+                    }}
+                }}
+                
+                if (availablePositions.length > 0) {{
+                    // 利用可能な位置からランダムに選択
+                    let randomPos = Math.floor(Math.random() * availablePositions.length);
+                    let newHintPosition = availablePositions[randomPos];
+                    
+                    // ヒントを追加
+                    if (!showHints[hintWord]) {{
+                        showHints[hintWord] = [];
+                    }}
+                    showHints[hintWord].push(newHintPosition);
+                    
+                    updateTargetWordsDisplay();
+                }}
             }}
         }}
 
