@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import random
 import math
+import json
 import streamlit.components.v1 as components
 
 # ページ設定
@@ -590,7 +591,7 @@ elif st.session_state.game_state == 'game':
         let points = [];
         let targetWords = {st.session_state.target_words};
         let foundWords = {st.session_state.found_words};
-        let showHints = {JSON.dumps(st.session_state.show_hints)};
+        let showHints = {json.dumps(st.session_state.show_hints)};
 
         const selectedWordDiv = document.getElementById('selected-word');
         const targetWordsDiv = document.getElementById('target-words');
