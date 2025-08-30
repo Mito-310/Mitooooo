@@ -37,6 +37,29 @@ st.markdown("""
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
+/* シャッフルボタン専用のスタイル */
+.shuffle-button > button {
+    background-color: #333 !important;
+    color: white !important;
+    border: 2px solid #333 !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    transition: all 0.3s ease !important;
+    height: 50px !important;
+}
+
+.shuffle-button > button:hover {
+    background-color: #555 !important;
+    border-color: #555 !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important;
+}
+
+.shuffle-button > button:active {
+    transform: translateY(0) !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
+}
+
 /* プログレスバーの色調整 */
 .stProgress .st-bo {
     background-color: #4CAF50;
@@ -268,27 +291,15 @@ elif st.session_state.game_state == 'game':
         </div>
         """, unsafe_allow_html=True)
     with col3:
-        # シャッフルボタンに黒背景のスタイルを適用
-        st.markdown("""
-        <style>
-        div[data-testid="column"]:nth-child(3) .stButton > button {
-            background-color: #333 !important;
-            color: white !important;
-            border: 2px solid #333 !important;
-        }
-        div[data-testid="column"]:nth-child(3) .stButton > button:hover {
-            background-color: #555 !important;
-            border-color: #555 !important;
-        }
-        </style>
-        """, unsafe_allow_html=True)
-        
-        if st.button("文字をシャッフル", key="shuffle_button", use_container_width=True, help="文字の配置をシャッフルします"):
+        # シャッフルボタンに専用のCSSクラスを適用
+        st.markdown('<div class="shuffle-button">', unsafe_allow_html=True)
+        if st.button("シャッフル", key="shuffle_button", use_container_width=True, help="文字の配置をシャッフルします"):
             # 現在の文字配列をシャッフル（正解した単語やヒントは保持）
             letters_copy = st.session_state.shuffled_letters.copy()
             random.shuffle(letters_copy)
             st.session_state.shuffled_letters = letters_copy
             st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
     
     # 進行状況
     progress = len(st.session_state.found_words) / len(st.session_state.target_words)
