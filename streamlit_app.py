@@ -112,7 +112,7 @@ DEFAULT_STAGES = {
         'name': 'ステージ 3',
         'problem_text': 'discover',
         'letters': ['D', 'I', 'S', 'C', 'O', 'V', 'E', 'R'],
-        'words': ['COVER', 'CODE', 'DIVE', 'DISCOVER']
+        'words': ['COVER', 'RIDE', 'DIVE', 'DISCOVER']
     }
 }
 
