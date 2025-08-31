@@ -447,10 +447,7 @@ elif st.session_state.game_state == 'game':
         st.query_params.clear()
         st.rerun()
     
-    # 進行状況
-    progress = len(st.session_state.found_words) / len(st.session_state.target_words)
-    st.progress(progress)
-    st.markdown(f"<div style='text-align: center; color: #555; font-weight: 500; margin-bottom: 1rem;'>進行状況: {len(st.session_state.found_words)} / {len(st.session_state.target_words)} 単語</div>", unsafe_allow_html=True)
+
     
     # 目標単語の表示（文字数→アルファベット順でソート）
     sorted_words = sorted(st.session_state.target_words, key=lambda x: (len(x), x))
@@ -1019,13 +1016,12 @@ elif st.session_state.game_state == 'game':
         st.query_params.clear()
         st.rerun()
 
-    # ステージクリア状態の確認とボタン表示
+    # ステージクリア状態の確認
     stage_completed = len(st.session_state.found_words) == len(st.session_state.target_words)
     
     if stage_completed:
-        # ステージクリア時に cleared_stages に追加
-        if st.session_state.current_stage not in st.session_state.cleared_stages:
-            st.session_state.cleared_stages.add(st.session_state.current_stage)
+        # ステージクリア時に cleared_stages に追加（即座に追加）
+        st.session_state.cleared_stages.add(st.session_state.current_stage)
         
         st.success("ステージクリア！")
         col1, col2, col3 = st.columns([1, 1, 1])
