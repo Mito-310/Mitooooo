@@ -209,6 +209,8 @@ if 'shuffled_letters' not in st.session_state:
     st.session_state.shuffled_letters = []
 if 'cleared_stages' not in st.session_state:
     st.session_state.cleared_stages = set()
+if 'temp_found_words' not in st.session_state:
+    st.session_state.temp_found_words = []
 
 STAGES = DEFAULT_STAGES
 
@@ -299,6 +301,7 @@ if st.session_state.game_state == 'title':
             st.session_state.current_stage = 1
             st.session_state.target_words = STAGES[1]['words']
             st.session_state.found_words = []
+            st.session_state.temp_found_words = []
             st.session_state.hints_used = []
             st.session_state.show_hints = {}
             # 文字をシャッフルして保存
@@ -356,6 +359,7 @@ if st.session_state.game_state == 'title':
                             st.session_state.current_stage = stage_num
                             st.session_state.target_words = stage_info['words']
                             st.session_state.found_words = []
+                            st.session_state.temp_found_words = []
                             st.session_state.hints_used = []
                             st.session_state.show_hints = {}
                             # 文字をシャッフルして保存
@@ -370,6 +374,7 @@ if st.session_state.game_state == 'title':
                             st.session_state.current_stage = stage_num
                             st.session_state.target_words = stage_info['words']
                             st.session_state.found_words = []
+                            st.session_state.temp_found_words = []
                             st.session_state.hints_used = []
                             st.session_state.show_hints = {}
                             # 文字をシャッフルして保存
@@ -420,6 +425,7 @@ elif st.session_state.game_state == 'game':
                 next_stage_info = STAGES[st.session_state.current_stage]
                 st.session_state.target_words = next_stage_info['words']
                 st.session_state.found_words = []
+                st.session_state.temp_found_words = []
                 st.session_state.hints_used = []
                 st.session_state.show_hints = {}
                 # 新しいステージの文字をシャッフル
@@ -430,6 +436,16 @@ elif st.session_state.game_state == 'game':
         else:
             # 最後のステージの場合は空のスペース
             st.empty()
+    
+    # JavaScriptから送信された正解単語をチェック
+    query_params = st.query_params
+    if "correct_word" in query_params:
+        correct_word = query_params["correct_word"]
+        if correct_word not in st.session_state.found_words:
+            st.session_state.found_words.append(correct_word)
+        # クエリパラメータをクリア
+        st.query_params.clear()
+        st.rerun()
     
     # 進行状況
     progress = len(st.session_state.found_words) / len(st.session_state.target_words)
@@ -676,12 +692,24 @@ elif st.session_state.game_state == 'game':
             targetWordsDiv.innerHTML = targetBoxesHtml.join('');
         }}
 
+        // Streamlitに正解した単語を通知する関数
+        function notifyCorrectWord(word) {{
+            // parent.postMessageを使ってStreamlitに通知
+            window.parent.postMessage({{
+                type: 'correct_word',
+                word: word
+            }}, '*');
+        }}
+
         function checkCorrectWord() {{
             const currentWord = selectedLetters.join('');
             if (currentWord && targetWords.includes(currentWord) && !foundWords.includes(currentWord)) {{
                 foundWords.push(currentWord);
                 updateTargetWordsDisplay();
                 showSuccessMessage();
+                
+                // Streamlitに正解を通知
+                notifyCorrectWord(currentWord);
                 
                 if (foundWords.length === targetWords.length) {{
                     setTimeout(() => {{
@@ -730,6 +758,14 @@ elif st.session_state.game_state == 'game':
                     showHints[hintWord].push(newHintPosition);
                     
                     updateTargetWordsDisplay();
+                    
+                    // Streamlitにヒント情報を通知
+                    window.parent.postMessage({{
+                        type: 'hint_used',
+                        word: hintWord,
+                        position: newHintPosition,
+                        hints: showHints
+                    }}, '*');
                 }}
             }}
         }}
@@ -931,6 +967,58 @@ elif st.session_state.game_state == 'game':
     </html>
     """, height=600)
 
+    # JavaScriptからのメッセージを受信するためのプレースホルダー
+    message_placeholder = st.empty()
+    
+    # postMessageを監視するためのJavaScript
+    components.html("""
+    <script>
+    window.addEventListener('message', function(event) {
+        if (event.data.type === 'correct_word') {
+            // URLパラメータを使ってStreamlitに正解した単語を通知
+            const currentUrl = new URL(window.location);
+            currentUrl.searchParams.set('correct_word', event.data.word);
+            window.location.href = currentUrl.toString();
+        }
+        if (event.data.type === 'hint_used') {
+            // ヒント使用をURLパラメータで通知
+            const currentUrl = new URL(window.location);
+            currentUrl.searchParams.set('hint_word', event.data.word);
+            currentUrl.searchParams.set('hint_position', event.data.position);
+            currentUrl.searchParams.set('hint_data', JSON.stringify(event.data.hints));
+            window.location.href = currentUrl.toString();
+        }
+        if (event.data.type === 'stage_complete') {
+            // ステージクリアをURLパラメータで通知
+            const currentUrl = new URL(window.location);
+            currentUrl.searchParams.set('stage_complete', 'true');
+            currentUrl.searchParams.set('completed_stage', event.data.stage);
+            window.location.href = currentUrl.toString();
+        }
+    });
+    </script>
+    """, height=0)
+    
+    # ヒント使用のチェック
+    if "hint_word" in query_params and "hint_position" in query_params:
+        hint_word = query_params["hint_word"]
+        hint_position = int(query_params["hint_position"])
+        if hint_word not in st.session_state.show_hints:
+            st.session_state.show_hints[hint_word] = []
+        if hint_position not in st.session_state.show_hints[hint_word]:
+            st.session_state.show_hints[hint_word].append(hint_position)
+        # クエリパラメータをクリア
+        st.query_params.clear()
+        st.rerun()
+    
+    # ステージクリアのチェック
+    if "stage_complete" in query_params and query_params["stage_complete"] == "true":
+        completed_stage = int(query_params["completed_stage"])
+        st.session_state.cleared_stages.add(completed_stage)
+        # クエリパラメータをクリア
+        st.query_params.clear()
+        st.rerun()
+
     # ステージクリア状態の確認とボタン表示
     stage_completed = len(st.session_state.found_words) == len(st.session_state.target_words)
     
@@ -948,6 +1036,7 @@ elif st.session_state.game_state == 'game':
                     next_stage_info = STAGES[st.session_state.current_stage]
                     st.session_state.target_words = next_stage_info['words']
                     st.session_state.found_words = []
+                    st.session_state.temp_found_words = []
                     st.session_state.hints_used = []
                     st.session_state.show_hints = {}
                     # 新しいステージの文字をシャッフル
@@ -962,6 +1051,7 @@ elif st.session_state.game_state == 'game':
                     st.session_state.game_state = 'title'
                     st.session_state.current_stage = 1
                     st.session_state.found_words = []
+                    st.session_state.temp_found_words = []
                     st.session_state.hints_used = []
                     st.session_state.show_hints = {}
                     st.session_state.shuffled_letters = []
