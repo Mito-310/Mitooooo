@@ -224,8 +224,42 @@ if 'shuffled_letters' not in st.session_state:
     st.session_state.shuffled_letters = []
 if 'cleared_stages' not in st.session_state:
     st.session_state.cleared_stages = set()
+if 'game_key' not in st.session_state:
+    st.session_state.game_key = 0
 
 STAGES = DEFAULT_STAGES
+
+# 単語チェック用のフォーム（隠しフィールド）
+if st.session_state.game_state == 'game':
+    with st.form(key=f"word_check_{st.session_state.game_key}", clear_on_submit=True):
+        word_input = st.text_input("", key="word_input", label_visibility="hidden")
+        hint_requested = st.form_submit_button("hint", type="secondary")
+        
+        # フォームが送信されたとき
+        if word_input:
+            word = word_input.upper().strip()
+            if word and word in st.session_state.target_words and word not in st.session_state.found_words:
+                st.session_state.found_words.append(word)
+                if len(st.session_state.found_words) == len(st.session_state.target_words):
+                    st.session_state.cleared_stages.add(st.session_state.current_stage)
+                st.rerun()
+        
+        # ヒントが要求されたとき
+        if hint_requested:
+            unfound_words = [w for w in st.session_state.target_words if w not in st.session_state.found_words]
+            if unfound_words:
+                hint_word = random.choice(unfound_words)
+                current_hints = st.session_state.show_hints.get(hint_word, [])
+                
+                # 最後の文字以外で未解放の文字のインデックスを取得
+                available_positions = [i for i in range(len(hint_word) - 1) if i not in current_hints]
+                
+                if available_positions:
+                    new_hint_position = random.choice(available_positions)
+                    if hint_word not in st.session_state.show_hints:
+                        st.session_state.show_hints[hint_word] = []
+                    st.session_state.show_hints[hint_word].append(new_hint_position)
+                    st.rerun()
 
 # タイトル画面
 if st.session_state.game_state == 'title':
@@ -321,6 +355,7 @@ if st.session_state.game_state == 'title':
             random.shuffle(stage_letters)
             st.session_state.shuffled_letters = stage_letters
             st.session_state.game_state = 'game'
+            st.session_state.game_key += 1
             st.rerun()
     
     # 区切り線
@@ -378,6 +413,7 @@ if st.session_state.game_state == 'title':
                             random.shuffle(stage_letters)
                             st.session_state.shuffled_letters = stage_letters
                             st.session_state.game_state = 'game'
+                            st.session_state.game_key += 1
                             st.rerun()
                     else:
                         button_text = "▶"
@@ -392,6 +428,7 @@ if st.session_state.game_state == 'title':
                             random.shuffle(stage_letters)
                             st.session_state.shuffled_letters = stage_letters
                             st.session_state.game_state = 'game'
+                            st.session_state.game_key += 1
                             st.rerun()
             else:
                 # 空のカラム
@@ -442,6 +479,7 @@ elif st.session_state.game_state == 'game':
                     stage_letters = next_stage_info['letters'].copy()
                     random.shuffle(stage_letters)
                     st.session_state.shuffled_letters = stage_letters
+                    st.session_state.game_key += 1
                     st.rerun()
             else:
                 # 最後のステージの場合は空のスペース
@@ -691,6 +729,35 @@ elif st.session_state.game_state == 'game':
         const canvas = document.getElementById('lineCanvas');
         const ctx = canvas.getContext('2d');
 
+        // Streamlitにデータを送信する関数
+        function submitWordToStreamlit(word) {{
+            // 隠しフォームの入力フィールドを取得して値を設定
+            const wordInput = window.parent.document.querySelector('input[data-testid="stTextInput-textInput"]');
+            if (wordInput) {{
+                wordInput.value = word;
+                wordInput.dispatchEvent(new Event('input', {{ bubbles: true }}));
+                
+                // フォームを送信
+                setTimeout(() => {{
+                    const form = wordInput.closest('form');
+                    if (form) {{
+                        const submitButton = form.querySelector('button[type="submit"]');
+                        if (submitButton) {{
+                            submitButton.click();
+                        }}
+                    }}
+                }}, 100);
+            }}
+        }}
+
+        function submitHintToStreamlit() {{
+            // ヒントボタンをクリック
+            const hintButton = window.parent.document.querySelector('button[kind="secondary"]');
+            if (hintButton) {{
+                hintButton.click();
+            }}
+        }}
+
         function updateSelectedWord() {{
             selectedWordDiv.textContent = selectedLetters.join('');
         }}
@@ -698,18 +765,16 @@ elif st.session_state.game_state == 'game':
         function checkCorrectWord() {{
             const currentWord = selectedLetters.join('');
             if (currentWord && targetWords.includes(currentWord) && !foundWords.includes(currentWord)) {{
-                foundWords.push(currentWord);
+                // Streamlitに単語を送信
+                submitWordToStreamlit(currentWord);
                 showSuccessMessage();
+                
+                // ローカルでも更新（表示の即時反映のため）
+                foundWords.push(currentWord);
                 
                 if (foundWords.length === targetWords.length) {{
                     setTimeout(() => {{
                         showCompleteMessage();
-                        // ステージクリア状態をStreamlitに通知
-                        window.parent.postMessage({{
-                            type: 'stage_complete',
-                            stage: {st.session_state.current_stage},
-                            foundWords: foundWords
-                        }}, '*');
                     }}, 1000);
                 }}
                 return true;
@@ -718,71 +783,7 @@ elif st.session_state.game_state == 'game':
         }}
         
         function showHint() {{
-            let unfoundWords = targetWords.filter(word => !foundWords.includes(word));
-            
-            if (unfoundWords.length > 0) {{
-                // ランダムに単語を選択
-                let randomIndex = Math.floor(Math.random() * unfoundWords.length);
-                let hintWord = unfoundWords[randomIndex];
-                
-                // その単語の現在のヒント状況を確認
-                let currentHints = showHints[hintWord] || [];
-                
-                // 最後の文字以外で未解放の文字のインデックスを取得
-                let availablePositions = [];
-                for (let i = 0; i < hintWord.length - 1; i++) {{
-                    if (!currentHints.includes(i)) {{
-                        availablePositions.push(i);
-                    }}
-                }}
-                
-                if (availablePositions.length > 0) {{
-                    // 利用可能な位置からランダムに選択
-                    let randomPos = Math.floor(Math.random() * availablePositions.length);
-                    let newHintPosition = availablePositions[randomPos];
-                    
-                    // ヒントを追加
-                    if (!showHints[hintWord]) {{
-                        showHints[hintWord] = [];
-                    }}
-                    showHints[hintWord].push(newHintPosition);
-                    
-                    updateTargetWordsDisplay();
-                }}
-            }}
-        }}
-
-        function updateTargetWordsDisplay() {{
-            let targetBoxesHtml = [];
-            let sortedWords = targetWords.slice().sort((a, b) => {{
-                // 文字数で比較、同じなら辞書順
-                if (a.length !== b.length) {{
-                    return a.length - b.length;
-                }}
-                return a.localeCompare(b);
-            }});
-            
-            for (let word of sortedWords) {{
-                let isFound = foundWords.includes(word);
-                let wordHints = showHints[word] || [];
-                let boxesHtml = "";
-                for (let i = 0; i < word.length; i++) {{
-                    let letter = word[i];
-                    if (isFound) {{
-                        boxesHtml += '<span style="display: inline-block; width: 26px; height: 26px; border: 1px solid #333; background: white; color: #333; text-align: center; line-height: 26px; margin: 1px; font-size: 14px; font-weight: bold; border-radius: 3px; vertical-align: top;">' + letter + '</span>';
-                    }} else if (wordHints.includes(i)) {{
-                        boxesHtml += '<span style="display: inline-block; width: 26px; height: 26px; border: 1px solid #FF9800; background: #FFF8E1; color: #FF9800; text-align: center; line-height: 26px; margin: 1px; font-size: 14px; font-weight: bold; border-radius: 3px; vertical-align: top;">' + letter + '</span>';
-                    }} else {{
-                        boxesHtml += '<span style="display: inline-block; width: 26px; height: 26px; border: 1px solid #ddd; background: white; text-align: center; line-height: 26px; margin: 1px; border-radius: 3px; vertical-align: top;"></span>';
-                    }}
-                }}
-                targetBoxesHtml.push('<div style="display: inline-block; margin: 6px; vertical-align: top;">' + boxesHtml + '</div>');
-            }}
-            
-            const targetWordsDiv = document.querySelector('.target-words');
-            if (targetWordsDiv) {{
-                targetWordsDiv.innerHTML = targetBoxesHtml.join('');
-            }}
+            submitHintToStreamlit();
         }}
 
         function showSuccessMessage() {{
@@ -990,7 +991,6 @@ elif st.session_state.game_state == 'game':
 
         // 初期化
         updateSelectedWord();
-        updateTargetWordsDisplay();
 
         // コンテキストメニューと選択をゲームエリア内のみ無効化
         gameContainer.addEventListener('contextmenu', e => e.preventDefault());
@@ -1023,6 +1023,7 @@ elif st.session_state.game_state == 'game':
                     stage_letters = next_stage_info['letters'].copy()
                     random.shuffle(stage_letters)
                     st.session_state.shuffled_letters = stage_letters
+                    st.session_state.game_key += 1
                     st.rerun()
             else:
                 st.balloons()
