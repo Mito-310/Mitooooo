@@ -37,29 +37,6 @@ st.markdown("""
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
-/* シャッフルボタン専用のスタイル */
-.shuffle-button > button {
-    background-color: #333 !important;
-    color: white !important;
-    border: 2px solid #333 !important;
-    border-radius: 8px !important;
-    font-weight: 600 !important;
-    transition: all 0.3s ease !important;
-    height: 50px !important;
-}
-
-.shuffle-button > button:hover {
-    background-color: #555 !important;
-    border-color: #555 !important;
-    transform: translateY(-2px) !important;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important;
-}
-
-.shuffle-button > button:active {
-    transform: translateY(0) !important;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
-}
-
 /* プログレスバーの色調整 */
 .stProgress .st-bo {
     background-color: #4CAF50;
@@ -92,16 +69,92 @@ st.markdown("""
     border-left: 4px solid #F44336;
 }
 
-/* クリア済みステージボタンのスタイル */
-.cleared-stage > button {
+/* ステージ選択エリアのスタイル */
+.stage-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.stage-row {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    flex-wrap: wrap;
+}
+
+.stage-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 120px;
+}
+
+.stage-info {
+    text-align: center;
+    margin-bottom: 8px;
+    color: #555;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+/* 通常のステージボタン */
+.stage-button {
+    width: 120px;
+    height: 50px;
+    background-color: #333;
+    color: white;
+    border: 2px solid #333;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.stage-button:hover {
+    background-color: #555;
+    border-color: #555;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+/* クリア済みステージボタン */
+.stage-button.cleared {
     background-color: #4CAF50 !important;
     border-color: #4CAF50 !important;
     color: white !important;
 }
 
-.cleared-stage > button:hover {
+.stage-button.cleared:hover {
     background-color: #45a049 !important;
     border-color: #45a049 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
+}
+
+/* STARTボタンのスタイル強化 */
+.start-button {
+    background: linear-gradient(135deg, #333 0%, #555 100%) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 12px !important;
+    font-weight: 700 !important;
+    font-size: 18px !important;
+    height: 60px !important;
+    letter-spacing: 2px !important;
+    transition: all 0.3s ease !important;
+}
+
+.start-button:hover {
+    background: linear-gradient(135deg, #555 0%, #777 100%) !important;
+    transform: translateY(-3px) !important;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.3) !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -223,15 +276,9 @@ if st.session_state.game_state == 'title':
     .stage-selection-title {
         text-align: center;
         color: #333;
-        margin: 2rem 0 1.5rem 0;
+        margin: 3rem 0 2rem 0;
         font-size: 1.8rem;
         font-weight: 600;
-    }
-    .stage-info {
-        text-align: center;
-        margin-bottom: 0.5rem;
-        color: #555;
-        font-weight: 500;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -267,6 +314,7 @@ if st.session_state.game_state == 'title':
     # STARTボタン
     col1, col2, col3 = st.columns([1, 1, 1])
     with col2:
+        st.markdown('<div class="start-button">', unsafe_allow_html=True)
         if st.button("START", key="start_button", use_container_width=True):
             st.session_state.current_stage = 1
             st.session_state.target_words = STAGES[1]['words']
@@ -279,68 +327,79 @@ if st.session_state.game_state == 'title':
             st.session_state.shuffled_letters = stage_letters
             st.session_state.game_state = 'game'
             st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
     
     # 区切り線
-    st.markdown('<hr style="border: none; height: 2px; background: linear-gradient(90deg, transparent 0%, #ddd 50%, transparent 100%); margin: 2rem 0;">', unsafe_allow_html=True)
+    st.markdown('<hr style="border: none; height: 2px; background: linear-gradient(90deg, transparent 0%, #ddd 50%, transparent 100%); margin: 3rem 0;">', unsafe_allow_html=True)
     
     # ステージ選択
     st.markdown('<h2 class="stage-selection-title">ステージ選択</h2>', unsafe_allow_html=True)
     
+    # ステージ選択のHTMLを直接生成
+    stage_html = '<div class="stage-grid">'
+    
     for i in range(0, len(STAGES), 3):
-        cols = st.columns(3)
+        stage_html += '<div class="stage-row">'
         for j in range(3):
             stage_num = i + j + 1
             if stage_num in STAGES:
                 stage_info = STAGES[stage_num]
                 is_cleared = stage_num in st.session_state.cleared_stages
-                with cols[j]:
-                    st.markdown(f'<div class="stage-info">{stage_info["name"]}</div>', unsafe_allow_html=True)
-                    
-                    # クリア済みの場合は緑色のボタンにチェックマークを追加
-                    if is_cleared:
-                        button_text = "✓ CLEAR"
-                        # インラインスタイルで直接緑色を適用
-                        st.markdown(f'''
-                        <style>
-                        div[data-testid="stButton"]:has(button:contains("✓ CLEAR")) > button {{
-                            background-color: #4CAF50 !important;
-                            border-color: #4CAF50 !important;
-                            color: white !important;
-                        }}
-                        div[data-testid="stButton"]:has(button:contains("✓ CLEAR")) > button:hover {{
-                            background-color: #45a049 !important;
-                            border-color: #45a049 !important;
-                        }}
-                        .cleared-stage-{stage_num} > button {{
-                            background-color: #4CAF50 !important;
-                            border-color: #4CAF50 !important;
-                            color: white !important;
-                        }}
-                        .cleared-stage-{stage_num} > button:hover {{
-                            background-color: #45a049 !important;
-                            border-color: #45a049 !important;
-                        }}
-                        </style>
-                        <div class="cleared-stage-{stage_num}">
-                        ''', unsafe_allow_html=True)
-                        button_clicked = st.button(button_text, key=f"stage_{stage_num}", use_container_width=True)
-                        st.markdown('</div>', unsafe_allow_html=True)
-                    else:
-                        button_text = "▶︎"
-                        button_clicked = st.button(button_text, key=f"stage_{stage_num}", use_container_width=True)
-                    
-                    if button_clicked:
-                        st.session_state.current_stage = stage_num
-                        st.session_state.target_words = stage_info['words']
-                        st.session_state.found_words = []
-                        st.session_state.hints_used = []
-                        st.session_state.show_hints = {}
-                        # 文字をシャッフルして保存
-                        stage_letters = stage_info['letters'].copy()
-                        random.shuffle(stage_letters)
-                        st.session_state.shuffled_letters = stage_letters
-                        st.session_state.game_state = 'game'
-                        st.rerun()
+                cleared_class = "cleared" if is_cleared else ""
+                button_text = "CLEAR" if is_cleared else "▶"
+                
+                stage_html += f'''
+                <div class="stage-item">
+                    <div class="stage-info">{stage_info["name"]}</div>
+                    <button class="stage-button {cleared_class}" 
+                            onclick="selectStage({stage_num})">
+                        {button_text}
+                    </button>
+                </div>
+                '''
+        stage_html += '</div>'
+    
+    stage_html += '</div>'
+    
+    # JavaScriptでステージ選択を処理
+    stage_html += '''
+    <script>
+    function selectStage(stageNum) {
+        // Streamlitのsession_stateを更新するために、親ウィンドウにメッセージを送信
+        window.parent.postMessage({
+            type: 'select_stage',
+            stage: stageNum
+        }, '*');
+        
+        // Streamlitのbutton clickをシミュレート
+        const buttons = window.parent.document.querySelectorAll('[data-testid="stButton"] button');
+        buttons.forEach(button => {
+            if (button.textContent.includes('stage_' + stageNum)) {
+                button.click();
+            }
+        });
+    }
+    </script>
+    '''
+    
+    # HTMLを表示
+    components.html(stage_html, height=400)
+    
+    # 非表示のStreamlitボタンでステージ選択を処理
+    for stage_num in STAGES:
+        stage_info = STAGES[stage_num]
+        if st.button(f"stage_{stage_num}", key=f"hidden_stage_{stage_num}", label_visibility="hidden"):
+            st.session_state.current_stage = stage_num
+            st.session_state.target_words = stage_info['words']
+            st.session_state.found_words = []
+            st.session_state.hints_used = []
+            st.session_state.show_hints = {}
+            # 文字をシャッフルして保存
+            stage_letters = stage_info['letters'].copy()
+            random.shuffle(stage_letters)
+            st.session_state.shuffled_letters = stage_letters
+            st.session_state.game_state = 'game'
+            st.rerun()
 
 # ゲーム画面
 elif st.session_state.game_state == 'game':
