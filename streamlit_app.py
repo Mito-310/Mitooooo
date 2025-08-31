@@ -123,20 +123,6 @@ st.markdown("""
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
-
-/* クリア済みステージボタン */
-.stage-button.cleared {
-    background-color: #4CAF50 !important;
-    border-color: #4CAF50 !important;
-    color: white !important;
-}
-
-.stage-button.cleared:hover {
-    background-color: #45a049 !important;
-    border-color: #45a049 !important;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
-}
 </style>
 """, unsafe_allow_html=True)
 
@@ -207,8 +193,7 @@ if 'show_hints' not in st.session_state:
     st.session_state.show_hints = {}
 if 'shuffled_letters' not in st.session_state:
     st.session_state.shuffled_letters = []
-if 'cleared_stages' not in st.session_state:
-    st.session_state.cleared_stages = set()
+
 if 'temp_found_words' not in st.session_state:
     st.session_state.temp_found_words = []
 
@@ -324,65 +309,26 @@ if st.session_state.game_state == 'title':
             stage_num = i + j + 1
             if stage_num <= len(STAGES):
                 stage_info = STAGES[stage_num]
-                is_cleared = stage_num in st.session_state.cleared_stages
                 
                 with cols[j]:
                     # ステージ情報を表示
                     st.markdown(f'<div style="text-align: center; margin-bottom: 8px; color: #555; font-weight: 500; font-size: 14px;">{stage_info["name"]}</div>', unsafe_allow_html=True)
                     
-                    # ボタンテキストとスタイルを決定
-                    if is_cleared:
-                        button_text = "CLEAR"
-                        # クリア済みボタンのスタイル
-                        st.markdown('''
-                        <style>
-                        .stButton > button[kind="secondary"] {
-                            background-color: #4CAF50 !important;
-                            border-color: #4CAF50 !important;
-                            color: white !important;
-                            width: 120px;
-                            height: 50px;
-                            border-radius: 8px;
-                            font-weight: 600;
-                            transition: all 0.3s ease;
-                        }
-                        .stButton > button[kind="secondary"]:hover {
-                            background-color: #45a049 !important;
-                            border-color: #45a049 !important;
-                            transform: translateY(-2px);
-                            box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
-                        }
-                        </style>
-                        ''', unsafe_allow_html=True)
-                        
-                        if st.button(button_text, key=f"stage_{stage_num}", use_container_width=True, type="secondary"):
-                            st.session_state.current_stage = stage_num
-                            st.session_state.target_words = stage_info['words']
-                            st.session_state.found_words = []
-                            st.session_state.temp_found_words = []
-                            st.session_state.hints_used = []
-                            st.session_state.show_hints = {}
-                            # 文字をシャッフルして保存
-                            stage_letters = stage_info['letters'].copy()
-                            random.shuffle(stage_letters)
-                            st.session_state.shuffled_letters = stage_letters
-                            st.session_state.game_state = 'game'
-                            st.rerun()
-                    else:
-                        button_text = "▶"
-                        if st.button(button_text, key=f"stage_{stage_num}", use_container_width=True):
-                            st.session_state.current_stage = stage_num
-                            st.session_state.target_words = stage_info['words']
-                            st.session_state.found_words = []
-                            st.session_state.temp_found_words = []
-                            st.session_state.hints_used = []
-                            st.session_state.show_hints = {}
-                            # 文字をシャッフルして保存
-                            stage_letters = stage_info['letters'].copy()
-                            random.shuffle(stage_letters)
-                            st.session_state.shuffled_letters = stage_letters
-                            st.session_state.game_state = 'game'
-                            st.rerun()
+                    # ボタン
+                    button_text = "▶"
+                    if st.button(button_text, key=f"stage_{stage_num}", use_container_width=True):
+                        st.session_state.current_stage = stage_num
+                        st.session_state.target_words = stage_info['words']
+                        st.session_state.found_words = []
+                        st.session_state.temp_found_words = []
+                        st.session_state.hints_used = []
+                        st.session_state.show_hints = {}
+                        # 文字をシャッフルして保存
+                        stage_letters = stage_info['letters'].copy()
+                        random.shuffle(stage_letters)
+                        st.session_state.shuffled_letters = stage_letters
+                        st.session_state.game_state = 'game'
+                        st.rerun()
             else:
                 # 空のカラム
                 with cols[j]:
@@ -715,8 +661,7 @@ elif st.session_state.game_state == 'game':
                         // ステージクリア状態をStreamlitに通知
                         window.parent.postMessage({{
                             type: 'stage_complete',
-                            stage: {st.session_state.current_stage},
-                            foundWords: foundWords
+                            stage: {st.session_state.current_stage}
                         }}, '*');
                     }}, 1000);
                 }}
@@ -987,11 +932,8 @@ elif st.session_state.game_state == 'game':
             window.location.href = currentUrl.toString();
         }
         if (event.data.type === 'stage_complete') {
-            // ステージクリアをURLパラメータで通知
-            const currentUrl = new URL(window.location);
-            currentUrl.searchParams.set('stage_complete', 'true');
-            currentUrl.searchParams.set('completed_stage', event.data.stage);
-            window.location.href = currentUrl.toString();
+            // ステージクリア通知（特別な処理は不要）
+            console.log('Stage completed:', event.data.stage);
         }
     });
     </script>
@@ -1009,21 +951,10 @@ elif st.session_state.game_state == 'game':
         st.query_params.clear()
         st.rerun()
     
-    # ステージクリアのチェック
-    if "stage_complete" in query_params and query_params["stage_complete"] == "true":
-        completed_stage = int(query_params["completed_stage"])
-        st.session_state.cleared_stages.add(completed_stage)
-        # クエリパラメータをクリア
-        st.query_params.clear()
-        st.rerun()
-
     # ステージクリア状態の確認
     stage_completed = len(st.session_state.found_words) == len(st.session_state.target_words)
     
     if stage_completed:
-        # ステージクリア時に cleared_stages に追加（即座に追加）
-        st.session_state.cleared_stages.add(st.session_state.current_stage)
-        
         st.success("ステージクリア！")
         col1, col2, col3 = st.columns([1, 1, 1])
         with col2:
@@ -1048,7 +979,3 @@ elif st.session_state.game_state == 'game':
                     st.session_state.game_state = 'title'
                     # ステージクリア状態は維持したままタイトルに戻る
                     st.rerun()
-
-    # デバッグ用：現在のクリア状態を表示
-    if st.session_state.cleared_stages:
-        st.sidebar.write(f"クリア済みステージ: {sorted(list(st.session_state.cleared_stages))}")
