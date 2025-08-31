@@ -178,6 +178,14 @@ if 'cleared_stages' not in st.session_state:
 
 STAGES = DEFAULT_STAGES
 
+# シャッフル機能
+def shuffle_letters():
+    """現在のステージの文字をシャッフルする"""
+    if st.session_state.current_stage in STAGES:
+        stage_letters = STAGES[st.session_state.current_stage]['letters'].copy()
+        random.shuffle(stage_letters)
+        st.session_state.shuffled_letters = stage_letters
+
 # タイトル画面
 if st.session_state.game_state == 'title':
     st.markdown("""
@@ -354,6 +362,11 @@ elif st.session_state.game_state == 'game':
     
     letters = st.session_state.shuffled_letters
     num_letters = len(letters)
+    
+    # シャッフルボタンが押された場合
+    if st.button("🔀", key="shuffle_button", help="シャッフル"):
+        shuffle_letters()
+        st.rerun()
     
     # ヘッダー（3列レイアウト）
     col1, col2, col3 = st.columns([1, 2, 1])
@@ -563,6 +576,31 @@ elif st.session_state.game_state == 'game':
             z-index: 1;
             pointer-events: none;
         }}
+        .game-buttons {{
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            display: flex;
+            gap: 8px;
+        }}
+        .game-button {{
+            padding: 8px 16px;
+            background: #333;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }}
+        .game-button:hover {{
+            background: #555;
+            transform: translateY(-1px);
+        }}
+        .game-button:active {{
+            transform: translateY(0);
+        }}
         </style>
     </head>
     <body>
@@ -571,8 +609,9 @@ elif st.session_state.game_state == 'game':
         <div id="success-message" class="success-message">正解！</div>
         <div id="complete-message" class="complete-message">ステージクリア！</div>
         
-        <div style="position: fixed; top: 10px; right: 10px; z-index: 1000;">
-            <button onclick="showHint()" style="padding: 8px 16px; background: #333; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; transition: all 0.2s ease;" onmouseover="this.style.background='#555'" onmouseout="this.style.background='#333'">ヒント</button>
+        <div class="game-buttons">
+            <button class="game-button" onclick="showHint()">ヒント</button>
+            <button class="game-button" onclick="shuffleLetters()">🔀</button>
         </div>
 
         <div class="circle-container" id="circle-container">
@@ -687,6 +726,13 @@ elif st.session_state.game_state == 'game':
                     updateTargetWordsDisplay();
                 }}
             }}
+        }}
+
+        function shuffleLetters() {{
+            // Streamlitのシャッフルボタンをトリガーするためのメッセージを送信
+            window.parent.postMessage({{
+                type: 'shuffle_letters'
+            }}, '*');
         }}
 
         function showSuccessMessage() {{
