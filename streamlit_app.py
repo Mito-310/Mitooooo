@@ -180,11 +180,12 @@ STAGES = DEFAULT_STAGES
 
 # シャッフル機能
 def shuffle_letters():
-    """現在のステージの文字をシャッフルする"""
+    """現在のステージの文字をシャッフルする（found_wordsとshow_hintsは保持）"""
     if st.session_state.current_stage in STAGES:
         stage_letters = STAGES[st.session_state.current_stage]['letters'].copy()
         random.shuffle(stage_letters)
         st.session_state.shuffled_letters = stage_letters
+        # found_wordsとshow_hintsは変更しない
 
 # タイトル画面
 if st.session_state.game_state == 'title':
@@ -362,11 +363,6 @@ elif st.session_state.game_state == 'game':
     
     letters = st.session_state.shuffled_letters
     num_letters = len(letters)
-    
-    # シャッフルボタンが押された場合
-    if st.button("🔀", key="shuffle_button", help="シャッフル"):
-        shuffle_letters()
-        st.rerun()
     
     # ヘッダー（3列レイアウト）
     col1, col2, col3 = st.columns([1, 2, 1])
@@ -643,7 +639,6 @@ elif st.session_state.game_state == 'game':
         function updateTargetWordsDisplay() {{
             let targetBoxesHtml = [];
             let sortedWords = targetWords.slice().sort((a, b) => {{
-                // 文字数で比較、同じなら辞書順
                 if (a.length !== b.length) {{
                     return a.length - b.length;
                 }}
@@ -680,7 +675,6 @@ elif st.session_state.game_state == 'game':
                 if (foundWords.length === targetWords.length) {{
                     setTimeout(() => {{
                         showCompleteMessage();
-                        // ステージクリア状態をStreamlitに通知
                         window.parent.postMessage({{
                             type: 'stage_complete',
                             stage: {st.session_state.current_stage},
@@ -697,14 +691,11 @@ elif st.session_state.game_state == 'game':
             let unfoundWords = targetWords.filter(word => !foundWords.includes(word));
             
             if (unfoundWords.length > 0) {{
-                // ランダムに単語を選択
                 let randomIndex = Math.floor(Math.random() * unfoundWords.length);
                 let hintWord = unfoundWords[randomIndex];
                 
-                // その単語の現在のヒント状況を確認
                 let currentHints = showHints[hintWord] || [];
                 
-                // 最後の文字以外で未解放の文字のインデックスを取得
                 let availablePositions = [];
                 for (let i = 0; i < hintWord.length - 1; i++) {{
                     if (!currentHints.includes(i)) {{
@@ -713,25 +704,31 @@ elif st.session_state.game_state == 'game':
                 }}
                 
                 if (availablePositions.length > 0) {{
-                    // 利用可能な位置からランダムに選択
                     let randomPos = Math.floor(Math.random() * availablePositions.length);
                     let newHintPosition = availablePositions[randomPos];
                     
-                    // ヒントを追加
                     if (!showHints[hintWord]) {{
                         showHints[hintWord] = [];
                     }}
                     showHints[hintWord].push(newHintPosition);
                     
                     updateTargetWordsDisplay();
+                    
+                    // ヒント状態をStreamlitに送信
+                    window.parent.postMessage({{
+                        type: 'hint_used',
+                        showHints: showHints
+                    }}, '*');
                 }}
             }}
         }}
 
         function shuffleLetters() {{
-            // Streamlitのシャッフルボタンをトリガーするためのメッセージを送信
+            // シャッフル要求をStreamlitに送信
             window.parent.postMessage({{
-                type: 'shuffle_letters'
+                type: 'shuffle_request',
+                currentFoundWords: foundWords,
+                currentShowHints: showHints
             }}, '*');
         }}
 
@@ -931,6 +928,17 @@ elif st.session_state.game_state == 'game':
     </body>
     </html>
     """, height=600)
+
+    # StreamlitでJavaScriptからのメッセージを受信してシャッフル処理
+    if 'shuffle_trigger' not in st.session_state:
+        st.session_state.shuffle_trigger = 0
+    
+    # シンプルなシャッフルボタンを画面下部に配置（テスト用）
+    col1, col2, col3 = st.columns([2, 1, 2])
+    with col2:
+        if st.button("🔀 シャッフル", key="shuffle_main", help="文字配置をシャッフル", use_container_width=True):
+            shuffle_letters()
+            st.rerun()
 
     # ステージクリア状態の確認とボタン表示
     stage_completed = len(st.session_state.found_words) == len(st.session_state.target_words)
