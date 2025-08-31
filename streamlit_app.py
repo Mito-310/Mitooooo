@@ -137,21 +137,6 @@ st.markdown("""
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
 }
-
-/* ゲーム画面のスクロール改善 */
-.game-container {
-    min-height: 100vh;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-}
-
-/* ヘッダーエリアの固定化防止 */
-.header-container {
-    position: relative;
-    z-index: 1;
-    background: white;
-    padding: 10px 0;
-}
 </style>
 """, unsafe_allow_html=True)
 
@@ -224,42 +209,8 @@ if 'shuffled_letters' not in st.session_state:
     st.session_state.shuffled_letters = []
 if 'cleared_stages' not in st.session_state:
     st.session_state.cleared_stages = set()
-if 'game_key' not in st.session_state:
-    st.session_state.game_key = 0
 
 STAGES = DEFAULT_STAGES
-
-# 単語チェック用のフォーム（隠しフィールド）
-if st.session_state.game_state == 'game':
-    with st.form(key=f"word_check_{st.session_state.game_key}", clear_on_submit=True):
-        word_input = st.text_input("", key="word_input", label_visibility="hidden")
-        hint_requested = st.form_submit_button("hint", type="secondary")
-        
-        # フォームが送信されたとき
-        if word_input:
-            word = word_input.upper().strip()
-            if word and word in st.session_state.target_words and word not in st.session_state.found_words:
-                st.session_state.found_words.append(word)
-                if len(st.session_state.found_words) == len(st.session_state.target_words):
-                    st.session_state.cleared_stages.add(st.session_state.current_stage)
-                st.rerun()
-        
-        # ヒントが要求されたとき
-        if hint_requested:
-            unfound_words = [w for w in st.session_state.target_words if w not in st.session_state.found_words]
-            if unfound_words:
-                hint_word = random.choice(unfound_words)
-                current_hints = st.session_state.show_hints.get(hint_word, [])
-                
-                # 最後の文字以外で未解放の文字のインデックスを取得
-                available_positions = [i for i in range(len(hint_word) - 1) if i not in current_hints]
-                
-                if available_positions:
-                    new_hint_position = random.choice(available_positions)
-                    if hint_word not in st.session_state.show_hints:
-                        st.session_state.show_hints[hint_word] = []
-                    st.session_state.show_hints[hint_word].append(new_hint_position)
-                    st.rerun()
 
 # タイトル画面
 if st.session_state.game_state == 'title':
@@ -355,7 +306,6 @@ if st.session_state.game_state == 'title':
             random.shuffle(stage_letters)
             st.session_state.shuffled_letters = stage_letters
             st.session_state.game_state = 'game'
-            st.session_state.game_key += 1
             st.rerun()
     
     # 区切り線
@@ -413,7 +363,6 @@ if st.session_state.game_state == 'title':
                             random.shuffle(stage_letters)
                             st.session_state.shuffled_letters = stage_letters
                             st.session_state.game_state = 'game'
-                            st.session_state.game_key += 1
                             st.rerun()
                     else:
                         button_text = "▶"
@@ -428,7 +377,6 @@ if st.session_state.game_state == 'title':
                             random.shuffle(stage_letters)
                             st.session_state.shuffled_letters = stage_letters
                             st.session_state.game_state = 'game'
-                            st.session_state.game_key += 1
                             st.rerun()
             else:
                 # 空のカラム
@@ -452,38 +400,36 @@ elif st.session_state.game_state == 'game':
     letters = st.session_state.shuffled_letters
     num_letters = len(letters)
     
-    # ヘッダーをStreamlitのコンテナに変更（固定位置を削除）
-    with st.container():
-        col1, col2, col3 = st.columns([1, 2, 1])
-        with col1:
-            if st.button("タイトルに戻る", key="back_to_title_header", use_container_width=True):
-                st.session_state.game_state = 'title'
+    # ヘッダー（3列レイアウト）
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col1:
+        if st.button("タイトルに戻る", key="back_to_title_header", use_container_width=True):
+            st.session_state.game_state = 'title'
+            st.rerun()
+    with col2:
+        st.markdown(f"""
+        <div style="display: flex; justify-content: center; align-items: center; height: 50px;">
+            <h2 style="text-align: center; color: #333; margin: 0; line-height: 1.2;">{current_stage_info['name']}</h2>
+        </div>
+        """, unsafe_allow_html=True)
+    with col3:
+        # 次のステージボタン（最後のステージでない場合のみ表示）
+        if st.session_state.current_stage < len(STAGES):
+            if st.button("次のステージへ", key="next_stage_header", use_container_width=True):
+                st.session_state.current_stage += 1
+                next_stage_info = STAGES[st.session_state.current_stage]
+                st.session_state.target_words = next_stage_info['words']
+                st.session_state.found_words = []
+                st.session_state.hints_used = []
+                st.session_state.show_hints = {}
+                # 新しいステージの文字をシャッフル
+                stage_letters = next_stage_info['letters'].copy()
+                random.shuffle(stage_letters)
+                st.session_state.shuffled_letters = stage_letters
                 st.rerun()
-        with col2:
-            st.markdown(f"""
-            <div style="display: flex; justify-content: center; align-items: center; height: 50px;">
-                <h2 style="text-align: center; color: #333; margin: 0; line-height: 1.2;">{current_stage_info['name']}</h2>
-            </div>
-            """, unsafe_allow_html=True)
-        with col3:
-            # 次のステージボタン（最後のステージでない場合のみ表示）
-            if st.session_state.current_stage < len(STAGES):
-                if st.button("次のステージへ", key="next_stage_header", use_container_width=True):
-                    st.session_state.current_stage += 1
-                    next_stage_info = STAGES[st.session_state.current_stage]
-                    st.session_state.target_words = next_stage_info['words']
-                    st.session_state.found_words = []
-                    st.session_state.hints_used = []
-                    st.session_state.show_hints = {}
-                    # 新しいステージの文字をシャッフル
-                    stage_letters = next_stage_info['letters'].copy()
-                    random.shuffle(stage_letters)
-                    st.session_state.shuffled_letters = stage_letters
-                    st.session_state.game_key += 1
-                    st.rerun()
-            else:
-                # 最後のステージの場合は空のスペース
-                st.empty()
+        else:
+            # 最後のステージの場合は空のスペース
+            st.empty()
     
     # 進行状況
     progress = len(st.session_state.found_words) / len(st.session_state.target_words)
@@ -530,33 +476,26 @@ elif st.session_state.game_state == 'game':
     <!DOCTYPE html>
     <html>
     <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
         <style>
         body {{
             margin: 0;
             font-family: Arial, sans-serif;
+            user-select: none;
+            touch-action: none;
+            overflow: hidden;
             background: #fafafa;
         }}
-        
-        .main-container {{
-            position: relative;
-            width: 100%;
-            min-height: 600px;
-            overflow: visible;
-        }}
-        
         .circle-container {{
             position: relative;
             width: 320px;
             height: 320px;
-            margin: 40px auto;
+            margin: 200px auto 40px auto;
             border: 3px solid #ddd;
             border-radius: 50%;
             background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
             box-shadow: 0 6px 12px rgba(0,0,0,0.1);
-            touch-action: none;
         }}
-        
         .circle-button {{
             position: absolute;
             width: 50px;
@@ -575,12 +514,7 @@ elif st.session_state.game_state == 'game':
             touch-action: none;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             z-index: 10;
-            user-select: none;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
         }}
-        
         .circle-button.selected {{
             background: linear-gradient(135deg, #2c2c2c 0%, #1a1a1a 100%) !important;
             color: white !important;
@@ -590,20 +524,21 @@ elif st.session_state.game_state == 'game':
             transition: all 0.1s ease;
             z-index: 10;
         }}
-        
         .circle-button:not(.selected):hover {{
             background: linear-gradient(135deg, #f0f0f0 0%, #e9ecef 100%) !important;
             transform: scale(1.05);
             box-shadow: 0 3px 6px rgba(0,0,0,0.15);
         }}
-        
         .circle-button.hover {{
             background: linear-gradient(135deg, #f0f0f0 0%, #e9ecef 100%) !important;
             transform: scale(1.05);
             box-shadow: 0 3px 6px rgba(0,0,0,0.15);
         }}
-        
-        .selected-word {{
+        #selected-word {{
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
             text-align: center;
             font-size: 26px;
             font-weight: bold;
@@ -612,39 +547,22 @@ elif st.session_state.game_state == 'game':
             min-height: 40px;
             color: #333;
             background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            z-index: 999;
             border-bottom: 2px solid #e9ecef;
-            margin-bottom: 10px;
         }}
-        
-        .target-words {{
+        #target-words {{
+            position: fixed;
+            top: 64px;
+            left: 0;
+            width: 100%;
             text-align: center;
             font-size: 16px;
             padding: 15px;
             color: #666;
             background: #f9f9f9;
+            z-index: 998;
             border-bottom: 1px solid #ddd;
-            margin-bottom: 20px;
         }}
-        
-        .hint-button {{
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            padding: 8px 16px;
-            background: #333;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            z-index: 100;
-        }}
-        
-        .hint-button:hover {{
-            background: #555;
-        }}
-        
         .success-message {{
             position: fixed;
             top: 50%;
@@ -659,14 +577,11 @@ elif st.session_state.game_state == 'game':
             z-index: 1000;
             opacity: 0;
             transition: all 0.3s ease;
-            pointer-events: none;
         }}
-        
         .success-message.show {{
             opacity: 1;
             transform: translate(-50%, -50%) scale(1.1);
         }}
-        
         .complete-message {{
             position: fixed;
             top: 50%;
@@ -681,14 +596,11 @@ elif st.session_state.game_state == 'game':
             z-index: 1001;
             opacity: 0;
             transition: all 0.3s ease;
-            pointer-events: none;
         }}
-        
         .complete-message.show {{
             opacity: 1;
             transform: translate(-50%, -50%) scale(1.1);
         }}
-        
         canvas {{
             position: absolute;
             top: 0;
@@ -699,18 +611,18 @@ elif st.session_state.game_state == 'game':
         </style>
     </head>
     <body>
-        <div class="main-container">
-            <div class="selected-word" id="selected-word"></div>
-            <div class="target-words">{target_display}</div>
-            <div id="success-message" class="success-message">正解！</div>
-            <div id="complete-message" class="complete-message">ステージクリア！</div>
-            
-            <button class="hint-button" onclick="showHint()">ヒント</button>
+        <div id="selected-word"></div>
+        <div id="target-words">{target_display}</div>
+        <div id="success-message" class="success-message">正解！</div>
+        <div id="complete-message" class="complete-message">ステージクリア！</div>
+        
+        <div style="position: fixed; top: 10px; right: 10px; z-index: 1000;">
+            <button onclick="showHint()" style="padding: 8px 16px; background: #333; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; transition: all 0.2s ease;" onmouseover="this.style.background='#555'" onmouseout="this.style.background='#333'">ヒント</button>
+        </div>
 
-            <div class="circle-container" id="circle-container">
-                <canvas id="lineCanvas" width="320" height="320"></canvas>
-                {button_html}
-            </div>
+        <div class="circle-container" id="circle-container">
+            <canvas id="lineCanvas" width="320" height="320"></canvas>
+            {button_html}
         </div>
 
         <script>
@@ -723,58 +635,63 @@ elif st.session_state.game_state == 'game':
         let showHints = {json.dumps(st.session_state.show_hints)};
 
         const selectedWordDiv = document.getElementById('selected-word');
+        const targetWordsDiv = document.getElementById('target-words');
         const successMessageDiv = document.getElementById('success-message');
         const completeMessageDiv = document.getElementById('complete-message');
         const container = document.getElementById('circle-container');
         const canvas = document.getElementById('lineCanvas');
         const ctx = canvas.getContext('2d');
 
-        // Streamlitにデータを送信する関数
-        function submitWordToStreamlit(word) {{
-            // 隠しフォームの入力フィールドを取得して値を設定
-            const wordInput = window.parent.document.querySelector('input[data-testid="stTextInput-textInput"]');
-            if (wordInput) {{
-                wordInput.value = word;
-                wordInput.dispatchEvent(new Event('input', {{ bubbles: true }}));
-                
-                // フォームを送信
-                setTimeout(() => {{
-                    const form = wordInput.closest('form');
-                    if (form) {{
-                        const submitButton = form.querySelector('button[type="submit"]');
-                        if (submitButton) {{
-                            submitButton.click();
-                        }}
-                    }}
-                }}, 100);
-            }}
-        }}
-
-        function submitHintToStreamlit() {{
-            // ヒントボタンをクリック
-            const hintButton = window.parent.document.querySelector('button[kind="secondary"]');
-            if (hintButton) {{
-                hintButton.click();
-            }}
-        }}
-
         function updateSelectedWord() {{
             selectedWordDiv.textContent = selectedLetters.join('');
+        }}
+
+        function updateTargetWordsDisplay() {{
+            let targetBoxesHtml = [];
+            let sortedWords = targetWords.slice().sort((a, b) => {{
+                // 文字数で比較、同じなら辞書順
+                if (a.length !== b.length) {{
+                    return a.length - b.length;
+                }}
+                return a.localeCompare(b);
+            }});
+            
+            for (let word of sortedWords) {{
+                let isFound = foundWords.includes(word);
+                let wordHints = showHints[word] || [];
+                let boxesHtml = "";
+                for (let i = 0; i < word.length; i++) {{
+                    let letter = word[i];
+                    if (isFound) {{
+                        boxesHtml += '<span style="display: inline-block; width: 26px; height: 26px; border: 1px solid #333; background: white; color: #333; text-align: center; line-height: 26px; margin: 1px; font-size: 14px; font-weight: bold; border-radius: 3px; vertical-align: top;">' + letter + '</span>';
+                    }} else if (wordHints.includes(i)) {{
+                        boxesHtml += '<span style="display: inline-block; width: 26px; height: 26px; border: 1px solid #FF9800; background: #FFF8E1; color: #FF9800; text-align: center; line-height: 26px; margin: 1px; font-size: 14px; font-weight: bold; border-radius: 3px; vertical-align: top;">' + letter + '</span>';
+                    }} else {{
+                        boxesHtml += '<span style="display: inline-block; width: 26px; height: 26px; border: 1px solid #ddd; background: white; text-align: center; line-height: 26px; margin: 1px; border-radius: 3px; vertical-align: top;"></span>';
+                    }}
+                }}
+                targetBoxesHtml.push('<div style="display: inline-block; margin: 6px; vertical-align: top;">' + boxesHtml + '</div>');
+            }}
+            
+            targetWordsDiv.innerHTML = targetBoxesHtml.join('');
         }}
 
         function checkCorrectWord() {{
             const currentWord = selectedLetters.join('');
             if (currentWord && targetWords.includes(currentWord) && !foundWords.includes(currentWord)) {{
-                // Streamlitに単語を送信
-                submitWordToStreamlit(currentWord);
-                showSuccessMessage();
-                
-                // ローカルでも更新（表示の即時反映のため）
                 foundWords.push(currentWord);
+                updateTargetWordsDisplay();
+                showSuccessMessage();
                 
                 if (foundWords.length === targetWords.length) {{
                     setTimeout(() => {{
                         showCompleteMessage();
+                        // ステージクリア状態をStreamlitに通知
+                        window.parent.postMessage({{
+                            type: 'stage_complete',
+                            stage: {st.session_state.current_stage},
+                            foundWords: foundWords
+                        }}, '*');
                     }}, 1000);
                 }}
                 return true;
@@ -783,7 +700,38 @@ elif st.session_state.game_state == 'game':
         }}
         
         function showHint() {{
-            submitHintToStreamlit();
+            let unfoundWords = targetWords.filter(word => !foundWords.includes(word));
+            
+            if (unfoundWords.length > 0) {{
+                // ランダムに単語を選択
+                let randomIndex = Math.floor(Math.random() * unfoundWords.length);
+                let hintWord = unfoundWords[randomIndex];
+                
+                // その単語の現在のヒント状況を確認
+                let currentHints = showHints[hintWord] || [];
+                
+                // 最後の文字以外で未解放の文字のインデックスを取得
+                let availablePositions = [];
+                for (let i = 0; i < hintWord.length - 1; i++) {{
+                    if (!currentHints.includes(i)) {{
+                        availablePositions.push(i);
+                    }}
+                }}
+                
+                if (availablePositions.length > 0) {{
+                    // 利用可能な位置からランダムに選択
+                    let randomPos = Math.floor(Math.random() * availablePositions.length);
+                    let newHintPosition = availablePositions[randomPos];
+                    
+                    // ヒントを追加
+                    if (!showHints[hintWord]) {{
+                        showHints[hintWord] = [];
+                    }}
+                    showHints[hintWord].push(newHintPosition);
+                    
+                    updateTargetWordsDisplay();
+                }}
+            }}
         }}
 
         function showSuccessMessage() {{
@@ -892,28 +840,32 @@ elif st.session_state.game_state == 'game':
             }});
         }}
 
-        function handleStart(clientX, clientY) {{
+        function handleMouseDown(event) {{
+            event.preventDefault();
             isDragging = true;
             clearAllSelections();
             
-            const button = getButtonAtPosition(clientX, clientY);
+            const button = getButtonAtPosition(event.clientX, event.clientY);
             if (button) {{
                 selectButton(button);
             }}
         }}
 
-        function handleMove(clientX, clientY) {{
+        function handleMouseMove(event) {{
+            event.preventDefault();
+            
             if (isDragging) {{
-                const button = getButtonAtPosition(clientX, clientY);
+                const button = getButtonAtPosition(event.clientX, event.clientY);
                 if (button) {{
                     selectButton(button);
                 }}
             }} else {{
-                getButtonAtPosition(clientX, clientY);
+                getButtonAtPosition(event.clientX, event.clientY);
             }}
         }}
 
-        function handleEnd() {{
+        function handleMouseUp(event) {{
+            event.preventDefault();
             if (isDragging) {{
                 isDragging = false;
                 const isCorrect = checkCorrectWord();
@@ -927,78 +879,57 @@ elif st.session_state.game_state == 'game':
             }});
         }}
 
-        // マウスイベント（PC用）
-        function handleMouseDown(event) {{
-            // ゲームエリア内のみで動作するように制限
-            if (event.target.closest('.circle-container')) {{
-                event.preventDefault();
-                handleStart(event.clientX, event.clientY);
-            }}
-        }}
-
-        function handleMouseMove(event) {{
-            // ゲームエリア内のみで動作するように制限
-            if (isDragging || event.target.closest('.circle-container')) {{
-                event.preventDefault();
-                handleMove(event.clientX, event.clientY);
-            }}
-        }}
-
-        function handleMouseUp(event) {{
-            if (isDragging) {{
-                event.preventDefault();
-                handleEnd();
-            }}
-        }}
-
-        // タッチイベント（スマホ・タブレット用）
         function handleTouchStart(event) {{
-            // ゲームエリア内のみで動作するように制限
-            if (event.target.closest('.circle-container')) {{
-                event.preventDefault();
-                const touch = event.touches[0];
-                handleStart(touch.clientX, touch.clientY);
+            event.preventDefault();
+            isDragging = true;
+            clearAllSelections();
+            
+            const touch = event.touches[0];
+            const button = getButtonAtPosition(touch.clientX, touch.clientY);
+            if (button) {{
+                selectButton(button);
             }}
         }}
 
         function handleTouchMove(event) {{
-            if (isDragging) {{
-                event.preventDefault();
-                const touch = event.touches[0];
-                handleMove(touch.clientX, touch.clientY);
+            event.preventDefault();
+            if (!isDragging) return;
+            
+            const touch = event.touches[0];
+            const button = getButtonAtPosition(touch.clientX, touch.clientY);
+            if (button) {{
+                selectButton(button);
             }}
         }}
 
         function handleTouchEnd(event) {{
+            event.preventDefault();
             if (isDragging) {{
-                event.preventDefault();
-                handleEnd();
+                isDragging = false;
+                const isCorrect = checkCorrectWord();
+                setTimeout(() => {{
+                    clearAllSelections();
+                }}, isCorrect ? 1000 : 200);
             }}
         }}
 
-        // イベントリスナーをゲームエリアに限定
-        const gameContainer = document.querySelector('.circle-container');
-        
-        // マウスイベント
         document.addEventListener('mousedown', handleMouseDown);
         document.addEventListener('mousemove', handleMouseMove);
         document.addEventListener('mouseup', handleMouseUp);
 
-        // タッチイベント（ゲームエリア内のみ）
-        gameContainer.addEventListener('touchstart', handleTouchStart, {{passive: false}});
-        gameContainer.addEventListener('touchmove', handleTouchMove, {{passive: false}});
-        gameContainer.addEventListener('touchend', handleTouchEnd, {{passive: false}});
+        document.addEventListener('touchstart', handleTouchStart, {{passive: false}});
+        document.addEventListener('touchmove', handleTouchMove, {{passive: false}});
+        document.addEventListener('touchend', handleTouchEnd, {{passive: false}});
 
-        // 初期化
         updateSelectedWord();
+        updateTargetWordsDisplay();
 
-        // コンテキストメニューと選択をゲームエリア内のみ無効化
-        gameContainer.addEventListener('contextmenu', e => e.preventDefault());
-        gameContainer.addEventListener('selectstart', e => e.preventDefault());
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('selectstart', e => e.preventDefault());
         </script>
     </body>
     </html>
-    """, height=700)
+    """, height=600)
 
     # ステージクリア状態の確認とボタン表示
     stage_completed = len(st.session_state.found_words) == len(st.session_state.target_words)
@@ -1023,7 +954,6 @@ elif st.session_state.game_state == 'game':
                     stage_letters = next_stage_info['letters'].copy()
                     random.shuffle(stage_letters)
                     st.session_state.shuffled_letters = stage_letters
-                    st.session_state.game_key += 1
                     st.rerun()
             else:
                 st.balloons()
