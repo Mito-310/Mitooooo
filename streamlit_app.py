@@ -178,15 +178,6 @@ if 'cleared_stages' not in st.session_state:
 
 STAGES = DEFAULT_STAGES
 
-# シャッフル機能
-def shuffle_letters():
-    """現在のステージの文字をシャッフルする（found_wordsとshow_hintsは保持）"""
-    if st.session_state.current_stage in STAGES:
-        stage_letters = STAGES[st.session_state.current_stage]['letters'].copy()
-        random.shuffle(stage_letters)
-        st.session_state.shuffled_letters = stage_letters
-        # found_wordsとshow_hintsは変更しない
-
 # タイトル画面
 if st.session_state.game_state == 'title':
     st.markdown("""
@@ -572,31 +563,6 @@ elif st.session_state.game_state == 'game':
             z-index: 1;
             pointer-events: none;
         }}
-        .game-buttons {{
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            z-index: 1000;
-            display: flex;
-            gap: 8px;
-        }}
-        .game-button {{
-            padding: 8px 16px;
-            background: #333;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }}
-        .game-button:hover {{
-            background: #555;
-            transform: translateY(-1px);
-        }}
-        .game-button:active {{
-            transform: translateY(0);
-        }}
         </style>
     </head>
     <body>
@@ -605,9 +571,8 @@ elif st.session_state.game_state == 'game':
         <div id="success-message" class="success-message">正解！</div>
         <div id="complete-message" class="complete-message">ステージクリア！</div>
         
-        <div class="game-buttons">
-            <button class="game-button" onclick="showHint()">ヒント</button>
-            <button class="game-button" onclick="shuffleLetters()">🔀</button>
+        <div style="position: fixed; top: 10px; right: 10px; z-index: 1000;">
+            <button onclick="showHint()" style="padding: 8px 16px; background: #333; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; transition: all 0.2s ease;" onmouseover="this.style.background='#555'" onmouseout="this.style.background='#333'">ヒント</button>
         </div>
 
         <div class="circle-container" id="circle-container">
@@ -639,6 +604,7 @@ elif st.session_state.game_state == 'game':
         function updateTargetWordsDisplay() {{
             let targetBoxesHtml = [];
             let sortedWords = targetWords.slice().sort((a, b) => {{
+                // 文字数で比較、同じなら辞書順
                 if (a.length !== b.length) {{
                     return a.length - b.length;
                 }}
@@ -675,6 +641,7 @@ elif st.session_state.game_state == 'game':
                 if (foundWords.length === targetWords.length) {{
                     setTimeout(() => {{
                         showCompleteMessage();
+                        // ステージクリア状態をStreamlitに通知
                         window.parent.postMessage({{
                             type: 'stage_complete',
                             stage: {st.session_state.current_stage},
@@ -691,11 +658,14 @@ elif st.session_state.game_state == 'game':
             let unfoundWords = targetWords.filter(word => !foundWords.includes(word));
             
             if (unfoundWords.length > 0) {{
+                // ランダムに単語を選択
                 let randomIndex = Math.floor(Math.random() * unfoundWords.length);
                 let hintWord = unfoundWords[randomIndex];
                 
+                // その単語の現在のヒント状況を確認
                 let currentHints = showHints[hintWord] || [];
                 
+                // 最後の文字以外で未解放の文字のインデックスを取得
                 let availablePositions = [];
                 for (let i = 0; i < hintWord.length - 1; i++) {{
                     if (!currentHints.includes(i)) {{
@@ -704,32 +674,19 @@ elif st.session_state.game_state == 'game':
                 }}
                 
                 if (availablePositions.length > 0) {{
+                    // 利用可能な位置からランダムに選択
                     let randomPos = Math.floor(Math.random() * availablePositions.length);
                     let newHintPosition = availablePositions[randomPos];
                     
+                    // ヒントを追加
                     if (!showHints[hintWord]) {{
                         showHints[hintWord] = [];
                     }}
                     showHints[hintWord].push(newHintPosition);
                     
                     updateTargetWordsDisplay();
-                    
-                    // ヒント状態をStreamlitに送信
-                    window.parent.postMessage({{
-                        type: 'hint_used',
-                        showHints: showHints
-                    }}, '*');
                 }}
             }}
-        }}
-
-        function shuffleLetters() {{
-            // シャッフル要求をStreamlitに送信
-            window.parent.postMessage({{
-                type: 'shuffle_request',
-                currentFoundWords: foundWords,
-                currentShowHints: showHints
-            }}, '*');
         }}
 
         function showSuccessMessage() {{
@@ -928,17 +885,6 @@ elif st.session_state.game_state == 'game':
     </body>
     </html>
     """, height=600)
-
-    # StreamlitでJavaScriptからのメッセージを受信してシャッフル処理
-    if 'shuffle_trigger' not in st.session_state:
-        st.session_state.shuffle_trigger = 0
-    
-    # シンプルなシャッフルボタンを画面下部に配置（テスト用）
-    col1, col2, col3 = st.columns([2, 1, 2])
-    with col2:
-        if st.button("🔀 シャッフル", key="shuffle_main", help="文字配置をシャッフル", use_container_width=True):
-            shuffle_letters()
-            st.rerun()
 
     # ステージクリア状態の確認とボタン表示
     stage_completed = len(st.session_state.found_words) == len(st.session_state.target_words)
