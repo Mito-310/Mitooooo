@@ -137,25 +137,6 @@ st.markdown("""
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
 }
-
-/* STARTボタンのスタイル強化 */
-.start-button {
-    background: linear-gradient(135deg, #333 0%, #555 100%) !important;
-    color: white !important;
-    border: none !important;
-    border-radius: 12px !important;
-    font-weight: 700 !important;
-    font-size: 18px !important;
-    height: 60px !important;
-    letter-spacing: 2px !important;
-    transition: all 0.3s ease !important;
-}
-
-.start-button:hover {
-    background: linear-gradient(135deg, #555 0%, #777 100%) !important;
-    transform: translateY(-3px) !important;
-    box-shadow: 0 6px 15px rgba(0,0,0,0.3) !important;
-}
 </style>
 """, unsafe_allow_html=True)
 
@@ -314,7 +295,6 @@ if st.session_state.game_state == 'title':
     # STARTボタン
     col1, col2, col3 = st.columns([1, 1, 1])
     with col2:
-        st.markdown('<div class="start-button">', unsafe_allow_html=True)
         if st.button("START", key="start_button", use_container_width=True):
             st.session_state.current_stage = 1
             st.session_state.target_words = STAGES[1]['words']
@@ -327,7 +307,6 @@ if st.session_state.game_state == 'title':
             st.session_state.shuffled_letters = stage_letters
             st.session_state.game_state = 'game'
             st.rerun()
-        st.markdown('</div>', unsafe_allow_html=True)
     
     # 区切り線
     st.markdown('<hr style="border: none; height: 2px; background: linear-gradient(90deg, transparent 0%, #ddd 50%, transparent 100%); margin: 3rem 0;">', unsafe_allow_html=True)
