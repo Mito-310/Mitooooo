@@ -259,7 +259,6 @@ if st.session_state.game_state == 'title':
             <h3>ゲームルール</h3>
             <p>リング状に配置された文字をなぞって繋げて単語を作るゲームです</p>
             <p>すべての目標単語を見つけるとステージクリア！</p>
-            <p>ヒントも利用して楽しく英単語を覚えよう！！</p>
         </div>
     </div>
     """, unsafe_allow_html=True)
