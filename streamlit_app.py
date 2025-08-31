@@ -410,6 +410,7 @@ elif st.session_state.game_state == 'game':
     with col1:
         if st.button("タイトルに戻る", key="back_to_title_header", use_container_width=True):
             st.session_state.game_state = 'title'
+            # ステージクリア状態は維持したままタイトルに戻る
             st.rerun()
     with col2:
         st.markdown(f"""
@@ -1045,10 +1046,9 @@ elif st.session_state.game_state == 'game':
                 st.success("全ステージクリア！おめでとうございます！")
                 if st.button("タイトルに戻る", key="back_to_title", use_container_width=True, type="primary"):
                     st.session_state.game_state = 'title'
-                    st.session_state.current_stage = 1
-                    st.session_state.found_words = []
-                    st.session_state.temp_found_words = []
-                    st.session_state.hints_used = []
-                    st.session_state.show_hints = {}
-                    st.session_state.shuffled_letters = []
+                    # ステージクリア状態は維持したままタイトルに戻る
                     st.rerun()
+
+    # デバッグ用：現在のクリア状態を表示
+    if st.session_state.cleared_stages:
+        st.sidebar.write(f"クリア済みステージ: {sorted(list(st.session_state.cleared_stages))}")
