@@ -335,71 +335,78 @@ if st.session_state.game_state == 'title':
     # ステージ選択
     st.markdown('<h2 class="stage-selection-title">ステージ選択</h2>', unsafe_allow_html=True)
     
-    # ステージ選択のHTMLを直接生成
-    stage_html = '<div class="stage-grid">'
-    
+    # ステージ選択を通常のStreamlitボタンで実装
     for i in range(0, len(STAGES), 3):
-        stage_html += '<div class="stage-row">'
+        cols = st.columns(3)
         for j in range(3):
             stage_num = i + j + 1
-            if stage_num in STAGES:
+            if stage_num <= len(STAGES):
                 stage_info = STAGES[stage_num]
                 is_cleared = stage_num in st.session_state.cleared_stages
-                cleared_class = "cleared" if is_cleared else ""
-                button_text = "CLEAR" if is_cleared else "▶"
                 
-                stage_html += f'''
-                <div class="stage-item">
-                    <div class="stage-info">{stage_info["name"]}</div>
-                    <button class="stage-button {cleared_class}" 
-                            onclick="selectStage({stage_num})">
-                        {button_text}
-                    </button>
-                </div>
-                '''
-        stage_html += '</div>'
-    
-    stage_html += '</div>'
-    
-    # JavaScriptでステージ選択を処理
-    stage_html += '''
-    <script>
-    function selectStage(stageNum) {
-        // Streamlitのsession_stateを更新するために、親ウィンドウにメッセージを送信
-        window.parent.postMessage({
-            type: 'select_stage',
-            stage: stageNum
-        }, '*');
+                with cols[j]:
+                    # ステージ情報を表示
+                    st.markdown(f'<div style="text-align: center; margin-bottom: 8px; color: #555; font-weight: 500; font-size: 14px;">{stage_info["name"]}</div>', unsafe_allow_html=True)
+                    
+                    # ボタンテキストとスタイルを決定
+                    if is_cleared:
+                        button_text = "CLEAR"
+                        # クリア済みボタンのスタイル
+                        st.markdown('''
+                        <style>
+                        .stButton > button[kind="secondary"] {
+                            background-color: #4CAF50 !important;
+                            border-color: #4CAF50 !important;
+                            color: white !important;
+                            width: 120px;
+                            height: 50px;
+                            border-radius: 8px;
+                            font-weight: 600;
+                            transition: all 0.3s ease;
+                        }
+                        .stButton > button[kind="secondary"]:hover {
+                            background-color: #45a049 !important;
+                            border-color: #45a049 !important;
+                            transform: translateY(-2px);
+                            box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
+                        }
+                        </style>
+                        ''', unsafe_allow_html=True)
+                        
+                        if st.button(button_text, key=f"stage_{stage_num}", use_container_width=True, type="secondary"):
+                            st.session_state.current_stage = stage_num
+                            st.session_state.target_words = stage_info['words']
+                            st.session_state.found_words = []
+                            st.session_state.hints_used = []
+                            st.session_state.show_hints = {}
+                            # 文字をシャッフルして保存
+                            stage_letters = stage_info['letters'].copy()
+                            random.shuffle(stage_letters)
+                            st.session_state.shuffled_letters = stage_letters
+                            st.session_state.game_state = 'game'
+                            st.rerun()
+                    else:
+                        button_text = "▶"
+                        if st.button(button_text, key=f"stage_{stage_num}", use_container_width=True):
+                            st.session_state.current_stage = stage_num
+                            st.session_state.target_words = stage_info['words']
+                            st.session_state.found_words = []
+                            st.session_state.hints_used = []
+                            st.session_state.show_hints = {}
+                            # 文字をシャッフルして保存
+                            stage_letters = stage_info['letters'].copy()
+                            random.shuffle(stage_letters)
+                            st.session_state.shuffled_letters = stage_letters
+                            st.session_state.game_state = 'game'
+                            st.rerun()
+            else:
+                # 空のカラム
+                with cols[j]:
+                    st.empty()
         
-        // Streamlitのbutton clickをシミュレート
-        const buttons = window.parent.document.querySelectorAll('[data-testid="stButton"] button');
-        buttons.forEach(button => {
-            if (button.textContent.includes('stage_' + stageNum)) {
-                button.click();
-            }
-        });
-    }
-    </script>
-    '''
-    
-    # HTMLを表示
-    components.html(stage_html, height=400)
-    
-    # 非表示のStreamlitボタンでステージ選択を処理
-    for stage_num in STAGES:
-        stage_info = STAGES[stage_num]
-        if st.button(f"stage_{stage_num}", key=f"hidden_stage_{stage_num}", label_visibility="hidden"):
-            st.session_state.current_stage = stage_num
-            st.session_state.target_words = stage_info['words']
-            st.session_state.found_words = []
-            st.session_state.hints_used = []
-            st.session_state.show_hints = {}
-            # 文字をシャッフルして保存
-            stage_letters = stage_info['letters'].copy()
-            random.shuffle(stage_letters)
-            st.session_state.shuffled_letters = stage_letters
-            st.session_state.game_state = 'game'
-            st.rerun()
+        # 行間のスペース
+        if i + 3 < len(STAGES):
+            st.markdown('<div style="margin: 20px 0;"></div>', unsafe_allow_html=True)
 
 # ゲーム画面
 elif st.session_state.game_state == 'game':
