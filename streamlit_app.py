@@ -269,7 +269,7 @@ if st.session_state.game_state == 'title':
     
     st.markdown("""
     <div class="title-section">
-        <h1 class="game-title">RINGLISH! -リングリッシュ-</h1>
+        <h1 class="game-title">RINGLISH!</h1>
         <div class="game-rules">
             <h3>ゲームルール</h3>
             <p>リング状に配置された文字をなぞって繋げて単語を作るゲームです</p>
@@ -436,16 +436,23 @@ elif st.session_state.game_state == 'game':
     <!DOCTYPE html>
     <html>
     <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
         body {{
             margin: 0;
             font-family: Arial, sans-serif;
             user-select: none;
-            touch-action: none;
-            overflow: hidden;
             background: #fafafa;
+            min-height: 100vh;
+            padding-bottom: 20px;
         }}
+        
+        .game-container {{
+            position: relative;
+            width: 100%;
+            min-height: calc(100vh - 20px);
+        }}
+        
         .circle-container {{
             position: relative;
             width: 320px;
@@ -455,7 +462,9 @@ elif st.session_state.game_state == 'game':
             border-radius: 50%;
             background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
             box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+            touch-action: none;
         }}
+        
         .circle-button {{
             position: absolute;
             width: 50px;
@@ -475,6 +484,7 @@ elif st.session_state.game_state == 'game':
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             z-index: 10;
         }}
+        
         .circle-button.selected {{
             background: linear-gradient(135deg, #2c2c2c 0%, #1a1a1a 100%) !important;
             color: white !important;
@@ -484,16 +494,19 @@ elif st.session_state.game_state == 'game':
             transition: all 0.1s ease;
             z-index: 10;
         }}
+        
         .circle-button:not(.selected):hover {{
             background: linear-gradient(135deg, #f0f0f0 0%, #e9ecef 100%) !important;
             transform: scale(1.05);
             box-shadow: 0 3px 6px rgba(0,0,0,0.15);
         }}
+        
         .circle-button.hover {{
             background: linear-gradient(135deg, #f0f0f0 0%, #e9ecef 100%) !important;
             transform: scale(1.05);
             box-shadow: 0 3px 6px rgba(0,0,0,0.15);
         }}
+        
         #selected-word {{
             position: fixed;
             top: 0;
@@ -510,6 +523,7 @@ elif st.session_state.game_state == 'game':
             z-index: 999;
             border-bottom: 2px solid #e9ecef;
         }}
+        
         #target-words {{
             position: fixed;
             top: 64px;
@@ -523,6 +537,39 @@ elif st.session_state.game_state == 'game':
             z-index: 998;
             border-bottom: 1px solid #ddd;
         }}
+        
+        .hint-button {{
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 1002;
+            padding: 10px 18px;
+            background: #333;
+            color: white;
+            border: 2px solid #333;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }}
+        
+        .hint-button:hover {{
+            background: #555;
+            border-color: #555;
+            transform: translateY(-1px);
+            box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+        }}
+        
+        .hint-button:active {{
+            transform: translateY(0);
+            background: #222;
+            border-color: #222;
+        }}
+        
         .success-message {{
             position: fixed;
             top: 50%;
@@ -538,10 +585,12 @@ elif st.session_state.game_state == 'game':
             opacity: 0;
             transition: all 0.3s ease;
         }}
+        
         .success-message.show {{
             opacity: 1;
             transform: translate(-50%, -50%) scale(1.1);
         }}
+        
         .complete-message {{
             position: fixed;
             top: 50%;
@@ -557,10 +606,12 @@ elif st.session_state.game_state == 'game':
             opacity: 0;
             transition: all 0.3s ease;
         }}
+        
         .complete-message.show {{
             opacity: 1;
             transform: translate(-50%, -50%) scale(1.1);
         }}
+        
         canvas {{
             position: absolute;
             top: 0;
@@ -568,21 +619,35 @@ elif st.session_state.game_state == 'game':
             z-index: 1;
             pointer-events: none;
         }}
+        
+        /* モバイル対応 */
+        @media (max-width: 768px) {{
+            .circle-container {{
+                margin-top: 150px;
+            }}
+            
+            .hint-button {{
+                padding: 12px 20px;
+                font-size: 16px;
+                top: 8px;
+                right: 8px;
+            }}
+        }}
         </style>
     </head>
     <body>
-        <div id="selected-word"></div>
-        <div id="target-words">{target_display}</div>
-        <div id="success-message" class="success-message">正解！</div>
-        <div id="complete-message" class="complete-message">ステージクリア！</div>
-        
-        <div style="position: fixed; top: 10px; right: 10px; z-index: 1000;">
-            <button onclick="showHint()" style="padding: 8px 16px; background: #333; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; transition: all 0.2s ease;" onmouseover="this.style.background='#555'" onmouseout="this.style.background='#333'">ヒント</button>
-        </div>
+        <div class="game-container">
+            <div id="selected-word"></div>
+            <div id="target-words">{target_display}</div>
+            <div id="success-message" class="success-message">正解！</div>
+            <div id="complete-message" class="complete-message">ステージクリア！</div>
+            
+            <button class="hint-button" id="hint-button">ヒント</button>
 
-        <div class="circle-container" id="circle-container">
-            <canvas id="lineCanvas" width="320" height="320"></canvas>
-            {button_html}
+            <div class="circle-container" id="circle-container">
+                <canvas id="lineCanvas" width="320" height="320"></canvas>
+                {button_html}
+            </div>
         </div>
 
         <script>
@@ -601,6 +666,48 @@ elif st.session_state.game_state == 'game':
         const container = document.getElementById('circle-container');
         const canvas = document.getElementById('lineCanvas');
         const ctx = canvas.getContext('2d');
+        const hintButton = document.getElementById('hint-button');
+
+        // ヒントボタンのイベント処理を改善
+        function setupHintButton() {{
+            // 既存のイベントリスナーを削除
+            hintButton.onclick = null;
+            
+            // タッチイベント用のフラグ
+            let touchHandled = false;
+            
+            // タッチスタート
+            hintButton.addEventListener('touchstart', function(e) {{
+                e.preventDefault();
+                e.stopPropagation();
+                touchHandled = true;
+                this.style.background = '#222';
+                this.style.borderColor = '#222';
+                this.style.transform = 'translateY(0)';
+            }}, {{passive: false}});
+            
+            // タッチエンド
+            hintButton.addEventListener('touchend', function(e) {{
+                e.preventDefault();
+                e.stopPropagation();
+                if (touchHandled) {{
+                    this.style.background = '#333';
+                    this.style.borderColor = '#333';
+                    this.style.transform = 'translateY(-1px)';
+                    showHint();
+                    touchHandled = false;
+                }}
+            }}, {{passive: false}});
+            
+            // マウスイベント（デスクトップ用）
+            hintButton.addEventListener('click', function(e) {{
+                if (!touchHandled) {{
+                    e.preventDefault();
+                    e.stopPropagation();
+                    showHint();
+                }}
+            }});
+        }}
 
         function updateSelectedWord() {{
             selectedWordDiv.textContent = selectedLetters.join('');
@@ -819,32 +926,29 @@ elif st.session_state.game_state == 'game':
             }});
         }}
 
-        function handleMouseDown(event) {{
-            event.preventDefault();
+        // 改善されたイベント処理
+        function handleInteractionStart(clientX, clientY) {{
             isDragging = true;
             clearAllSelections();
             
-            const button = getButtonAtPosition(event.clientX, event.clientY);
+            const button = getButtonAtPosition(clientX, clientY);
             if (button) {{
                 selectButton(button);
             }}
         }}
 
-        function handleMouseMove(event) {{
-            event.preventDefault();
-            
+        function handleInteractionMove(clientX, clientY) {{
             if (isDragging) {{
-                const button = getButtonAtPosition(event.clientX, event.clientY);
+                const button = getButtonAtPosition(clientX, clientY);
                 if (button) {{
                     selectButton(button);
                 }}
             }} else {{
-                getButtonAtPosition(event.clientX, event.clientY);
+                getButtonAtPosition(clientX, clientY);
             }}
         }}
 
-        function handleMouseUp(event) {{
-            event.preventDefault();
+        function handleInteractionEnd() {{
             if (isDragging) {{
                 isDragging = false;
                 const isCorrect = checkCorrectWord();
@@ -858,51 +962,48 @@ elif st.session_state.game_state == 'game':
             }});
         }}
 
-        function handleTouchStart(event) {{
-            event.preventDefault();
-            isDragging = true;
-            clearAllSelections();
-            
-            const touch = event.touches[0];
-            const button = getButtonAtPosition(touch.clientX, touch.clientY);
-            if (button) {{
-                selectButton(button);
-            }}
-        }}
+        // マウスイベント
+        container.addEventListener('mousedown', function(e) {{
+            e.preventDefault();
+            handleInteractionStart(e.clientX, e.clientY);
+        }});
 
-        function handleTouchMove(event) {{
-            event.preventDefault();
-            if (!isDragging) return;
-            
-            const touch = event.touches[0];
-            const button = getButtonAtPosition(touch.clientX, touch.clientY);
-            if (button) {{
-                selectButton(button);
-            }}
-        }}
+        document.addEventListener('mousemove', function(e) {{
+            e.preventDefault();
+            handleInteractionMove(e.clientX, e.clientY);
+        }});
 
-        function handleTouchEnd(event) {{
-            event.preventDefault();
+        document.addEventListener('mouseup', function(e) {{
+            e.preventDefault();
+            handleInteractionEnd();
+        }});
+
+        // タッチイベント（改善版）
+        container.addEventListener('touchstart', function(e) {{
+            e.preventDefault();
+            const touch = e.touches[0];
+            handleInteractionStart(touch.clientX, touch.clientY);
+        }}, {{passive: false}});
+
+        document.addEventListener('touchmove', function(e) {{
+            e.preventDefault();
             if (isDragging) {{
-                isDragging = false;
-                const isCorrect = checkCorrectWord();
-                setTimeout(() => {{
-                    clearAllSelections();
-                }}, isCorrect ? 1000 : 200);
+                const touch = e.touches[0];
+                handleInteractionMove(touch.clientX, touch.clientY);
             }}
-        }}
+        }}, {{passive: false}});
 
-        document.addEventListener('mousedown', handleMouseDown);
-        document.addEventListener('mousemove', handleMouseMove);
-        document.addEventListener('mouseup', handleMouseUp);
+        document.addEventListener('touchend', function(e) {{
+            e.preventDefault();
+            handleInteractionEnd();
+        }}, {{passive: false}});
 
-        document.addEventListener('touchstart', handleTouchStart, {{passive: false}});
-        document.addEventListener('touchmove', handleTouchMove, {{passive: false}});
-        document.addEventListener('touchend', handleTouchEnd, {{passive: false}});
-
+        // 初期化
+        setupHintButton();
         updateSelectedWord();
         updateTargetWordsDisplay();
 
+        // コンテキストメニューと選択を無効化
         document.addEventListener('contextmenu', e => e.preventDefault());
         document.addEventListener('selectstart', e => e.preventDefault());
         </script>
