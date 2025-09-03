@@ -351,50 +351,23 @@ elif st.session_state.game_state == 'game':
     letters = st.session_state.shuffled_letters
     num_letters = len(letters)
     
-    # ヒントボタンの処理関数
-    def show_hint():
-        unfound_words = [word for word in st.session_state.target_words if word not in st.session_state.found_words]
-        
-        if unfound_words:
-            # ランダムに単語を選択
-            hint_word = random.choice(unfound_words)
-            
-            # その単語の現在のヒント状況を確認
-            current_hints = st.session_state.show_hints.get(hint_word, [])
-            
-            # 最後の文字以外で未解放の文字のインデックスを取得
-            available_positions = [i for i in range(len(hint_word) - 1) if i not in current_hints]
-            
-            if available_positions:
-                # 利用可能な位置からランダムに選択
-                new_hint_position = random.choice(available_positions)
-                
-                # ヒントを追加
-                if hint_word not in st.session_state.show_hints:
-                    st.session_state.show_hints[hint_word] = []
-                st.session_state.show_hints[hint_word].append(new_hint_position)
-                st.rerun()
-    
-    # ヘッダー（4列レイアウト）
-    col1, col2, col3, col4 = st.columns([1, 1, 2, 1])
+    # ヘッダー（3列レイアウト）
+    col1, col2, col3 = st.columns([1, 2, 1])
     with col1:
         if st.button("タイトルに戻る", key="back_to_title_header", use_container_width=True):
             st.session_state.game_state = 'title'
             # ステージクリア状態は維持したままタイトルに戻る
             st.rerun()
     with col2:
-        if st.button("ヒント", key="hint_button_header", use_container_width=True):
-            show_hint()
-    with col3:
         st.markdown(f"""
         <div style="display: flex; justify-content: center; align-items: center; height: 50px;">
             <h2 style="text-align: center; color: #333; margin: 0; line-height: 1.2;">{current_stage_info['name']}</h2>
         </div>
         """, unsafe_allow_html=True)
-    with col4:
+    with col3:
         # 次のステージボタン（最後のステージでない場合のみ表示）
         if st.session_state.current_stage < len(STAGES):
-            if st.button("次へ", key="next_stage_header", use_container_width=True):
+            if st.button("次のステージへ", key="next_stage_header", use_container_width=True):
                 st.session_state.current_stage += 1
                 next_stage_info = STAGES[st.session_state.current_stage]
                 st.session_state.target_words = next_stage_info['words']
@@ -458,7 +431,7 @@ elif st.session_state.game_state == 'game':
         ''' for i, letter in enumerate(letters)
     ])
 
-    # HTMLを表示（ヒントボタンは削除）
+    # HTMLを表示
     components.html(f"""
     <!DOCTYPE html>
     <html>
@@ -602,6 +575,28 @@ elif st.session_state.game_state == 'game':
         <div id="target-words">{target_display}</div>
         <div id="success-message" class="success-message">正解！</div>
         <div id="complete-message" class="complete-message">ステージクリア！</div>
+        
+        <div style="position: fixed; top: 120px; right: 15px; z-index: 1000;">
+            <button id="hint-button" 
+                    style="padding: 12px 20px; 
+                           background: #333; 
+                           color: white; 
+                           border: none; 
+                           border-radius: 8px; 
+                           font-weight: bold; 
+                           font-size: 16px;
+                           cursor: pointer; 
+                           transition: all 0.2s ease;
+                           min-width: 70px;
+                           min-height: 48px;
+                           box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+                           touch-action: manipulation;
+                           -webkit-touch-callout: none;
+                           -webkit-user-select: none;
+                           user-select: none;">
+                ヒント
+            </button>
+        </div>
 
         <div class="circle-container" id="circle-container">
             <canvas id="lineCanvas" width="320" height="320"></canvas>
@@ -691,6 +686,49 @@ elif st.session_state.game_state == 'game':
                 return true;
             }}
             return false;
+        }}
+        
+        function showHint() {{
+            let unfoundWords = targetWords.filter(word => !foundWords.includes(word));
+            
+            if (unfoundWords.length > 0) {{
+                // ランダムに単語を選択
+                let randomIndex = Math.floor(Math.random() * unfoundWords.length);
+                let hintWord = unfoundWords[randomIndex];
+                
+                // その単語の現在のヒント状況を確認
+                let currentHints = showHints[hintWord] || [];
+                
+                // 最後の文字以外で未解放の文字のインデックスを取得
+                let availablePositions = [];
+                for (let i = 0; i < hintWord.length - 1; i++) {{
+                    if (!currentHints.includes(i)) {{
+                        availablePositions.push(i);
+                    }}
+                }}
+                
+                if (availablePositions.length > 0) {{
+                    // 利用可能な位置からランダムに選択
+                    let randomPos = Math.floor(Math.random() * availablePositions.length);
+                    let newHintPosition = availablePositions[randomPos];
+                    
+                    // ヒントを追加
+                    if (!showHints[hintWord]) {{
+                        showHints[hintWord] = [];
+                    }}
+                    showHints[hintWord].push(newHintPosition);
+                    
+                    updateTargetWordsDisplay();
+                    
+                    // Streamlitにヒント情報を通知
+                    window.parent.postMessage({{
+                        type: 'hint_used',
+                        word: hintWord,
+                        position: newHintPosition,
+                        hints: showHints
+                    }}, '*');
+                }}
+            }}
         }}
 
         function showSuccessMessage() {{
@@ -883,6 +921,38 @@ elif st.session_state.game_state == 'game':
         updateSelectedWord();
         updateTargetWordsDisplay();
 
+        // ヒントボタンのイベントリスナーを設定
+        const hintButton = document.getElementById('hint-button');
+        
+        // タッチイベントとクリックイベントの両方に対応
+        hintButton.addEventListener('touchstart', function(e) {{
+            e.preventDefault();
+            e.stopPropagation();
+            this.style.background = '#555';
+        }});
+        
+        hintButton.addEventListener('touchend', function(e) {{
+            e.preventDefault();
+            e.stopPropagation();
+            this.style.background = '#333';
+            showHint();
+        }});
+        
+        hintButton.addEventListener('click', function(e) {{
+            e.preventDefault();
+            e.stopPropagation();
+            showHint();
+        }});
+        
+        // ホバー効果（デスクトップ用）
+        hintButton.addEventListener('mouseenter', function() {{
+            this.style.background = '#555';
+        }});
+        
+        hintButton.addEventListener('mouseleave', function() {{
+            this.style.background = '#333';
+        }});
+
         document.addEventListener('contextmenu', e => e.preventDefault());
         document.addEventListener('selectstart', e => e.preventDefault());
         </script>
@@ -903,6 +973,14 @@ elif st.session_state.game_state == 'game':
             currentUrl.searchParams.set('correct_word', event.data.word);
             window.location.href = currentUrl.toString();
         }
+        if (event.data.type === 'hint_used') {
+            // ヒント使用をURLパラメータで通知
+            const currentUrl = new URL(window.location);
+            currentUrl.searchParams.set('hint_word', event.data.word);
+            currentUrl.searchParams.set('hint_position', event.data.position);
+            currentUrl.searchParams.set('hint_data', JSON.stringify(event.data.hints));
+            window.location.href = currentUrl.toString();
+        }
         if (event.data.type === 'stage_complete') {
             // ステージクリア通知（特別な処理は不要）
             console.log('Stage completed:', event.data.stage);
@@ -910,6 +988,18 @@ elif st.session_state.game_state == 'game':
     });
     </script>
     """, height=0)
+    
+    # ヒント使用のチェック
+    if "hint_word" in query_params and "hint_position" in query_params:
+        hint_word = query_params["hint_word"]
+        hint_position = int(query_params["hint_position"])
+        if hint_word not in st.session_state.show_hints:
+            st.session_state.show_hints[hint_word] = []
+        if hint_position not in st.session_state.show_hints[hint_word]:
+            st.session_state.show_hints[hint_word].append(hint_position)
+        # クエリパラメータをクリア
+        st.query_params.clear()
+        st.rerun()
     
     # ステージクリア状態の確認
     stage_completed = len(st.session_state.found_words) == len(st.session_state.target_words)
