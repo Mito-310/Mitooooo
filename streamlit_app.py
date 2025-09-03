@@ -271,10 +271,8 @@ if st.session_state.game_state == 'title':
     <div class="title-section">
         <h1 class="game-title">RINGLISH!</h1>
         <div class="game-rules">
-            <p>リング状に配置された文字を
-                なぞって繋げて単語を作るゲームです</p>
-            <p>すべての目標単語を見つけると
-                ステージクリア！</p>
+            <p>リング状に配置された文字をなぞって繋げて単語を作るゲームです</p>
+            <p>すべての目標単語を見つけるとステージクリア！</p>
         </div>
     </div>
     """, unsafe_allow_html=True)
