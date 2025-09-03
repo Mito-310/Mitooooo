@@ -430,7 +430,7 @@ elif st.session_state.game_state == 'game':
         ''' for i, letter in enumerate(letters)
     ])
 
-    # HTMLを表示
+    # HTMLを表示（修正箇所：マージンを増やしてより下に移動）
     components.html(f"""
     <!DOCTYPE html>
     <html>
@@ -456,7 +456,7 @@ elif st.session_state.game_state == 'game':
             position: relative;
             width: 320px;
             height: 320px;
-            margin: 200px auto 40px auto;
+            margin: 280px auto 40px auto;  /* 上マージンを280pxに増加 */
             border: 3px solid #ddd;
             border-radius: 50%;
             background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
@@ -530,11 +530,14 @@ elif st.session_state.game_state == 'game':
             width: 100%;
             text-align: center;
             font-size: 16px;
-            padding: 15px;
+            padding: 20px 15px;  /* パディングを少し増やす */
             color: #666;
             background: #f9f9f9;
             z-index: 998;
             border-bottom: 1px solid #ddd;
+            min-height: 80px;  /* 最小高さを追加 */
+            max-height: 150px;  /* 最大高さを制限 */
+            overflow-y: auto;   /* スクロール対応 */
         }}
         
         .hint-button {{
@@ -622,7 +625,8 @@ elif st.session_state.game_state == 'game':
         /* モバイル対応 */
         @media (max-width: 768px) {{
             .circle-container {{
-                margin-top: 150px;
+                margin-top: 250px;  /* スマホでは250pxに調整 */
+                margin-bottom: 60px;
             }}
             
             .hint-button {{
@@ -630,6 +634,38 @@ elif st.session_state.game_state == 'game':
                 font-size: 16px;
                 top: 8px;
                 right: 8px;
+            }}
+            
+            #target-words {{
+                padding: 15px 10px;
+                font-size: 14px;
+                max-height: 120px;  /* スマホではもう少し低く */
+            }}
+            
+            #selected-word {{
+                font-size: 22px;  /* スマホでは少し小さく */
+                padding: 10px;
+            }}
+        }}
+        
+        /* 更に小さいスクリーンの場合 */
+        @media (max-width: 480px) {{
+            .circle-container {{
+                margin-top: 220px;
+                width: 280px;
+                height: 280px;
+            }}
+            
+            .circle-button {{
+                width: 45px;
+                height: 45px;
+                font-size: 16px;
+            }}
+            
+            #target-words {{
+                padding: 12px 8px;
+                font-size: 13px;
+                max-height: 100px;
             }}
         }}
         </style>
@@ -1008,7 +1044,7 @@ elif st.session_state.game_state == 'game':
         </script>
     </body>
     </html>
-    """, height=600)
+    """, height=700)
 
     # JavaScriptからのメッセージを受信するためのプレースホルダー
     message_placeholder = st.empty()
