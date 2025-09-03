@@ -576,8 +576,26 @@ elif st.session_state.game_state == 'game':
         <div id="success-message" class="success-message">正解！</div>
         <div id="complete-message" class="complete-message">ステージクリア！</div>
         
-        <div style="position: fixed; top: 10px; right: 10px; z-index: 1000;">
-            <button onclick="showHint()" style="padding: 8px 16px; background: #333; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; transition: all 0.2s ease;" onmouseover="this.style.background='#555'" onmouseout="this.style.background='#333'">ヒント</button>
+        <div style="position: fixed; top: 120px; right: 15px; z-index: 1000;">
+            <button id="hint-button" 
+                    style="padding: 12px 20px; 
+                           background: #333; 
+                           color: white; 
+                           border: none; 
+                           border-radius: 8px; 
+                           font-weight: bold; 
+                           font-size: 16px;
+                           cursor: pointer; 
+                           transition: all 0.2s ease;
+                           min-width: 70px;
+                           min-height: 48px;
+                           box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+                           touch-action: manipulation;
+                           -webkit-touch-callout: none;
+                           -webkit-user-select: none;
+                           user-select: none;">
+                ヒント
+            </button>
         </div>
 
         <div class="circle-container" id="circle-container">
@@ -902,6 +920,38 @@ elif st.session_state.game_state == 'game':
 
         updateSelectedWord();
         updateTargetWordsDisplay();
+
+        // ヒントボタンのイベントリスナーを設定
+        const hintButton = document.getElementById('hint-button');
+        
+        // タッチイベントとクリックイベントの両方に対応
+        hintButton.addEventListener('touchstart', function(e) {{
+            e.preventDefault();
+            e.stopPropagation();
+            this.style.background = '#555';
+        }});
+        
+        hintButton.addEventListener('touchend', function(e) {{
+            e.preventDefault();
+            e.stopPropagation();
+            this.style.background = '#333';
+            showHint();
+        }});
+        
+        hintButton.addEventListener('click', function(e) {{
+            e.preventDefault();
+            e.stopPropagation();
+            showHint();
+        }});
+        
+        // ホバー効果（デスクトップ用）
+        hintButton.addEventListener('mouseenter', function() {{
+            this.style.background = '#555';
+        }});
+        
+        hintButton.addEventListener('mouseleave', function() {{
+            this.style.background = '#333';
+        }});
 
         document.addEventListener('contextmenu', e => e.preventDefault());
         document.addEventListener('selectstart', e => e.preventDefault());
