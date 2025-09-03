@@ -6,7 +6,7 @@ import streamlit.components.v1 as components
 
 # ページ設定
 st.set_page_config(
-    page_title="Word Connect Game",
+    page_title="RINGLISH!",
     layout="centered",
     initial_sidebar_state="auto"
 )
@@ -269,9 +269,8 @@ if st.session_state.game_state == 'title':
     
     st.markdown("""
     <div class="title-section">
-        <h1 class="game-title">RINGLISH! -リングリッシュ-</h1>
+        <h1 class="game-title">RINGLISH!</h1>
         <div class="game-rules">
-            <h3>ゲームルール</h3>
             <p>リング状に配置された文字をなぞって繋げて単語を作るゲームです</p>
             <p>すべての目標単語を見つけるとステージクリア！</p>
         </div>
