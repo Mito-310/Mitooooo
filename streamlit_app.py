@@ -907,7 +907,7 @@ elif st.session_state.game_state == 'game':
         </script>
     </body>
     </html>
-    """, height=420)
+    """, height=500)
 
     # JavaScriptからのメッセージを受信するためのプレースホルダー
     message_placeholder = st.empty()
