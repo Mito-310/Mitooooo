@@ -6,7 +6,7 @@ import streamlit.components.v1 as components
 
 # ページ設定
 st.set_page_config(
-    page_title="RINGLISH!",
+    page_title="RINGLISH",
     layout="centered",
     initial_sidebar_state="auto"
 )
@@ -269,8 +269,9 @@ if st.session_state.game_state == 'title':
     
     st.markdown("""
     <div class="title-section">
-        <h1 class="game-title">RINGLISH!</h1>
+        <h1 class="game-title">RINGLISH! -リングリッシュ-</h1>
         <div class="game-rules">
+            <h3>ゲームルール</h3>
             <p>リング状に配置された文字をなぞって繋げて単語を作るゲームです</p>
             <p>すべての目標単語を見つけるとステージクリア！</p>
         </div>
@@ -417,54 +418,44 @@ elif st.session_state.game_state == 'game':
     
     target_display = ''.join(target_boxes_html)
     
-    # 円形ボタンのHTML生成 - より正確な位置計算
+    # 円形ボタンのHTML生成
     button_html = ''.join([
         f'''
-        <div class="circle-button" 
-             id="button_{i}"
-             data-letter="{letter}"
-             data-index="{i}"
-             style="left: {160 + 120 * math.cos(2 * math.pi * i / num_letters - math.pi/2) - 25}px;
-                    top:  {160 + 120 * math.sin(2 * math.pi * i / num_letters - math.pi/2) - 25}px;">
+        <div class="circle-button" id="button_{i}"
+                data-letter="{letter}"
+                data-index="{i}"
+                style="left: {160 + 120 * math.cos(2 * math.pi * i / num_letters - math.pi/2) - 25}px;
+                       top:  {160 + 120 * math.sin(2 * math.pi * i / num_letters - math.pi/2) - 25}px;">
             {letter}
         </div>
         ''' for i, letter in enumerate(letters)
     ])
 
-    # HTMLを表示（修正版 - 当たり判定を改善）
+    # HTMLを表示
     components.html(f"""
     <!DOCTYPE html>
     <html>
     <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
         <style>
         body {{
             margin: 0;
             font-family: Arial, sans-serif;
             user-select: none;
+            touch-action: none;
+            overflow: hidden;
             background: #fafafa;
-            min-height: 100vh;
-            padding-bottom: 20px;
         }}
-        
-        .game-container {{
-            position: relative;
-            width: 100%;
-            min-height: calc(100vh - 20px);
-        }}
-        
         .circle-container {{
             position: relative;
             width: 320px;
             height: 320px;
-            margin: 280px auto 40px auto;
+            margin: 200px auto 40px auto;
             border: 3px solid #ddd;
             border-radius: 50%;
             background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
             box-shadow: 0 6px 12px rgba(0,0,0,0.1);
-            touch-action: none;
         }}
-        
         .circle-button {{
             position: absolute;
             width: 50px;
@@ -484,7 +475,6 @@ elif st.session_state.game_state == 'game':
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             z-index: 10;
         }}
-        
         .circle-button.selected {{
             background: linear-gradient(135deg, #2c2c2c 0%, #1a1a1a 100%) !important;
             color: white !important;
@@ -492,21 +482,18 @@ elif st.session_state.game_state == 'game':
             box-shadow: 0 6px 12px rgba(0,0,0,0.3);
             border: 2px solid #1a1a1a;
             transition: all 0.1s ease;
-            z-index: 20;
+            z-index: 10;
         }}
-        
         .circle-button:not(.selected):hover {{
             background: linear-gradient(135deg, #f0f0f0 0%, #e9ecef 100%) !important;
             transform: scale(1.05);
             box-shadow: 0 3px 6px rgba(0,0,0,0.15);
         }}
-        
         .circle-button.hover {{
             background: linear-gradient(135deg, #f0f0f0 0%, #e9ecef 100%) !important;
             transform: scale(1.05);
             box-shadow: 0 3px 6px rgba(0,0,0,0.15);
         }}
-        
         #selected-word {{
             position: fixed;
             top: 0;
@@ -523,7 +510,6 @@ elif st.session_state.game_state == 'game':
             z-index: 999;
             border-bottom: 2px solid #e9ecef;
         }}
-        
         #target-words {{
             position: fixed;
             top: 64px;
@@ -531,48 +517,12 @@ elif st.session_state.game_state == 'game':
             width: 100%;
             text-align: center;
             font-size: 16px;
-            padding: 20px 15px;
+            padding: 15px;
             color: #666;
             background: #f9f9f9;
             z-index: 998;
             border-bottom: 1px solid #ddd;
-            min-height: 80px;
-            max-height: 150px;
-            overflow-y: auto;
         }}
-        
-        .hint-button {{
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            z-index: 1002;
-            padding: 10px 18px;
-            background: #333;
-            color: white;
-            border: 2px solid #333;
-            border-radius: 6px;
-            font-weight: bold;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            -webkit-tap-highlight-color: transparent;
-            touch-action: manipulation;
-        }}
-        
-        .hint-button:hover {{
-            background: #555;
-            border-color: #555;
-            transform: translateY(-1px);
-            box-shadow: 0 3px 6px rgba(0,0,0,0.2);
-        }}
-        
-        .hint-button:active {{
-            transform: translateY(0);
-            background: #222;
-            border-color: #222;
-        }}
-        
         .success-message {{
             position: fixed;
             top: 50%;
@@ -588,12 +538,10 @@ elif st.session_state.game_state == 'game':
             opacity: 0;
             transition: all 0.3s ease;
         }}
-        
         .success-message.show {{
             opacity: 1;
             transform: translate(-50%, -50%) scale(1.1);
         }}
-        
         .complete-message {{
             position: fixed;
             top: 50%;
@@ -609,12 +557,10 @@ elif st.session_state.game_state == 'game':
             opacity: 0;
             transition: all 0.3s ease;
         }}
-        
         .complete-message.show {{
             opacity: 1;
             transform: translate(-50%, -50%) scale(1.1);
         }}
-        
         canvas {{
             position: absolute;
             top: 0;
@@ -622,68 +568,39 @@ elif st.session_state.game_state == 'game':
             z-index: 1;
             pointer-events: none;
         }}
-        
-        /* モバイル対応 */
-        @media (max-width: 768px) {{
-            .circle-container {{
-                margin-top: 250px;
-                margin-bottom: 60px;
-            }}
-            
-            .hint-button {{
-                padding: 12px 20px;
-                font-size: 16px;
-                top: 8px;
-                right: 8px;
-            }}
-            
-            #target-words {{
-                padding: 15px 10px;
-                font-size: 14px;
-                max-height: 120px;
-            }}
-            
-            #selected-word {{
-                font-size: 22px;
-                padding: 10px;
-            }}
-        }}
-        
-        /* 更に小さいスクリーンの場合 */
-        @media (max-width: 480px) {{
-            .circle-container {{
-                margin-top: 220px;
-                width: 280px;
-                height: 280px;
-            }}
-            
-            .circle-button {{
-                width: 45px;
-                height: 45px;
-                font-size: 16px;
-            }}
-            
-            #target-words {{
-                padding: 12px 8px;
-                font-size: 13px;
-                max-height: 100px;
-            }}
-        }}
         </style>
     </head>
     <body>
-        <div class="game-container">
-            <div id="selected-word"></div>
-            <div id="target-words">{target_display}</div>
-            <div id="success-message" class="success-message">正解！</div>
-            <div id="complete-message" class="complete-message">ステージクリア！</div>
-            
-            <button class="hint-button" id="hint-button">ヒント</button>
+        <div id="selected-word"></div>
+        <div id="target-words">{target_display}</div>
+        <div id="success-message" class="success-message">正解！</div>
+        <div id="complete-message" class="complete-message">ステージクリア！</div>
+        
+        <div style="position: fixed; top: 120px; right: 15px; z-index: 1000;">
+            <button id="hint-button" 
+                    style="padding: 12px 20px; 
+                           background: #333; 
+                           color: white; 
+                           border: none; 
+                           border-radius: 8px; 
+                           font-weight: bold; 
+                           font-size: 16px;
+                           cursor: pointer; 
+                           transition: all 0.2s ease;
+                           min-width: 70px;
+                           min-height: 48px;
+                           box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+                           touch-action: manipulation;
+                           -webkit-touch-callout: none;
+                           -webkit-user-select: none;
+                           user-select: none;">
+                ヒント
+            </button>
+        </div>
 
-            <div class="circle-container" id="circle-container">
-                <canvas id="lineCanvas" width="320" height="320"></canvas>
-                {button_html}
-            </div>
+        <div class="circle-container" id="circle-container">
+            <canvas id="lineCanvas" width="320" height="320"></canvas>
+            {button_html}
         </div>
 
         <script>
@@ -694,7 +611,6 @@ elif st.session_state.game_state == 'game':
         let targetWords = {json.dumps(st.session_state.target_words)};
         let foundWords = {json.dumps(st.session_state.found_words)};
         let showHints = {json.dumps(st.session_state.show_hints)};
-        let buttonPositions = []; // ボタン位置を保存
 
         const selectedWordDiv = document.getElementById('selected-word');
         const targetWordsDiv = document.getElementById('target-words');
@@ -703,50 +619,6 @@ elif st.session_state.game_state == 'game':
         const container = document.getElementById('circle-container');
         const canvas = document.getElementById('lineCanvas');
         const ctx = canvas.getContext('2d');
-        const hintButton = document.getElementById('hint-button');
-
-
-
-        // ヒントボタンのイベント処理を改善
-        function setupHintButton() {{
-            // 既存のイベントリスナーを削除
-            hintButton.onclick = null;
-            
-            // タッチイベント用のフラグ
-            let touchHandled = false;
-            
-            // タッチスタート
-            hintButton.addEventListener('touchstart', function(e) {{
-                e.preventDefault();
-                e.stopPropagation();
-                touchHandled = true;
-                this.style.background = '#222';
-                this.style.borderColor = '#222';
-                this.style.transform = 'translateY(0)';
-            }}, {{passive: false}});
-            
-            // タッチエンド
-            hintButton.addEventListener('touchend', function(e) {{
-                e.preventDefault();
-                e.stopPropagation();
-                if (touchHandled) {{
-                    this.style.background = '#333';
-                    this.style.borderColor = '#333';
-                    this.style.transform = 'translateY(-1px)';
-                    showHint();
-                    touchHandled = false;
-                }}
-            }}, {{passive: false}});
-            
-            // マウスイベント（デスクトップ用）
-            hintButton.addEventListener('click', function(e) {{
-                if (!touchHandled) {{
-                    e.preventDefault();
-                    e.stopPropagation();
-                    showHint();
-                }}
-            }});
-        }}
 
         function updateSelectedWord() {{
             selectedWordDiv.textContent = selectedLetters.join('');
@@ -873,25 +745,27 @@ elif st.session_state.game_state == 'game':
             }}, 2500);
         }}
 
-        function getButtonCenterPosition(buttonData) {{
+        function getButtonCenterPosition(button) {{
+            const rect = button.getBoundingClientRect();
+            const containerRect = container.getBoundingClientRect();
             return {{
-                x: buttonData.centerX,
-                y: buttonData.centerY
+                x: rect.left - containerRect.left + rect.width / 2,
+                y: rect.top - containerRect.top + rect.height / 2
             }};
         }}
 
-        function selectButton(buttonData) {{
-            if (!selectedButtons.find(b => b.index === buttonData.index)) {{
-                buttonData.button.classList.add('selected');
-                buttonData.button.classList.remove('hover');
+        function selectButton(button) {{
+            if (!selectedButtons.includes(button)) {{
+                button.classList.add('selected');
+                button.classList.remove('hover');
                 
-                selectedLetters.push(buttonData.button.dataset.letter);
-                selectedButtons.push(buttonData);
-                points.push(getButtonCenterPosition(buttonData));
+                selectedLetters.push(button.dataset.letter);
+                selectedButtons.push(button);
+                points.push(getButtonCenterPosition(button));
                 updateSelectedWord();
                 drawLine();
                 
-                buttonData.button.offsetHeight;
+                button.offsetHeight;
             }}
         }}
 
@@ -908,39 +782,35 @@ elif st.session_state.game_state == 'game':
             drawLine();
         }}
 
-        // 改善された当たり判定関数
         function getButtonAtPosition(clientX, clientY) {{
-            // 全てのボタンからhoverクラスを削除
-            buttonPositions.forEach(buttonData => {{
-                if (!buttonData.button.classList.contains('selected')) {{
-                    buttonData.button.classList.remove('hover');
-                }}
-            }});
-            
-            const containerRect = container.getBoundingClientRect();
-            const relativeX = clientX - containerRect.left;
-            const relativeY = clientY - containerRect.top;
-            
+            const buttons = document.querySelectorAll('.circle-button');
             let closestButton = null;
             let closestDistance = Infinity;
             
-            // 距離計算を使用して最も近いボタンを見つける
-            for (let buttonData of buttonPositions) {{
+            buttons.forEach(button => {{
+                if (!button.classList.contains('selected')) {{
+                    button.classList.remove('hover');
+                }}
+            }});
+            
+            for (let button of buttons) {{
+                const rect = button.getBoundingClientRect();
+                const buttonCenterX = rect.left + rect.width / 2;
+                const buttonCenterY = rect.top + rect.height / 2;
+                
                 const distance = Math.sqrt(
-                    Math.pow(relativeX - buttonData.centerX, 2) + 
-                    Math.pow(relativeY - buttonData.centerY, 2)
+                    Math.pow(clientX - buttonCenterX, 2) + 
+                    Math.pow(clientY - buttonCenterY, 2)
                 );
                 
-                // 当たり判定の範囲内で最も近いボタン
-                if (distance <= buttonData.radius && distance < closestDistance) {{
+                if (distance <= 40 && distance < closestDistance) {{
                     closestDistance = distance;
-                    closestButton = buttonData;
+                    closestButton = button;
                 }}
             }}
             
-            // 見つかったボタンにhoverエフェクトを追加
-            if (closestButton && !closestButton.button.classList.contains('selected')) {{
-                closestButton.button.classList.add('hover');
+            if (closestButton && !closestButton.classList.contains('selected')) {{
+                closestButton.classList.add('hover');
             }}
             
             return closestButton;
@@ -967,29 +837,32 @@ elif st.session_state.game_state == 'game':
             }});
         }}
 
-        // 改善されたイベント処理
-        function handleInteractionStart(clientX, clientY) {{
+        function handleMouseDown(event) {{
+            event.preventDefault();
             isDragging = true;
             clearAllSelections();
             
-            const buttonData = getButtonAtPosition(clientX, clientY);
-            if (buttonData) {{
-                selectButton(buttonData);
+            const button = getButtonAtPosition(event.clientX, event.clientY);
+            if (button) {{
+                selectButton(button);
             }}
         }}
 
-        function handleInteractionMove(clientX, clientY) {{
+        function handleMouseMove(event) {{
+            event.preventDefault();
+            
             if (isDragging) {{
-                const buttonData = getButtonAtPosition(clientX, clientY);
-                if (buttonData) {{
-                    selectButton(buttonData);
+                const button = getButtonAtPosition(event.clientX, event.clientY);
+                if (button) {{
+                    selectButton(button);
                 }}
             }} else {{
-                getButtonAtPosition(clientX, clientY);
+                getButtonAtPosition(event.clientX, event.clientY);
             }}
         }}
 
-        function handleInteractionEnd() {{
+        function handleMouseUp(event) {{
+            event.preventDefault();
             if (isDragging) {{
                 isDragging = false;
                 const isCorrect = checkCorrectWord();
@@ -998,73 +871,94 @@ elif st.session_state.game_state == 'game':
                     clearAllSelections();
                 }}, isCorrect ? 1000 : 200);
             }}
-            // 全てのhoverエフェクトを削除
-            buttonPositions.forEach(buttonData => {{
-                buttonData.button.classList.remove('hover');
+            document.querySelectorAll('.circle-button').forEach(button => {{
+                button.classList.remove('hover');
             }});
         }}
 
-        // マウスイベント
-        container.addEventListener('mousedown', function(e) {{
-            e.preventDefault();
-            handleInteractionStart(e.clientX, e.clientY);
-        }});
-
-        document.addEventListener('mousemove', function(e) {{
-            e.preventDefault();
-            handleInteractionMove(e.clientX, e.clientY);
-        }});
-
-        document.addEventListener('mouseup', function(e) {{
-            e.preventDefault();
-            handleInteractionEnd();
-        }});
-
-        // タッチイベント（改善版）
-        container.addEventListener('touchstart', function(e) {{
-            e.preventDefault();
-            const touch = e.touches[0];
-            handleInteractionStart(touch.clientX, touch.clientY);
-        }}, {{passive: false}});
-
-        document.addEventListener('touchmove', function(e) {{
-            e.preventDefault();
-            if (isDragging) {{
-                const touch = e.touches[0];
-                handleInteractionMove(touch.clientX, touch.clientY);
+        function handleTouchStart(event) {{
+            event.preventDefault();
+            isDragging = true;
+            clearAllSelections();
+            
+            const touch = event.touches[0];
+            const button = getButtonAtPosition(touch.clientX, touch.clientY);
+            if (button) {{
+                selectButton(button);
             }}
-        }}, {{passive: false}});
+        }}
 
-        document.addEventListener('touchend', function(e) {{
+        function handleTouchMove(event) {{
+            event.preventDefault();
+            if (!isDragging) return;
+            
+            const touch = event.touches[0];
+            const button = getButtonAtPosition(touch.clientX, touch.clientY);
+            if (button) {{
+                selectButton(button);
+            }}
+        }}
+
+        function handleTouchEnd(event) {{
+            event.preventDefault();
+            if (isDragging) {{
+                isDragging = false;
+                const isCorrect = checkCorrectWord();
+                setTimeout(() => {{
+                    clearAllSelections();
+                }}, isCorrect ? 1000 : 200);
+            }}
+        }}
+
+        document.addEventListener('mousedown', handleMouseDown);
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+
+        document.addEventListener('touchstart', handleTouchStart, {{passive: false}});
+        document.addEventListener('touchmove', handleTouchMove, {{passive: false}});
+        document.addEventListener('touchend', handleTouchEnd, {{passive: false}});
+
+        updateSelectedWord();
+        updateTargetWordsDisplay();
+
+        // ヒントボタンのイベントリスナーを設定
+        const hintButton = document.getElementById('hint-button');
+        
+        // タッチイベントとクリックイベントの両方に対応
+        hintButton.addEventListener('touchstart', function(e) {{
             e.preventDefault();
-            handleInteractionEnd();
-        }}, {{passive: false}});
-
-        // 初期化
-        window.addEventListener('load', function() {{
-            // DOMが完全に読み込まれた後にボタン位置を計算
-            setTimeout(() => {{
-                initializeButtonPositions();
-                setupHintButton();
-                updateSelectedWord();
-                updateTargetWordsDisplay();
-            }}, 100);
+            e.stopPropagation();
+            this.style.background = '#555';
+        }});
+        
+        hintButton.addEventListener('touchend', function(e) {{
+            e.preventDefault();
+            e.stopPropagation();
+            this.style.background = '#333';
+            showHint();
+        }});
+        
+        hintButton.addEventListener('click', function(e) {{
+            e.preventDefault();
+            e.stopPropagation();
+            showHint();
+        }});
+        
+        // ホバー効果（デスクトップ用）
+        hintButton.addEventListener('mouseenter', function() {{
+            this.style.background = '#555';
+        }});
+        
+        hintButton.addEventListener('mouseleave', function() {{
+            this.style.background = '#333';
         }});
 
-        // ウィンドウサイズ変更時に位置を再計算
-        window.addEventListener('resize', function() {{
-            setTimeout(() => {{
-                initializeButtonPositions();
-            }}, 100);
-        }});
-
-        // コンテキストメニューと選択を無効化
         document.addEventListener('contextmenu', e => e.preventDefault());
         document.addEventListener('selectstart', e => e.preventDefault());
         </script>
     </body>
     </html>
-    """, height=700)
+    """, height=600)
 
     # JavaScriptからのメッセージを受信するためのプレースホルダー
     message_placeholder = st.empty()
