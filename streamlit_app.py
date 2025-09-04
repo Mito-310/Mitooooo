@@ -442,14 +442,45 @@ elif st.session_state.game_state == 'game':
             font-family: Arial, sans-serif;
             user-select: none;
             touch-action: none;
-            overflow: hidden;
+            overflow-x: hidden;
             background: #fafafa;
+            min-height: 100vh;
+            position: relative;
         }}
+        
+        /* モバイル向けレイアウト調整 */
+        @media (max-width: 600px) {{
+            .circle-container {{
+                margin: 80px auto 60px auto !important;
+            }}
+            #target-words {{
+                font-size: 14px !important;
+                padding: 12px !important;
+                top: 64px !important;
+            }}
+            #selected-word {{
+                font-size: 22px !important;
+                padding: 10px !important;
+            }}
+            #hint-button {{
+                top: auto !important;
+                bottom: 20px !important;
+                right: 50% !important;
+                transform: translateX(50%) !important;
+                position: fixed !important;
+                z-index: 1000 !important;
+                padding: 14px 24px !important;
+                font-size: 18px !important;
+                min-width: 100px !important;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
+            }}
+        }}
+        
         .circle-container {{
             position: relative;
             width: 320px;
             height: 320px;
-            margin: 200px auto 40px auto;
+            margin: 120px auto 40px auto;
             border: 3px solid #ddd;
             border-radius: 50%;
             background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
@@ -567,6 +598,29 @@ elif st.session_state.game_state == 'game':
             z-index: 1;
             pointer-events: none;
         }}
+        
+        #hint-button {{
+            position: fixed;
+            top: 120px;
+            right: 15px;
+            z-index: 1000;
+            padding: 12px 20px;
+            background: #333;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-width: 70px;
+            min-height: 48px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            touch-action: manipulation;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }}
         </style>
     </head>
     <body>
@@ -575,27 +629,7 @@ elif st.session_state.game_state == 'game':
         <div id="success-message" class="success-message">正解！</div>
         <div id="complete-message" class="complete-message">ステージクリア！</div>
         
-        <div style="position: fixed; top: 120px; right: 15px; z-index: 1000;">
-            <button id="hint-button" 
-                    style="padding: 12px 20px; 
-                           background: #333; 
-                           color: white; 
-                           border: none; 
-                           border-radius: 8px; 
-                           font-weight: bold; 
-                           font-size: 16px;
-                           cursor: pointer; 
-                           transition: all 0.2s ease;
-                           min-width: 70px;
-                           min-height: 48px;
-                           box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-                           touch-action: manipulation;
-                           -webkit-touch-callout: none;
-                           -webkit-user-select: none;
-                           user-select: none;">
-                ヒント
-            </button>
-        </div>
+        <button id="hint-button">ヒント</button>
 
         <div class="circle-container" id="circle-container">
             <canvas id="lineCanvas" width="320" height="320"></canvas>
