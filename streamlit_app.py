@@ -417,20 +417,21 @@ elif st.session_state.game_state == 'game':
     
     target_display = ''.join(target_boxes_html)
     
-    # 円形ボタンのHTML生成
+    # 円形ボタンのHTML生成 - より正確な位置計算
     button_html = ''.join([
         f'''
-        <div class="circle-button" id="button_{i}"
-                data-letter="{letter}"
-                data-index="{i}"
-                style="left: {160 + 120 * math.cos(2 * math.pi * i / num_letters - math.pi/2) - 25}px;
-                       top:  {160 + 120 * math.sin(2 * math.pi * i / num_letters - math.pi/2) - 25}px;">
+        <div class="circle-button" 
+             id="button_{i}"
+             data-letter="{letter}"
+             data-index="{i}"
+             style="left: {160 + 120 * math.cos(2 * math.pi * i / num_letters - math.pi/2) - 25}px;
+                    top:  {160 + 120 * math.sin(2 * math.pi * i / num_letters - math.pi/2) - 25}px;">
             {letter}
         </div>
         ''' for i, letter in enumerate(letters)
     ])
 
-    # HTMLを表示（修正箇所：マージンを増やしてより下に移動）
+    # HTMLを表示（修正版 - 当たり判定を改善）
     components.html(f"""
     <!DOCTYPE html>
     <html>
@@ -456,7 +457,7 @@ elif st.session_state.game_state == 'game':
             position: relative;
             width: 320px;
             height: 320px;
-            margin: 280px auto 40px auto;  /* 上マージンを280pxに増加 */
+            margin: 280px auto 40px auto;
             border: 3px solid #ddd;
             border-radius: 50%;
             background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
@@ -491,7 +492,7 @@ elif st.session_state.game_state == 'game':
             box-shadow: 0 6px 12px rgba(0,0,0,0.3);
             border: 2px solid #1a1a1a;
             transition: all 0.1s ease;
-            z-index: 10;
+            z-index: 20;
         }}
         
         .circle-button:not(.selected):hover {{
@@ -530,14 +531,14 @@ elif st.session_state.game_state == 'game':
             width: 100%;
             text-align: center;
             font-size: 16px;
-            padding: 20px 15px;  /* パディングを少し増やす */
+            padding: 20px 15px;
             color: #666;
             background: #f9f9f9;
             z-index: 998;
             border-bottom: 1px solid #ddd;
-            min-height: 80px;  /* 最小高さを追加 */
-            max-height: 150px;  /* 最大高さを制限 */
-            overflow-y: auto;   /* スクロール対応 */
+            min-height: 80px;
+            max-height: 150px;
+            overflow-y: auto;
         }}
         
         .hint-button {{
@@ -625,7 +626,7 @@ elif st.session_state.game_state == 'game':
         /* モバイル対応 */
         @media (max-width: 768px) {{
             .circle-container {{
-                margin-top: 250px;  /* スマホでは250pxに調整 */
+                margin-top: 250px;
                 margin-bottom: 60px;
             }}
             
@@ -639,11 +640,11 @@ elif st.session_state.game_state == 'game':
             #target-words {{
                 padding: 15px 10px;
                 font-size: 14px;
-                max-height: 120px;  /* スマホではもう少し低く */
+                max-height: 120px;
             }}
             
             #selected-word {{
-                font-size: 22px;  /* スマホでは少し小さく */
+                font-size: 22px;
                 padding: 10px;
             }}
         }}
@@ -693,6 +694,7 @@ elif st.session_state.game_state == 'game':
         let targetWords = {json.dumps(st.session_state.target_words)};
         let foundWords = {json.dumps(st.session_state.found_words)};
         let showHints = {json.dumps(st.session_state.show_hints)};
+        let buttonPositions = []; // ボタン位置を保存
 
         const selectedWordDiv = document.getElementById('selected-word');
         const targetWordsDiv = document.getElementById('target-words');
@@ -702,6 +704,26 @@ elif st.session_state.game_state == 'game':
         const canvas = document.getElementById('lineCanvas');
         const ctx = canvas.getContext('2d');
         const hintButton = document.getElementById('hint-button');
+
+        // ボタン位置を初期化時に計算して保存
+        function initializeButtonPositions() {{
+            const buttons = document.querySelectorAll('.circle-button');
+            buttonPositions = [];
+            
+            buttons.forEach((button, index) => {{
+                const rect = button.getBoundingClientRect();
+                const containerRect = container.getBoundingClientRect();
+                
+                // ボタンの中心座標をコンテナ相対座標で保存
+                buttonPositions.push({{
+                    button: button,
+                    index: index,
+                    centerX: rect.left - containerRect.left + rect.width / 2,
+                    centerY: rect.top - containerRect.top + rect.height / 2,
+                    radius: Math.max(rect.width, rect.height) / 2 + 10 // 当たり判定を少し広げる
+                }});
+            }});
+        }}
 
         // ヒントボタンのイベント処理を改善
         function setupHintButton() {{
@@ -869,27 +891,25 @@ elif st.session_state.game_state == 'game':
             }}, 2500);
         }}
 
-        function getButtonCenterPosition(button) {{
-            const rect = button.getBoundingClientRect();
-            const containerRect = container.getBoundingClientRect();
+        function getButtonCenterPosition(buttonData) {{
             return {{
-                x: rect.left - containerRect.left + rect.width / 2,
-                y: rect.top - containerRect.top + rect.height / 2
+                x: buttonData.centerX,
+                y: buttonData.centerY
             }};
         }}
 
-        function selectButton(button) {{
-            if (!selectedButtons.includes(button)) {{
-                button.classList.add('selected');
-                button.classList.remove('hover');
+        function selectButton(buttonData) {{
+            if (!selectedButtons.find(b => b.index === buttonData.index)) {{
+                buttonData.button.classList.add('selected');
+                buttonData.button.classList.remove('hover');
                 
-                selectedLetters.push(button.dataset.letter);
-                selectedButtons.push(button);
-                points.push(getButtonCenterPosition(button));
+                selectedLetters.push(buttonData.button.dataset.letter);
+                selectedButtons.push(buttonData);
+                points.push(getButtonCenterPosition(buttonData));
                 updateSelectedWord();
                 drawLine();
                 
-                button.offsetHeight;
+                buttonData.button.offsetHeight;
             }}
         }}
 
@@ -906,35 +926,39 @@ elif st.session_state.game_state == 'game':
             drawLine();
         }}
 
+        // 改善された当たり判定関数
         function getButtonAtPosition(clientX, clientY) {{
-            const buttons = document.querySelectorAll('.circle-button');
-            let closestButton = null;
-            let closestDistance = Infinity;
-            
-            buttons.forEach(button => {{
-                if (!button.classList.contains('selected')) {{
-                    button.classList.remove('hover');
+            // 全てのボタンからhoverクラスを削除
+            buttonPositions.forEach(buttonData => {{
+                if (!buttonData.button.classList.contains('selected')) {{
+                    buttonData.button.classList.remove('hover');
                 }}
             }});
             
-            for (let button of buttons) {{
-                const rect = button.getBoundingClientRect();
-                const buttonCenterX = rect.left + rect.width / 2;
-                const buttonCenterY = rect.top + rect.height / 2;
-                
+            const containerRect = container.getBoundingClientRect();
+            const relativeX = clientX - containerRect.left;
+            const relativeY = clientY - containerRect.top;
+            
+            let closestButton = null;
+            let closestDistance = Infinity;
+            
+            // 距離計算を使用して最も近いボタンを見つける
+            for (let buttonData of buttonPositions) {{
                 const distance = Math.sqrt(
-                    Math.pow(clientX - buttonCenterX, 2) + 
-                    Math.pow(clientY - buttonCenterY, 2)
+                    Math.pow(relativeX - buttonData.centerX, 2) + 
+                    Math.pow(relativeY - buttonData.centerY, 2)
                 );
                 
-                if (distance <= 40 && distance < closestDistance) {{
+                // 当たり判定の範囲内で最も近いボタン
+                if (distance <= buttonData.radius && distance < closestDistance) {{
                     closestDistance = distance;
-                    closestButton = button;
+                    closestButton = buttonData;
                 }}
             }}
             
-            if (closestButton && !closestButton.classList.contains('selected')) {{
-                closestButton.classList.add('hover');
+            // 見つかったボタンにhoverエフェクトを追加
+            if (closestButton && !closestButton.button.classList.contains('selected')) {{
+                closestButton.button.classList.add('hover');
             }}
             
             return closestButton;
@@ -966,17 +990,17 @@ elif st.session_state.game_state == 'game':
             isDragging = true;
             clearAllSelections();
             
-            const button = getButtonAtPosition(clientX, clientY);
-            if (button) {{
-                selectButton(button);
+            const buttonData = getButtonAtPosition(clientX, clientY);
+            if (buttonData) {{
+                selectButton(buttonData);
             }}
         }}
 
         function handleInteractionMove(clientX, clientY) {{
             if (isDragging) {{
-                const button = getButtonAtPosition(clientX, clientY);
-                if (button) {{
-                    selectButton(button);
+                const buttonData = getButtonAtPosition(clientX, clientY);
+                if (buttonData) {{
+                    selectButton(buttonData);
                 }}
             }} else {{
                 getButtonAtPosition(clientX, clientY);
@@ -992,8 +1016,9 @@ elif st.session_state.game_state == 'game':
                     clearAllSelections();
                 }}, isCorrect ? 1000 : 200);
             }}
-            document.querySelectorAll('.circle-button').forEach(button => {{
-                button.classList.remove('hover');
+            // 全てのhoverエフェクトを削除
+            buttonPositions.forEach(buttonData => {{
+                buttonData.button.classList.remove('hover');
             }});
         }}
 
@@ -1034,9 +1059,22 @@ elif st.session_state.game_state == 'game':
         }}, {{passive: false}});
 
         // 初期化
-        setupHintButton();
-        updateSelectedWord();
-        updateTargetWordsDisplay();
+        window.addEventListener('load', function() {{
+            // DOMが完全に読み込まれた後にボタン位置を計算
+            setTimeout(() => {{
+                initializeButtonPositions();
+                setupHintButton();
+                updateSelectedWord();
+                updateTargetWordsDisplay();
+            }}, 100);
+        }});
+
+        // ウィンドウサイズ変更時に位置を再計算
+        window.addEventListener('resize', function() {{
+            setTimeout(() => {{
+                initializeButtonPositions();
+            }}, 100);
+        }});
 
         // コンテキストメニューと選択を無効化
         document.addEventListener('contextmenu', e => e.preventDefault());
