@@ -366,7 +366,7 @@ elif st.session_state.game_state == 'game':
     with col3:
         # 次のステージボタン（最後のステージでない場合のみ表示）
         if st.session_state.current_stage < len(STAGES):
-            if st.button("次のステージへ", key="next_stage_header", use_container_width=True):
+            if st.button("次へ", key="next_stage_header", use_container_width=True):
                 st.session_state.current_stage += 1
                 next_stage_info = STAGES[st.session_state.current_stage]
                 st.session_state.target_words = next_stage_info['words']
