@@ -518,7 +518,7 @@ elif st.session_state.game_state == 'game':
     
     target_display = ''.join(target_boxes_html)
     
-    # HTMLを表示（円とボタンの位置を下に移動）
+    # HTMLを表示（モバイル最適化版・円とボタンの位置修正）
     components.html(f"""
     <!DOCTYPE html>
     <html>
@@ -538,12 +538,12 @@ elif st.session_state.game_state == 'game':
             -webkit-tap-highlight-color: transparent;
         }}
         
-        /* モバイル向けレイアウト調整 - 円の位置を下に移動 */
+        /* モバイル向けレイアウト調整 */
         @media (max-width: 600px) {{
             .circle-container {{
                 width: 280px !important;
                 height: 280px !important;
-                margin: 140px auto 40px auto !important;
+                margin: 60px auto 40px auto !important;
             }}
             #target-words {{
                 font-size: 12px !important;
@@ -566,7 +566,7 @@ elif st.session_state.game_state == 'game':
             .circle-container {{
                 width: 260px !important;
                 height: 260px !important;
-                margin: 130px auto 30px auto !important;
+                margin: 50px auto 30px auto !important;
             }}
             #target-words {{
                 font-size: 11px !important;
@@ -584,12 +584,11 @@ elif st.session_state.game_state == 'game':
             }}
         }}
         
-        /* デスクトップでも円の位置を少し下に調整 */
         .circle-container {{
             position: relative;
             width: 300px;
             height: 300px;
-            margin: 150px auto 40px auto;
+            margin: 80px auto 40px auto;
             border: 2px solid #ddd;
             border-radius: 50%;
             background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
@@ -768,7 +767,7 @@ elif st.session_state.game_state == 'game':
         const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
         // 円とボタンの位置を正確に計算する関数
-        function calculateButtonPositions() {
+        function calculateButtonPositions() {{
             const containerRect = container.getBoundingClientRect();
             const containerStyle = window.getComputedStyle(container);
             const containerWidth = parseInt(containerStyle.width);
@@ -781,31 +780,31 @@ elif st.session_state.game_state == 'game':
             // 円の半径（ボタンが円の内側に配置されるように調整）
             const radius = Math.min(containerWidth, containerHeight) / 2 - 35; // ボタンサイズを考慮して調整
             
-            return {
+            return {{
                 centerX: centerX,
                 centerY: centerY,
                 radius: radius,
                 containerWidth: containerWidth,
                 containerHeight: containerHeight
-            };
-        }
+            }};
+        }}
 
         // キャンバスサイズをコンテナサイズに合わせて調整
-        function resizeCanvas() {
+        function resizeCanvas() {{
             const positions = calculateButtonPositions();
             
             canvas.width = positions.containerWidth;
             canvas.height = positions.containerHeight;
             canvas.style.width = positions.containerWidth + 'px';
             canvas.style.height = positions.containerHeight + 'px';
-        }
+        }}
 
         // ボタンを作成して配置する関数
-        function createButtons() {
+        function createButtons() {{
             const positions = calculateButtonPositions();
             buttonContainer.innerHTML = ''; // 既存のボタンをクリア
             
-            for (let i = 0; i < numLetters; i++) {
+            for (let i = 0; i < numLetters; i++) {{
                 // 各ボタンの角度を計算（12時方向から開始）
                 const angle = (2 * Math.PI * i / numLetters) - Math.PI / 2;
                 
@@ -816,7 +815,7 @@ elif st.session_state.game_state == 'game':
                 // ボタン要素を作成
                 const button = document.createElement('div');
                 button.className = 'circle-button';
-                button.id = `button_${i}`;
+                button.id = `button_${{i}}`;
                 button.dataset.letter = letters[i];
                 button.dataset.index = i;
                 button.textContent = letters[i];
@@ -829,57 +828,57 @@ elif st.session_state.game_state == 'game':
                 button.style.top = (buttonCenterY - buttonSize / 2) + 'px';
                 
                 buttonContainer.appendChild(button);
-            }
-        }
+            }}
+        }}
 
-        function updateSelectedWord() {
+        function updateSelectedWord() {{
             selectedWordDiv.textContent = selectedLetters.join('');
-        }
+        }}
 
-        function updateTargetWordsDisplay() {
+        function updateTargetWordsDisplay() {{
             let targetBoxesHtml = [];
-            let sortedWords = targetWords.slice().sort((a, b) => {
+            let sortedWords = targetWords.slice().sort((a, b) => {{
                 // 文字数で比較、同じなら辞書順
-                if (a.length !== b.length) {
+                if (a.length !== b.length) {{
                     return a.length - b.length;
-                }
+                }}
                 return a.localeCompare(b);
-            });
+            }});
             
             // モバイル向けにボックスサイズを調整
             const isMobileScreen = window.innerWidth <= 600;
             const boxSize = isMobileScreen ? 22 : 24;
             const fontSize = isMobileScreen ? 11 : 12;
             
-            for (let word of sortedWords) {
+            for (let word of sortedWords) {{
                 let isFound = foundWords.includes(word);
                 let boxesHtml = "";
-                for (let i = 0; i < word.length; i++) {
+                for (let i = 0; i < word.length; i++) {{
                     let letter = word[i];
-                    if (isFound) {
-                        boxesHtml += `<span style="display: inline-block; width: ${boxSize}px; height: ${boxSize}px; border: 1px solid #333; background: white; color: #333; text-align: center; line-height: ${boxSize}px; margin: 1px; font-size: ${fontSize}px; font-weight: bold; border-radius: 3px; vertical-align: top;">${letter}</span>`;
-                    } else {
-                        boxesHtml += `<span style="display: inline-block; width: ${boxSize}px; height: ${boxSize}px; border: 1px solid #ddd; background: white; text-align: center; line-height: ${boxSize}px; margin: 1px; border-radius: 3px; vertical-align: top;"></span>`;
-                    }
-                }
-                targetBoxesHtml.push(`<div style="display: inline-block; margin: 3px; vertical-align: top;">${boxesHtml}</div>`);
-            }
+                    if (isFound) {{
+                        boxesHtml += `<span style="display: inline-block; width: ${{boxSize}}px; height: ${{boxSize}}px; border: 1px solid #333; background: white; color: #333; text-align: center; line-height: ${{boxSize}}px; margin: 1px; font-size: ${{fontSize}}px; font-weight: bold; border-radius: 3px; vertical-align: top;">${{letter}}</span>`;
+                    }} else {{
+                        boxesHtml += `<span style="display: inline-block; width: ${{boxSize}}px; height: ${{boxSize}}px; border: 1px solid #ddd; background: white; text-align: center; line-height: ${{boxSize}}px; margin: 1px; border-radius: 3px; vertical-align: top;"></span>`;
+                    }}
+                }}
+                targetBoxesHtml.push(`<div style="display: inline-block; margin: 3px; vertical-align: top;">${{boxesHtml}}</div>`);
+            }}
             
             targetWordsDiv.innerHTML = targetBoxesHtml.join('');
-        }
+        }}
 
         // Streamlitに正解した単語を通知する関数
-        function notifyCorrectWord(word) {
+        function notifyCorrectWord(word) {{
             // parent.postMessageを使ってStreamlitに通知
-            window.parent.postMessage({
+            window.parent.postMessage({{
                 type: 'correct_word',
                 word: word
-            }, '*');
-        }
+            }}, '*');
+        }}
 
-        function checkCorrectWord() {
+        function checkCorrectWord() {{
             const currentWord = selectedLetters.join('');
-            if (currentWord && targetWords.includes(currentWord) && !foundWords.includes(currentWord)) {
+            if (currentWord && targetWords.includes(currentWord) && !foundWords.includes(currentWord)) {{
                 foundWords.push(currentWord);
                 updateTargetWordsDisplay();
                 showSuccessMessage();
@@ -887,46 +886,46 @@ elif st.session_state.game_state == 'game':
                 // Streamlitに正解を通知
                 notifyCorrectWord(currentWord);
                 
-                if (foundWords.length === targetWords.length) {
-                    setTimeout(() => {
+                if (foundWords.length === targetWords.length) {{
+                    setTimeout(() => {{
                         showCompleteMessage();
                         // ステージクリア状態をStreamlitに通知
-                        window.parent.postMessage({
+                        window.parent.postMessage({{
                             type: 'stage_complete',
-                            stage: ${st.session_state.current_stage}
-                        }, '*');
-                    }, 1000);
-                }
+                            stage: {st.session_state.current_stage}
+                        }}, '*');
+                    }}, 1000);
+                }}
                 return true;
-            }
+            }}
             return false;
-        }
+        }}
 
-        function showSuccessMessage() {
+        function showSuccessMessage() {{
             successMessageDiv.classList.add('show');
-            setTimeout(() => {
+            setTimeout(() => {{
                 successMessageDiv.classList.remove('show');
-            }, 1500);
-        }
+            }}, 1500);
+        }}
 
-        function showCompleteMessage() {
+        function showCompleteMessage() {{
             completeMessageDiv.classList.add('show');
-            setTimeout(() => {
+            setTimeout(() => {{
                 completeMessageDiv.classList.remove('show');
-            }, 2500);
-        }
+            }}, 2500);
+        }}
 
-        function getButtonCenterPosition(button) {
+        function getButtonCenterPosition(button) {{
             const rect = button.getBoundingClientRect();
             const containerRect = container.getBoundingClientRect();
-            return {
+            return {{
                 x: rect.left - containerRect.left + rect.width / 2,
                 y: rect.top - containerRect.top + rect.height / 2
-            };
-        }
+            }};
+        }}
 
-        function selectButton(button) {
-            if (!selectedButtons.includes(button)) {
+        function selectButton(button) {{
+            if (!selectedButtons.includes(button)) {{
                 button.classList.add('selected');
                 button.classList.remove('hover');
                 
@@ -937,36 +936,36 @@ elif st.session_state.game_state == 'game':
                 drawLine();
                 
                 // タッチデバイスでのフィードバック
-                if (isTouch && navigator.vibrate) {
+                if (isTouch && navigator.vibrate) {{
                     navigator.vibrate(10); // 軽い振動フィードバック
-                }
-            }
-        }
+                }}
+            }}
+        }}
 
-        function clearAllSelections() {
-            document.querySelectorAll('.circle-button').forEach(button => {
+        function clearAllSelections() {{
+            document.querySelectorAll('.circle-button').forEach(button => {{
                 button.classList.remove('selected');
                 button.classList.remove('hover');
-            });
+            }});
             selectedLetters = [];
             selectedButtons = [];
             points = [];
             updateSelectedWord();
             drawLine();
-        }
+        }}
 
-        function getButtonAtPosition(clientX, clientY) {
+        function getButtonAtPosition(clientX, clientY) {{
             const buttons = document.querySelectorAll('.circle-button');
             let closestButton = null;
             let closestDistance = Infinity;
             
-            buttons.forEach(button => {
-                if (!button.classList.contains('selected')) {
+            buttons.forEach(button => {{
+                if (!button.classList.contains('selected')) {{
                     button.classList.remove('hover');
-                }
-            });
+                }}
+            }});
             
-            for (let button of buttons) {
+            for (let button of buttons) {{
                 const rect = button.getBoundingClientRect();
                 const buttonCenterX = rect.left + rect.width / 2;
                 const buttonCenterY = rect.top + rect.height / 2;
@@ -979,20 +978,20 @@ elif st.session_state.game_state == 'game':
                 // モバイルでは少し大きめの判定領域を設定
                 const hitRadius = isMobile ? 40 : 35;
                 
-                if (distance <= hitRadius && distance < closestDistance) {
+                if (distance <= hitRadius && distance < closestDistance) {{
                     closestDistance = distance;
                     closestButton = button;
-                }
-            }
+                }}
+            }}
             
-            if (closestButton && !closestButton.classList.contains('selected')) {
+            if (closestButton && !closestButton.classList.contains('selected')) {{
                 closestButton.classList.add('hover');
-            }
+            }}
             
             return closestButton;
-        }
+        }}
 
-        function drawLine() {
+        function drawLine() {{
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             if (points.length < 2) return;
 
@@ -1002,126 +1001,126 @@ elif st.session_state.game_state == 'game':
 
             ctx.beginPath();
             ctx.moveTo(points[0].x, points[0].y);
-            for (let i = 1; i < points.length; i++) {
+            for (let i = 1; i < points.length; i++) {{
                 ctx.lineTo(points[i].x, points[i].y);
-            }
+            }}
             ctx.strokeStyle = '#333';
             ctx.lineWidth = lineWidth;
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
             ctx.stroke();
 
-            points.forEach(point => {
+            points.forEach(point => {{
                 ctx.beginPath();
                 ctx.arc(point.x, point.y, pointSize, 0, 2 * Math.PI);
                 ctx.fillStyle = '#333';
                 ctx.fill();
-            });
-        }
+            }});
+        }}
 
         // マウスイベント（デスクトップ用）
-        function handleMouseDown(event) {
+        function handleMouseDown(event) {{
             if (isTouch) return; // タッチデバイスではマウスイベントを無視
             event.preventDefault();
             isDragging = true;
             clearAllSelections();
             
             const button = getButtonAtPosition(event.clientX, event.clientY);
-            if (button) {
+            if (button) {{
                 selectButton(button);
-            }
-        }
+            }}
+        }}
 
-        function handleMouseMove(event) {
+        function handleMouseMove(event) {{
             if (isTouch) return;
             event.preventDefault();
             
-            if (isDragging) {
+            if (isDragging) {{
                 const button = getButtonAtPosition(event.clientX, event.clientY);
-                if (button) {
+                if (button) {{
                     selectButton(button);
-                }
-            } else {
+                }}
+            }} else {{
                 getButtonAtPosition(event.clientX, event.clientY);
-            }
-        }
+            }}
+        }}
 
-        function handleMouseUp(event) {
+        function handleMouseUp(event) {{
             if (isTouch) return;
             event.preventDefault();
-            if (isDragging) {
+            if (isDragging) {{
                 isDragging = false;
                 const isCorrect = checkCorrectWord();
                 
-                setTimeout(() => {
+                setTimeout(() => {{
                     clearAllSelections();
-                }, isCorrect ? 1000 : 200);
-            }
-            document.querySelectorAll('.circle-button').forEach(button => {
+                }}, isCorrect ? 1000 : 200);
+            }}
+            document.querySelectorAll('.circle-button').forEach(button => {{
                 button.classList.remove('hover');
-            });
-        }
+            }});
+        }}
 
         // タッチイベント（モバイル用）
-        function handleTouchStart(event) {
+        function handleTouchStart(event) {{
             event.preventDefault();
             isDragging = true;
             clearAllSelections();
             
             const touch = event.touches[0];
             const button = getButtonAtPosition(touch.clientX, touch.clientY);
-            if (button) {
+            if (button) {{
                 selectButton(button);
-            }
-        }
+            }}
+        }}
 
-        function handleTouchMove(event) {
+        function handleTouchMove(event) {{
             event.preventDefault();
             if (!isDragging) return;
             
             const touch = event.touches[0];
             const button = getButtonAtPosition(touch.clientX, touch.clientY);
-            if (button) {
+            if (button) {{
                 selectButton(button);
-            }
-        }
+            }}
+        }}
 
-        function handleTouchEnd(event) {
+        function handleTouchEnd(event) {{
             event.preventDefault();
-            if (isDragging) {
+            if (isDragging) {{
                 isDragging = false;
                 const isCorrect = checkCorrectWord();
-                setTimeout(() => {
+                setTimeout(() => {{
                     clearAllSelections();
-                }, isCorrect ? 1000 : 200);
-            }
-        }
+                }}, isCorrect ? 1000 : 200);
+            }}
+        }}
 
         // 初期化とリサイズ処理
-        function initialize() {
+        function initialize() {{
             createButtons();
             resizeCanvas();
             updateSelectedWord();
             updateTargetWordsDisplay();
-        }
+        }}
 
         // イベントリスナーの設定
-        if (!isTouch) {
+        if (!isTouch) {{
             // デスクトップ用マウスイベント
             document.addEventListener('mousedown', handleMouseDown);
             document.addEventListener('mousemove', handleMouseMove);
             document.addEventListener('mouseup', handleMouseUp);
-        }
+        }}
 
         // タッチイベント（モバイル・タブレット用）
-        document.addEventListener('touchstart', handleTouchStart, {passive: false});
-        document.addEventListener('touchmove', handleTouchMove, {passive: false});
-        document.addEventListener('touchend', handleTouchEnd, {passive: false});
+        document.addEventListener('touchstart', handleTouchStart, {{passive: false}});
+        document.addEventListener('touchmove', handleTouchMove, {{passive: false}});
+        document.addEventListener('touchend', handleTouchEnd, {{passive: false}});
 
         // リサイズイベント
-        window.addEventListener('resize', () => {
+        window.addEventListener('resize', () => {{
             initialize();
-        });
+        }});
 
         // 初期化
         initialize();
@@ -1137,7 +1136,7 @@ elif st.session_state.game_state == 'game':
         </script>
     </body>
     </html>
-    """, height=600)
+    """, height=520)
 
     # JavaScriptからのメッセージを受信するためのプレースホルダー
     message_placeholder = st.empty()
