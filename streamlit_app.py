@@ -11,26 +11,38 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# スマホ専用CSS（縦長レイアウト最適化）
+# カスタムCSS（スマホ対応強化版）
 st.markdown("""
 <style>
 /* 全体のベーススタイル */
 .main .block-container {
-    padding: 0.25rem;
+    padding-top: 0.5rem;
+    padding-bottom: 1rem;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
     max-width: 100%;
-    min-height: 100vh;
 }
 
-/* スマホ専用レスポンシブ調整 */
-.element-container {
-    margin-bottom: 0.3rem !important;
+/* モバイル向けレスポンシブ調整 */
+@media (max-width: 768px) {
+    .main .block-container {
+        padding-left: 0.25rem;
+        padding-right: 0.25rem;
+        padding-top: 0.25rem;
+    }
+    
+    /* Streamlitのデフォルトマージンを調整 */
+    .element-container {
+        margin-bottom: 0.5rem !important;
+    }
+    
+    /* カラムの間隔を狭める */
+    .row-widget .stButton {
+        margin-bottom: 0.25rem !important;
+    }
 }
 
-.row-widget .stButton {
-    margin-bottom: 0.2rem !important;
-}
-
-/* ボタンスタイル - スマホ最適化 */
+/* タイトル画面のボタンスタイル - モバイル対応 */
 .stButton > button {
     background-color: #333;
     color: white;
@@ -38,10 +50,10 @@ st.markdown("""
     border-radius: 8px;
     font-weight: 600;
     transition: all 0.3s ease;
-    height: 44px;
+    height: 48px;
     width: 100%;
-    font-size: 15px;
     touch-action: manipulation;
+    font-size: 16px;
 }
 
 .stButton > button:hover {
@@ -67,76 +79,140 @@ st.markdown("""
     border-color: #1976D2;
 }
 
+/* プログレスバーの色調整 */
+.stProgress .st-bo {
+    background-color: #4CAF50;
+}
+
+/* サイドバーのスタイル調整 */
+.stSidebar .stButton > button {
+    background-color: #2196F3;
+    border-color: #2196F3;
+}
+
+.stSidebar .stButton > button:hover {
+    background-color: #1976D2;
+    border-color: #1976D2;
+}
+
 /* SUCCESS/エラーメッセージの調整 */
 .stSuccess {
     background-color: #E8F5E8;
     border-left: 4px solid #4CAF50;
-    margin-bottom: 0.3rem;
-    padding: 0.4rem;
-    font-size: 14px;
+    margin-bottom: 0.5rem;
+    padding: 0.5rem;
 }
 
-/* タイトル画面のスタイル - スマホ最適化 */
+.stWarning {
+    background-color: #FFF8E1;
+    border-left: 4px solid #FF9800;
+    margin-bottom: 0.5rem;
+    padding: 0.5rem;
+}
+
+.stError {
+    background-color: #FFEBEE;
+    border-left: 4px solid #F44336;
+    margin-bottom: 0.5rem;
+    padding: 0.5rem;
+}
+
+/* タイトル画面のスタイル - モバイル最適化 */
 .title-section {
     text-align: center;
-    padding: 0.5rem;
-    margin-bottom: 0.5rem;
+    padding: 1rem 0.5rem;
+    margin-bottom: 1rem;
 }
 
 .game-title {
-    font-size: 2.2rem;
+    font-size: 2.5rem;
     font-weight: 700;
     color: #333;
-    margin-bottom: 0.8rem;
-    letter-spacing: 0.5px;
+    margin-bottom: 1rem;
+    letter-spacing: 1px;
     text-shadow: 1px 1px 3px rgba(0,0,0,0.1);
 }
 
+@media (max-width: 480px) {
+    .game-title {
+        font-size: 2rem;
+        letter-spacing: 0.5px;
+    }
+}
+
 .game-subtitle {
-    font-size: 1rem;
+    font-size: 1.2rem;
     color: #555;
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
     font-weight: 400;
+}
+
+@media (max-width: 480px) {
+    .game-subtitle {
+        font-size: 1rem;
+        margin-bottom: 1rem;
+    }
 }
 
 .game-rules {
     max-width: 100%;
     margin: 0 auto;
-    padding: 1rem;
+    padding: 1.5rem;
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    border-radius: 8px;
+    border-radius: 12px;
     text-align: left;
-    margin-bottom: 0.8rem;
+    margin-bottom: 1rem;
+}
+
+@media (max-width: 480px) {
+    .game-rules {
+        padding: 1rem;
+        border-radius: 8px;
+    }
 }
 
 .game-rules h3 {
     color: #333;
-    margin-bottom: 0.8rem;
-    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
 }
 
 .game-rules p {
     color: #555;
-    line-height: 1.5;
-    margin-bottom: 0.6rem;
-    font-size: 13px;
+    line-height: 1.6;
+    margin-bottom: 0.8rem;
+    font-size: 14px;
 }
 
 .stage-selection-title {
     text-align: center;
     color: #333;
-    margin: 1rem 0 0.8rem 0;
-    font-size: 1.3rem;
+    margin: 2rem 0 1.5rem 0;
+    font-size: 1.6rem;
     font-weight: 600;
+}
+
+@media (max-width: 480px) {
+    .stage-selection-title {
+        font-size: 1.4rem;
+        margin: 1.5rem 0 1rem 0;
+    }
 }
 
 /* ステージ選択ボタンのスタイル */
 .stage-info {
     text-align: center;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
     color: #555;
     font-weight: 500;
-    font-size: 12px;
+    font-size: 14px;
+}
+
+@media (max-width: 480px) {
+    .stage-info {
+        font-size: 12px;
+        margin-bottom: 6px;
+    }
 }
 
 /* ゲーム画面のヘッダー調整 */
@@ -144,8 +220,8 @@ st.markdown("""
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 40px;
-    margin-bottom: 0.3rem;
+    height: 48px;
+    margin-bottom: 0.5rem;
 }
 
 .game-header h2 {
@@ -153,25 +229,62 @@ st.markdown("""
     color: #333;
     margin: 0;
     line-height: 1.2;
-    font-size: 1.2rem;
+    font-size: 1.5rem;
 }
 
-/* カラムの調整 */
-.row-widget.stColumns > div {
-    min-width: 0;
-    flex: 1;
+@media (max-width: 480px) {
+    .game-header h2 {
+        font-size: 1.3rem;
+    }
+}
+
+/* レスポンシブなカラム調整 */
+@media (max-width: 480px) {
+    .row-widget.stColumns > div {
+        min-width: 0;
+        flex: 1;
+    }
+    
+    /* 3カラムを2カラムに変更（小さい画面の場合） */
+    .mobile-2col .row-widget.stColumns > div:nth-child(n+3) {
+        margin-top: 0.5rem;
+    }
 }
 
 /* スペーシング調整 */
 .mobile-spacing {
-    margin: 0.4rem 0;
+    margin: 1rem 0;
 }
 
-/* ズーム防止 */
-body {
-    -webkit-text-size-adjust: 100%;
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
+@media (max-width: 480px) {
+    .mobile-spacing {
+        margin: 0.5rem 0;
+    }
+}
+
+/* タッチデバイス向けの調整 */
+@media (hover: none) and (pointer: coarse) {
+    .stButton > button:hover {
+        transform: none;
+        box-shadow: none;
+    }
+    
+    .stButton > button:active {
+        transform: scale(0.98);
+        transition: transform 0.1s ease;
+    }
+}
+
+/* 縦向きスマホ専用の調整 */
+@media screen and (max-width: 480px) and (orientation: portrait) {
+    .main .block-container {
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+    
+    .row-widget.stColumns {
+        gap: 0.25rem;
+    }
 }
 </style>
 """, unsafe_allow_html=True)
@@ -260,7 +373,7 @@ if st.session_state.game_state == 'title':
             buffered = BytesIO()
             image.save(buffered, format="PNG")
             img_str = base64.b64encode(buffered.getvalue()).decode()
-            st.markdown(f'<div style="text-align: center; margin: 15px 0;"><img src="data:image/png;base64,{img_str}" width="120" style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"></div>', unsafe_allow_html=True)
+            st.markdown(f'<div style="text-align: center; margin: 20px 0;"><img src="data:image/png;base64,{img_str}" width="160" style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"></div>', unsafe_allow_html=True)
     except:
         pass
     
@@ -275,8 +388,8 @@ if st.session_state.game_state == 'title':
     """, unsafe_allow_html=True)
 
     
-    # STARTボタン - スマホ専用
-    col1, col2, col3 = st.columns([0.2, 1, 0.2])
+    # STARTボタン - モバイル対応
+    col1, col2, col3 = st.columns([0.5, 1, 0.5])
     with col2:
         if st.button("START", key="start_button", use_container_width=True, type="primary"):
             st.session_state.current_stage = 1
@@ -292,15 +405,15 @@ if st.session_state.game_state == 'title':
     
     # 区切り線
     st.markdown('<div class="mobile-spacing"></div>', unsafe_allow_html=True)
-    st.markdown('<hr style="border: none; height: 1px; background: linear-gradient(90deg, transparent 0%, #ddd 50%, transparent 100%); margin: 0.8rem 0;">', unsafe_allow_html=True)
+    st.markdown('<hr style="border: none; height: 1px; background: linear-gradient(90deg, transparent 0%, #ddd 50%, transparent 100%); margin: 1rem 0;">', unsafe_allow_html=True)
     
     # ステージ選択
     st.markdown('<h2 class="stage-selection-title">ステージ選択</h2>', unsafe_allow_html=True)
     
-    # ステージ選択を2列で表示（スマホ最適化）
-    for i in range(0, len(STAGES), 2):
-        cols = st.columns(2)
-        for j in range(2):
+    # ステージ選択を通常のStreamlitボタンで実装（モバイル対応）
+    for i in range(0, len(STAGES), 3):
+        cols = st.columns(3)
+        for j in range(3):
             stage_num = i + j + 1
             if stage_num <= len(STAGES):
                 stage_info = STAGES[stage_num]
@@ -327,9 +440,9 @@ if st.session_state.game_state == 'title':
                 with cols[j]:
                     st.empty()
         
-        # 行間のスペース
-        if i + 2 < len(STAGES):
-            st.markdown('<div style="margin: 0.3rem 0;"></div>', unsafe_allow_html=True)
+        # 行間のスペース（モバイルでは短縮）
+        if i + 3 < len(STAGES):
+            st.markdown('<div style="margin: 0.5rem 0;"></div>', unsafe_allow_html=True)
 
 # ゲーム画面
 elif st.session_state.game_state == 'game':
@@ -344,11 +457,12 @@ elif st.session_state.game_state == 'game':
     letters = st.session_state.shuffled_letters
     num_letters = len(letters)
     
-    # ヘッダー（3列レイアウト）- スマホ最適化
+    # ヘッダー（3列レイアウト）- モバイル最適化
     col1, col2, col3 = st.columns([1, 2, 1])
     with col1:
         if st.button("戻る", key="back_to_title_header", use_container_width=True):
             st.session_state.game_state = 'title'
+            # ステージクリア状態は維持したままタイトルに戻る
             st.rerun()
     with col2:
         st.markdown(f"""
@@ -396,15 +510,15 @@ elif st.session_state.game_state == 'game':
         for i, letter in enumerate(word):
             if is_found:
                 # 正解済みの単語は全文字表示
-                boxes_html += f'<span style="display: inline-block; width: 20px; height: 20px; border: 1px solid #333; background: white; color: #333; text-align: center; line-height: 20px; margin: 1px; font-size: 10px; font-weight: bold; border-radius: 3px; vertical-align: top;">{letter}</span>'
+                boxes_html += f'<span style="display: inline-block; width: 24px; height: 24px; border: 1px solid #333; background: white; color: #333; text-align: center; line-height: 24px; margin: 1px; font-size: 12px; font-weight: bold; border-radius: 3px; vertical-align: top;">{letter}</span>'
             else:
                 # 通常の空白枠
-                boxes_html += f'<span style="display: inline-block; width: 20px; height: 20px; border: 1px solid #ddd; background: white; text-align: center; line-height: 20px; margin: 1px; border-radius: 3px; vertical-align: top;"></span>'
-        target_boxes_html.append(f'<div style="display: inline-block; margin: 3px; vertical-align: top;">{boxes_html}</div>')
+                boxes_html += f'<span style="display: inline-block; width: 24px; height: 24px; border: 1px solid #ddd; background: white; text-align: center; line-height: 24px; margin: 1px; border-radius: 3px; vertical-align: top;"></span>'
+        target_boxes_html.append(f'<div style="display: inline-block; margin: 4px; vertical-align: top;">{boxes_html}</div>')
     
     target_display = ''.join(target_boxes_html)
     
-    # HTMLを表示（スマホ専用・縦長最適化・マウス操作のみ）
+    # HTMLを表示（モバイル最適化版・円とボタンの位置修正）
     components.html(f"""
     <!DOCTYPE html>
     <html>
@@ -415,6 +529,7 @@ elif st.session_state.game_state == 'game':
             margin: 0;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
             user-select: none;
+            touch-action: none;
             overflow-x: hidden;
             background: #fafafa;
             min-height: 100vh;
@@ -423,11 +538,57 @@ elif st.session_state.game_state == 'game':
             -webkit-tap-highlight-color: transparent;
         }}
         
+        /* モバイル向けレイアウト調整 */
+        @media (max-width: 600px) {{
+            .circle-container {{
+                width: 280px !important;
+                height: 280px !important;
+                margin: 60px auto 40px auto !important;
+            }}
+            #target-words {{
+                font-size: 12px !important;
+                padding: 10px !important;
+                top: 52px !important;
+            }}
+            #selected-word {{
+                font-size: 20px !important;
+                padding: 8px !important;
+                height: 44px !important;
+            }}
+            .circle-button {{
+                width: 44px !important;
+                height: 44px !important;
+                font-size: 16px !important;
+            }}
+        }}
+        
+        @media (max-width: 480px) {{
+            .circle-container {{
+                width: 260px !important;
+                height: 260px !important;
+                margin: 50px auto 30px auto !important;
+            }}
+            #target-words {{
+                font-size: 11px !important;
+                padding: 8px !important;
+            }}
+            #selected-word {{
+                font-size: 18px !important;
+                padding: 6px !important;
+                height: 40px !important;
+            }}
+            .circle-button {{
+                width: 40px !important;
+                height: 40px !important;
+                font-size: 15px !important;
+            }}
+        }}
+        
         .circle-container {{
             position: relative;
-            width: 240px;
-            height: 240px;
-            margin: 40px auto 20px auto;
+            width: 300px;
+            height: 300px;
+            margin: 80px auto 40px auto;
             border: 2px solid #ddd;
             border-radius: 50%;
             background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
@@ -436,12 +597,12 @@ elif st.session_state.game_state == 'game':
         
         .circle-button {{
             position: absolute;
-            width: 36px;
-            height: 36px;
+            width: 46px;
+            height: 46px;
             border-radius: 50%;
             background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
             color: #333;
-            font-size: 14px;
+            font-size: 17px;
             font-weight: bold;
             border: 2px solid #333;
             cursor: pointer;
@@ -449,6 +610,7 @@ elif st.session_state.game_state == 'game':
             justify-content: center;
             align-items: center;
             transition: all 0.2s ease;
+            touch-action: none;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             z-index: 10;
             -webkit-touch-callout: none;
@@ -465,7 +627,7 @@ elif st.session_state.game_state == 'game':
             z-index: 10;
         }}
         
-        .circle-button:not(.selected):hover,
+        .circle-button:not(.selected):active,
         .circle-button.hover {{
             background: linear-gradient(135deg, #f0f0f0 0%, #e9ecef 100%) !important;
             transform: scale(1.05);
@@ -478,11 +640,11 @@ elif st.session_state.game_state == 'game':
             left: 0;
             width: 100%;
             text-align: center;
-            font-size: 18px;
+            font-size: 22px;
             font-weight: bold;
-            padding: 8px;
-            letter-spacing: 2px;
-            min-height: 36px;
+            padding: 10px;
+            letter-spacing: 3px;
+            min-height: 48px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -495,12 +657,12 @@ elif st.session_state.game_state == 'game':
         
         #target-words {{
             position: fixed;
-            top: 44px;
+            top: 58px;
             left: 0;
             width: 100%;
             text-align: center;
-            font-size: 12px;
-            padding: 8px;
+            font-size: 14px;
+            padding: 12px;
             color: #666;
             background: #f9f9f9;
             z-index: 998;
@@ -516,9 +678,9 @@ elif st.session_state.game_state == 'game':
             transform: translate(-50%, -50%);
             background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
             color: white;
-            padding: 12px 20px;
+            padding: 16px 24px;
             border-radius: 8px;
-            font-size: 14px;
+            font-size: 16px;
             font-weight: bold;
             z-index: 1000;
             opacity: 0;
@@ -538,9 +700,9 @@ elif st.session_state.game_state == 'game':
             transform: translate(-50%, -50%);
             background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
             color: white;
-            padding: 18px 26px;
+            padding: 24px 32px;
             border-radius: 12px;
-            font-size: 16px;
+            font-size: 20px;
             font-weight: bold;
             z-index: 1001;
             opacity: 0;
@@ -559,6 +721,14 @@ elif st.session_state.game_state == 'game':
             left: 0;
             z-index: 1;
             pointer-events: none;
+        }}
+        
+        /* タッチデバイス専用の調整 */
+        @media (hover: none) and (pointer: coarse) {{
+            .circle-button:hover {{
+                transform: none;
+                background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            }}
         }}
         </style>
     </head>
@@ -592,6 +762,10 @@ elif st.session_state.game_state == 'game':
         const canvas = document.getElementById('lineCanvas');
         const ctx = canvas.getContext('2d');
 
+        // モバイルデバイスの検出
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
         // 円とボタンの位置を正確に計算する関数
         function calculateButtonPositions() {{
             const containerRect = container.getBoundingClientRect();
@@ -604,7 +778,7 @@ elif st.session_state.game_state == 'game':
             const centerY = containerHeight / 2;
             
             // 円の半径（ボタンが円の内側に配置されるように調整）
-            const radius = Math.min(containerWidth, containerHeight) / 2 - 25; // ボタンサイズを考慮
+            const radius = Math.min(containerWidth, containerHeight) / 2 - 35; // ボタンサイズを考慮して調整
             
             return {{
                 centerX: centerX,
@@ -646,8 +820,8 @@ elif st.session_state.game_state == 'game':
                 button.dataset.index = i;
                 button.textContent = letters[i];
                 
-                // ボタンサイズ
-                const buttonSize = 36;
+                // ボタンサイズを取得（CSSから）
+                const buttonSize = window.innerWidth <= 480 ? 40 : (window.innerWidth <= 600 ? 44 : 46);
                 
                 // ボタンを中心に配置するため、左上の座標を計算
                 button.style.left = (buttonCenterX - buttonSize / 2) + 'px';
@@ -671,8 +845,10 @@ elif st.session_state.game_state == 'game':
                 return a.localeCompare(b);
             }});
             
-            const boxSize = 20;
-            const fontSize = 10;
+            // モバイル向けにボックスサイズを調整
+            const isMobileScreen = window.innerWidth <= 600;
+            const boxSize = isMobileScreen ? 22 : 24;
+            const fontSize = isMobileScreen ? 11 : 12;
             
             for (let word of sortedWords) {{
                 let isFound = foundWords.includes(word);
@@ -685,7 +861,7 @@ elif st.session_state.game_state == 'game':
                         boxesHtml += `<span style="display: inline-block; width: ${{boxSize}}px; height: ${{boxSize}}px; border: 1px solid #ddd; background: white; text-align: center; line-height: ${{boxSize}}px; margin: 1px; border-radius: 3px; vertical-align: top;"></span>`;
                     }}
                 }}
-                targetBoxesHtml.push(`<div style="display: inline-block; margin: 2px; vertical-align: top;">${{boxesHtml}}</div>`);
+                targetBoxesHtml.push(`<div style="display: inline-block; margin: 3px; vertical-align: top;">${{boxesHtml}}</div>`);
             }}
             
             targetWordsDiv.innerHTML = targetBoxesHtml.join('');
@@ -758,6 +934,11 @@ elif st.session_state.game_state == 'game':
                 points.push(getButtonCenterPosition(button));
                 updateSelectedWord();
                 drawLine();
+                
+                // タッチデバイスでのフィードバック
+                if (isTouch && navigator.vibrate) {{
+                    navigator.vibrate(10); // 軽い振動フィードバック
+                }}
             }}
         }}
 
@@ -794,7 +975,8 @@ elif st.session_state.game_state == 'game':
                     Math.pow(clientY - buttonCenterY, 2)
                 );
                 
-                const hitRadius = 30;
+                // モバイルでは少し大きめの判定領域を設定
+                const hitRadius = isMobile ? 40 : 35;
                 
                 if (distance <= hitRadius && distance < closestDistance) {{
                     closestDistance = distance;
@@ -813,8 +995,9 @@ elif st.session_state.game_state == 'game':
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             if (points.length < 2) return;
 
-            const lineWidth = 3;
-            const pointSize = 3;
+            // モバイルでは少し太めの線を描画
+            const lineWidth = isMobile ? 4 : 3;
+            const pointSize = isMobile ? 4 : 3;
 
             ctx.beginPath();
             ctx.moveTo(points[0].x, points[0].y);
@@ -835,8 +1018,9 @@ elif st.session_state.game_state == 'game':
             }});
         }}
 
-        // マウスイベント（スマホでもマウス操作対応）
+        // マウスイベント（デスクトップ用）
         function handleMouseDown(event) {{
+            if (isTouch) return; // タッチデバイスではマウスイベントを無視
             event.preventDefault();
             isDragging = true;
             clearAllSelections();
@@ -848,6 +1032,7 @@ elif st.session_state.game_state == 'game':
         }}
 
         function handleMouseMove(event) {{
+            if (isTouch) return;
             event.preventDefault();
             
             if (isDragging) {{
@@ -861,6 +1046,7 @@ elif st.session_state.game_state == 'game':
         }}
 
         function handleMouseUp(event) {{
+            if (isTouch) return;
             event.preventDefault();
             if (isDragging) {{
                 isDragging = false;
@@ -875,6 +1061,41 @@ elif st.session_state.game_state == 'game':
             }});
         }}
 
+        // タッチイベント（モバイル用）
+        function handleTouchStart(event) {{
+            event.preventDefault();
+            isDragging = true;
+            clearAllSelections();
+            
+            const touch = event.touches[0];
+            const button = getButtonAtPosition(touch.clientX, touch.clientY);
+            if (button) {{
+                selectButton(button);
+            }}
+        }}
+
+        function handleTouchMove(event) {{
+            event.preventDefault();
+            if (!isDragging) return;
+            
+            const touch = event.touches[0];
+            const button = getButtonAtPosition(touch.clientX, touch.clientY);
+            if (button) {{
+                selectButton(button);
+            }}
+        }}
+
+        function handleTouchEnd(event) {{
+            event.preventDefault();
+            if (isDragging) {{
+                isDragging = false;
+                const isCorrect = checkCorrectWord();
+                setTimeout(() => {{
+                    clearAllSelections();
+                }}, isCorrect ? 1000 : 200);
+            }}
+        }}
+
         // 初期化とリサイズ処理
         function initialize() {{
             createButtons();
@@ -883,10 +1104,18 @@ elif st.session_state.game_state == 'game':
             updateTargetWordsDisplay();
         }}
 
-        // マウスイベントリスナーの設定
-        document.addEventListener('mousedown', handleMouseDown);
-        document.addEventListener('mousemove', handleMouseMove);
-        document.addEventListener('mouseup', handleMouseUp);
+        // イベントリスナーの設定
+        if (!isTouch) {{
+            // デスクトップ用マウスイベント
+            document.addEventListener('mousedown', handleMouseDown);
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', handleMouseUp);
+        }}
+
+        // タッチイベント（モバイル・タブレット用）
+        document.addEventListener('touchstart', handleTouchStart, {{passive: false}});
+        document.addEventListener('touchmove', handleTouchMove, {{passive: false}});
+        document.addEventListener('touchend', handleTouchEnd, {{passive: false}});
 
         // リサイズイベント
         window.addEventListener('resize', () => {{
@@ -907,7 +1136,7 @@ elif st.session_state.game_state == 'game':
         </script>
     </body>
     </html>
-    """, height=500)
+    """, height=520)
 
     # JavaScriptからのメッセージを受信するためのプレースホルダー
     message_placeholder = st.empty()
@@ -935,7 +1164,7 @@ elif st.session_state.game_state == 'game':
     
     if stage_completed:
         st.success("ステージクリア！")
-        col1, col2, col3 = st.columns([0.2, 1, 0.2])
+        col1, col2, col3 = st.columns([0.5, 1, 0.5])
         with col2:
             if st.session_state.current_stage < len(STAGES):
                 if st.button("次のステージへ", key="next_stage_main", use_container_width=True, type="primary"):
@@ -954,4 +1183,5 @@ elif st.session_state.game_state == 'game':
                 st.success("全ステージクリア！おめでとうございます！")
                 if st.button("タイトルに戻る", key="back_to_title", use_container_width=True, type="primary"):
                     st.session_state.game_state = 'title'
+                    # ステージクリア状態は維持したままタイトルに戻る
                     st.rerun()
