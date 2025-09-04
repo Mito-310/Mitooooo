@@ -462,18 +462,6 @@ elif st.session_state.game_state == 'game':
                 font-size: 22px !important;
                 padding: 10px !important;
             }}
-            #hint-button {{
-                top: auto !important;
-                bottom: 20px !important;
-                right: 50% !important;
-                transform: translateX(50%) !important;
-                position: fixed !important;
-                z-index: 1000 !important;
-                padding: 14px 24px !important;
-                font-size: 18px !important;
-                min-width: 100px !important;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
-            }}
         }}
         
         .circle-container {{
