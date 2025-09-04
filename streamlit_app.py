@@ -8,13 +8,41 @@ import streamlit.components.v1 as components
 st.set_page_config(
     page_title="RINGLISH",
     layout="centered",
-    initial_sidebar_state="auto"
+    initial_sidebar_state="collapsed"
 )
 
-# カスタムCSS
+# カスタムCSS（スマホ対応強化版）
 st.markdown("""
 <style>
-/* タイトル画面のボタンスタイル */
+/* 全体のベーススタイル */
+.main .block-container {
+    padding-top: 0.5rem;
+    padding-bottom: 1rem;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    max-width: 100%;
+}
+
+/* モバイル向けレスポンシブ調整 */
+@media (max-width: 768px) {
+    .main .block-container {
+        padding-left: 0.25rem;
+        padding-right: 0.25rem;
+        padding-top: 0.25rem;
+    }
+    
+    /* Streamlitのデフォルトマージンを調整 */
+    .element-container {
+        margin-bottom: 0.5rem !important;
+    }
+    
+    /* カラムの間隔を狭める */
+    .row-widget .stButton {
+        margin-bottom: 0.25rem !important;
+    }
+}
+
+/* タイトル画面のボタンスタイル - モバイル対応 */
 .stButton > button {
     background-color: #333;
     color: white;
@@ -22,19 +50,33 @@ st.markdown("""
     border-radius: 8px;
     font-weight: 600;
     transition: all 0.3s ease;
-    height: 50px;
+    height: 48px;
+    width: 100%;
+    touch-action: manipulation;
+    font-size: 16px;
 }
 
 .stButton > button:hover {
     background-color: #555;
     border-color: #555;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px rgba(0,0,0,0.2);
 }
 
 .stButton > button:active {
     transform: translateY(0);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+/* プライマリボタンのスタイル */
+.stButton > button[kind="primary"] {
+    background-color: #2196F3;
+    border-color: #2196F3;
+}
+
+.stButton > button[kind="primary"]:hover {
+    background-color: #1976D2;
+    border-color: #1976D2;
 }
 
 /* プログレスバーの色調整 */
@@ -57,41 +99,107 @@ st.markdown("""
 .stSuccess {
     background-color: #E8F5E8;
     border-left: 4px solid #4CAF50;
+    margin-bottom: 0.5rem;
+    padding: 0.5rem;
 }
 
 .stWarning {
     background-color: #FFF8E1;
     border-left: 4px solid #FF9800;
+    margin-bottom: 0.5rem;
+    padding: 0.5rem;
 }
 
 .stError {
     background-color: #FFEBEE;
     border-left: 4px solid #F44336;
+    margin-bottom: 0.5rem;
+    padding: 0.5rem;
 }
 
-/* ステージ選択エリアのスタイル */
-.stage-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    max-width: 600px;
+/* タイトル画面のスタイル - モバイル最適化 */
+.title-section {
+    text-align: center;
+    padding: 1rem 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.game-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 1rem;
+    letter-spacing: 1px;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+}
+
+@media (max-width: 480px) {
+    .game-title {
+        font-size: 2rem;
+        letter-spacing: 0.5px;
+    }
+}
+
+.game-subtitle {
+    font-size: 1.2rem;
+    color: #555;
+    margin-bottom: 1.5rem;
+    font-weight: 400;
+}
+
+@media (max-width: 480px) {
+    .game-subtitle {
+        font-size: 1rem;
+        margin-bottom: 1rem;
+    }
+}
+
+.game-rules {
+    max-width: 100%;
     margin: 0 auto;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 12px;
+    text-align: left;
+    margin-bottom: 1rem;
 }
 
-.stage-row {
-    display: flex;
-    justify-content: center;
-    gap: 30px;
-    flex-wrap: wrap;
+@media (max-width: 480px) {
+    .game-rules {
+        padding: 1rem;
+        border-radius: 8px;
+    }
 }
 
-.stage-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-width: 120px;
+.game-rules h3 {
+    color: #333;
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
 }
 
+.game-rules p {
+    color: #555;
+    line-height: 1.6;
+    margin-bottom: 0.8rem;
+    font-size: 14px;
+}
+
+.stage-selection-title {
+    text-align: center;
+    color: #333;
+    margin: 2rem 0 1.5rem 0;
+    font-size: 1.6rem;
+    font-weight: 600;
+}
+
+@media (max-width: 480px) {
+    .stage-selection-title {
+        font-size: 1.4rem;
+        margin: 1.5rem 0 1rem 0;
+    }
+}
+
+/* ステージ選択ボタンのスタイル */
 .stage-info {
     text-align: center;
     margin-bottom: 8px;
@@ -100,28 +208,83 @@ st.markdown("""
     font-size: 14px;
 }
 
-/* 通常のステージボタン */
-.stage-button {
-    width: 120px;
-    height: 50px;
-    background-color: #333;
-    color: white;
-    border: 2px solid #333;
-    border-radius: 8px;
-    font-weight: 600;
-    font-size: 16px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+@media (max-width: 480px) {
+    .stage-info {
+        font-size: 12px;
+        margin-bottom: 6px;
+    }
 }
 
-.stage-button:hover {
-    background-color: #555;
-    border-color: #555;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+/* ゲーム画面のヘッダー調整 */
+.game-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 48px;
+    margin-bottom: 0.5rem;
+}
+
+.game-header h2 {
+    text-align: center;
+    color: #333;
+    margin: 0;
+    line-height: 1.2;
+    font-size: 1.5rem;
+}
+
+@media (max-width: 480px) {
+    .game-header h2 {
+        font-size: 1.3rem;
+    }
+}
+
+/* レスポンシブなカラム調整 */
+@media (max-width: 480px) {
+    .row-widget.stColumns > div {
+        min-width: 0;
+        flex: 1;
+    }
+    
+    /* 3カラムを2カラムに変更（小さい画面の場合） */
+    .mobile-2col .row-widget.stColumns > div:nth-child(n+3) {
+        margin-top: 0.5rem;
+    }
+}
+
+/* スペーシング調整 */
+.mobile-spacing {
+    margin: 1rem 0;
+}
+
+@media (max-width: 480px) {
+    .mobile-spacing {
+        margin: 0.5rem 0;
+    }
+}
+
+/* タッチデバイス向けの調整 */
+@media (hover: none) and (pointer: coarse) {
+    .stButton > button:hover {
+        transform: none;
+        box-shadow: none;
+    }
+    
+    .stButton > button:active {
+        transform: scale(0.98);
+        transition: transform 0.1s ease;
+    }
+}
+
+/* 縦向きスマホ専用の調整 */
+@media screen and (max-width: 480px) and (orientation: portrait) {
+    .main .block-container {
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+    
+    .row-widget.stColumns {
+        gap: 0.25rem;
+    }
 }
 </style>
 """, unsafe_allow_html=True)
@@ -197,55 +360,6 @@ STAGES = DEFAULT_STAGES
 
 # タイトル画面
 if st.session_state.game_state == 'title':
-    st.markdown("""
-    <style>
-    .title-section {
-        text-align: center;
-        padding: 2rem 1rem;
-        margin-bottom: 2rem;
-    }
-    .game-title {
-        font-size: 3rem;
-        font-weight: 700;
-        color: #333;
-        margin-bottom: 1rem;
-        letter-spacing: 2px;
-        text-shadow: 1px 1px 3px rgba(0,0,0,0.1);
-    }
-    .game-subtitle {
-        font-size: 1.3rem;
-        color: #555;
-        margin-bottom: 2rem;
-        font-weight: 400;
-    }
-    .game-rules {
-        max-width: 600px;
-        margin: 0 auto;
-        padding: 2rem;
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-        border-radius: 12px;
-        text-align: left;
-        margin-bottom: 1rem;
-    }
-    .game-rules h3 {
-        color: #333;
-        margin-bottom: 1rem;
-        font-size: 1.2rem;
-    }
-    .game-rules p {
-        color: #555;
-        line-height: 1.6;
-        margin-bottom: 0.8rem;
-    }
-    .stage-selection-title {
-        text-align: center;
-        color: #333;
-        margin: 3rem 0 2rem 0;
-        font-size: 1.8rem;
-        font-weight: 600;
-    }
-    </style>
-    """, unsafe_allow_html=True)
     
     # 画像表示（利用可能な場合）
     try:
@@ -259,7 +373,7 @@ if st.session_state.game_state == 'title':
             buffered = BytesIO()
             image.save(buffered, format="PNG")
             img_str = base64.b64encode(buffered.getvalue()).decode()
-            st.markdown(f'<div style="text-align: center; margin: 20px 0;"><img src="data:image/png;base64,{img_str}" width="200" style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"></div>', unsafe_allow_html=True)
+            st.markdown(f'<div style="text-align: center; margin: 20px 0;"><img src="data:image/png;base64,{img_str}" width="160" style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"></div>', unsafe_allow_html=True)
     except:
         pass
     
@@ -274,10 +388,10 @@ if st.session_state.game_state == 'title':
     """, unsafe_allow_html=True)
 
     
-    # STARTボタン
-    col1, col2, col3 = st.columns([1, 1, 1])
+    # STARTボタン - モバイル対応
+    col1, col2, col3 = st.columns([0.5, 1, 0.5])
     with col2:
-        if st.button("START", key="start_button", use_container_width=True):
+        if st.button("START", key="start_button", use_container_width=True, type="primary"):
             st.session_state.current_stage = 1
             st.session_state.target_words = STAGES[1]['words']
             st.session_state.found_words = []
@@ -290,12 +404,13 @@ if st.session_state.game_state == 'title':
             st.rerun()
     
     # 区切り線
-    st.markdown('<hr style="border: none; height: 2px; background: linear-gradient(90deg, transparent 0%, #ddd 50%, transparent 100%); margin: 3rem 0;">', unsafe_allow_html=True)
+    st.markdown('<div class="mobile-spacing"></div>', unsafe_allow_html=True)
+    st.markdown('<hr style="border: none; height: 1px; background: linear-gradient(90deg, transparent 0%, #ddd 50%, transparent 100%); margin: 1rem 0;">', unsafe_allow_html=True)
     
     # ステージ選択
     st.markdown('<h2 class="stage-selection-title">ステージ選択</h2>', unsafe_allow_html=True)
     
-    # ステージ選択を通常のStreamlitボタンで実装
+    # ステージ選択を通常のStreamlitボタンで実装（モバイル対応）
     for i in range(0, len(STAGES), 3):
         cols = st.columns(3)
         for j in range(3):
@@ -305,7 +420,7 @@ if st.session_state.game_state == 'title':
                 
                 with cols[j]:
                     # ステージ情報を表示
-                    st.markdown(f'<div style="text-align: center; margin-bottom: 8px; color: #555; font-weight: 500; font-size: 14px;">{stage_info["name"]}</div>', unsafe_allow_html=True)
+                    st.markdown(f'<div class="stage-info">{stage_info["name"]}</div>', unsafe_allow_html=True)
                     
                     # ボタン
                     button_text = "▶"
@@ -325,9 +440,9 @@ if st.session_state.game_state == 'title':
                 with cols[j]:
                     st.empty()
         
-        # 行間のスペース
+        # 行間のスペース（モバイルでは短縮）
         if i + 3 < len(STAGES):
-            st.markdown('<div style="margin: 20px 0;"></div>', unsafe_allow_html=True)
+            st.markdown('<div style="margin: 0.5rem 0;"></div>', unsafe_allow_html=True)
 
 # ゲーム画面
 elif st.session_state.game_state == 'game':
@@ -342,17 +457,17 @@ elif st.session_state.game_state == 'game':
     letters = st.session_state.shuffled_letters
     num_letters = len(letters)
     
-    # ヘッダー（3列レイアウト）
+    # ヘッダー（3列レイアウト）- モバイル最適化
     col1, col2, col3 = st.columns([1, 2, 1])
     with col1:
-        if st.button("タイトルに戻る", key="back_to_title_header", use_container_width=True):
+        if st.button("戻る", key="back_to_title_header", use_container_width=True):
             st.session_state.game_state = 'title'
             # ステージクリア状態は維持したままタイトルに戻る
             st.rerun()
     with col2:
         st.markdown(f"""
-        <div style="display: flex; justify-content: center; align-items: center; height: 50px;">
-            <h2 style="text-align: center; color: #333; margin: 0; line-height: 1.2;">{current_stage_info['name']}</h2>
+        <div class="game-header">
+            <h2>{current_stage_info['name']}</h2>
         </div>
         """, unsafe_allow_html=True)
     with col3:
@@ -395,11 +510,11 @@ elif st.session_state.game_state == 'game':
         for i, letter in enumerate(word):
             if is_found:
                 # 正解済みの単語は全文字表示
-                boxes_html += f'<span style="display: inline-block; width: 26px; height: 26px; border: 1px solid #333; background: white; color: #333; text-align: center; line-height: 26px; margin: 1px; font-size: 14px; font-weight: bold; border-radius: 3px; vertical-align: top;">{letter}</span>'
+                boxes_html += f'<span style="display: inline-block; width: 24px; height: 24px; border: 1px solid #333; background: white; color: #333; text-align: center; line-height: 24px; margin: 1px; font-size: 12px; font-weight: bold; border-radius: 3px; vertical-align: top;">{letter}</span>'
             else:
                 # 通常の空白枠
-                boxes_html += f'<span style="display: inline-block; width: 26px; height: 26px; border: 1px solid #ddd; background: white; text-align: center; line-height: 26px; margin: 1px; border-radius: 3px; vertical-align: top;"></span>'
-        target_boxes_html.append(f'<div style="display: inline-block; margin: 6px; vertical-align: top;">{boxes_html}</div>')
+                boxes_html += f'<span style="display: inline-block; width: 24px; height: 24px; border: 1px solid #ddd; background: white; text-align: center; line-height: 24px; margin: 1px; border-radius: 3px; vertical-align: top;"></span>'
+        target_boxes_html.append(f'<div style="display: inline-block; margin: 4px; vertical-align: top;">{boxes_html}</div>')
     
     target_display = ''.join(target_boxes_html)
     
@@ -409,65 +524,98 @@ elif st.session_state.game_state == 'game':
         <div class="circle-button" id="button_{i}"
                 data-letter="{letter}"
                 data-index="{i}"
-                style="left: {160 + 120 * math.cos(2 * math.pi * i / num_letters - math.pi/2) - 25}px;
-                       top:  {160 + 120 * math.sin(2 * math.pi * i / num_letters - math.pi/2) - 25}px;">
+                style="left: {140 + 100 * math.cos(2 * math.pi * i / num_letters - math.pi/2) - 22}px;
+                       top:  {140 + 100 * math.sin(2 * math.pi * i / num_letters - math.pi/2) - 22}px;">
             {letter}
         </div>
         ''' for i, letter in enumerate(letters)
     ])
 
-    # HTMLを表示
+    # HTMLを表示（モバイル最適化版）
     components.html(f"""
     <!DOCTYPE html>
     <html>
     <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, minimum-scale=1.0">
         <style>
         body {{
             margin: 0;
-            font-family: Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
             user-select: none;
             touch-action: none;
             overflow-x: hidden;
             background: #fafafa;
             min-height: 100vh;
             position: relative;
+            -webkit-text-size-adjust: 100%;
+            -webkit-tap-highlight-color: transparent;
         }}
         
         /* モバイル向けレイアウト調整 */
         @media (max-width: 600px) {{
             .circle-container {{
-                margin: 80px auto 60px auto !important;
+                width: 280px !important;
+                height: 280px !important;
+                margin: 60px auto 40px auto !important;
             }}
             #target-words {{
-                font-size: 14px !important;
-                padding: 12px !important;
-                top: 64px !important;
+                font-size: 12px !important;
+                padding: 10px !important;
+                top: 52px !important;
             }}
             #selected-word {{
-                font-size: 22px !important;
-                padding: 10px !important;
+                font-size: 20px !important;
+                padding: 8px !important;
+                height: 44px !important;
+            }}
+            .circle-button {{
+                width: 44px !important;
+                height: 44px !important;
+                font-size: 16px !important;
+            }}
+        }}
+        
+        @media (max-width: 480px) {{
+            .circle-container {{
+                width: 260px !important;
+                height: 260px !important;
+                margin: 50px auto 30px auto !important;
+            }}
+            #target-words {{
+                font-size: 11px !important;
+                padding: 8px !important;
+            }}
+            #selected-word {{
+                font-size: 18px !important;
+                padding: 6px !important;
+                height: 40px !important;
+            }}
+            .circle-button {{
+                width: 40px !important;
+                height: 40px !important;
+                font-size: 15px !important;
             }}
         }}
         
         .circle-container {{
             position: relative;
-            width: 320px;
-            height: 320px;
-            margin: 120px auto 40px auto;
-            border: 3px solid #ddd;
+            width: 300px;
+            height: 300px;
+            margin: 80px auto 40px auto;
+            border: 2px solid #ddd;
             border-radius: 50%;
             background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }}
+        
         .circle-button {{
             position: absolute;
-            width: 50px;
-            height: 50px;
+            width: 46px;
+            height: 46px;
             border-radius: 50%;
             background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
             color: #333;
-            font-size: 18px;
+            font-size: 17px;
             font-weight: bold;
             border: 2px solid #333;
             cursor: pointer;
@@ -478,55 +626,64 @@ elif st.session_state.game_state == 'game':
             touch-action: none;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             z-index: 10;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
         }}
+        
         .circle-button.selected {{
             background: linear-gradient(135deg, #2c2c2c 0%, #1a1a1a 100%) !important;
             color: white !important;
-            transform: scale(1.15);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+            transform: scale(1.1);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
             border: 2px solid #1a1a1a;
             transition: all 0.1s ease;
             z-index: 10;
         }}
-        .circle-button:not(.selected):hover {{
-            background: linear-gradient(135deg, #f0f0f0 0%, #e9ecef 100%) !important;
-            transform: scale(1.05);
-            box-shadow: 0 3px 6px rgba(0,0,0,0.15);
-        }}
+        
+        .circle-button:not(.selected):active,
         .circle-button.hover {{
             background: linear-gradient(135deg, #f0f0f0 0%, #e9ecef 100%) !important;
             transform: scale(1.05);
             box-shadow: 0 3px 6px rgba(0,0,0,0.15);
         }}
+        
         #selected-word {{
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             text-align: center;
-            font-size: 26px;
+            font-size: 22px;
             font-weight: bold;
-            padding: 12px;
-            letter-spacing: 4px;
-            min-height: 40px;
+            padding: 10px;
+            letter-spacing: 3px;
+            min-height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             color: #333;
             background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
             z-index: 999;
             border-bottom: 2px solid #e9ecef;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }}
+        
         #target-words {{
             position: fixed;
-            top: 64px;
+            top: 58px;
             left: 0;
             width: 100%;
             text-align: center;
-            font-size: 16px;
-            padding: 15px;
+            font-size: 14px;
+            padding: 12px;
             color: #666;
             background: #f9f9f9;
             z-index: 998;
             border-bottom: 1px solid #ddd;
+            overflow-x: auto;
+            white-space: nowrap;
         }}
+        
         .success-message {{
             position: fixed;
             top: 50%;
@@ -534,18 +691,21 @@ elif st.session_state.game_state == 'game':
             transform: translate(-50%, -50%);
             background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
             color: white;
-            padding: 20px 30px;
+            padding: 16px 24px;
             border-radius: 8px;
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
             z-index: 1000;
             opacity: 0;
             transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }}
+        
         .success-message.show {{
             opacity: 1;
-            transform: translate(-50%, -50%) scale(1.1);
+            transform: translate(-50%, -50%) scale(1.05);
         }}
+        
         .complete-message {{
             position: fixed;
             top: 50%;
@@ -553,24 +713,35 @@ elif st.session_state.game_state == 'game':
             transform: translate(-50%, -50%);
             background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
             color: white;
-            padding: 30px 40px;
+            padding: 24px 32px;
             border-radius: 12px;
-            font-size: 24px;
+            font-size: 20px;
             font-weight: bold;
             z-index: 1001;
             opacity: 0;
             transition: all 0.3s ease;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.3);
         }}
+        
         .complete-message.show {{
             opacity: 1;
-            transform: translate(-50%, -50%) scale(1.1);
+            transform: translate(-50%, -50%) scale(1.05);
         }}
+        
         canvas {{
             position: absolute;
             top: 0;
             left: 0;
             z-index: 1;
             pointer-events: none;
+        }}
+        
+        /* タッチデバイス専用の調整 */
+        @media (hover: none) and (pointer: coarse) {{
+            .circle-button:hover {{
+                transform: none;
+                background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            }}
         }}
         </style>
     </head>
@@ -581,7 +752,7 @@ elif st.session_state.game_state == 'game':
         <div id="complete-message" class="complete-message">ステージクリア！</div>
 
         <div class="circle-container" id="circle-container">
-            <canvas id="lineCanvas" width="320" height="320"></canvas>
+            <canvas id="lineCanvas" width="300" height="300"></canvas>
             {button_html}
         </div>
 
@@ -601,6 +772,27 @@ elif st.session_state.game_state == 'game':
         const canvas = document.getElementById('lineCanvas');
         const ctx = canvas.getContext('2d');
 
+        // モバイルデバイスの検出
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+        // キャンバスサイズをコンテナサイズに合わせて調整
+        function resizeCanvas() {{
+            const containerRect = container.getBoundingClientRect();
+            const containerStyle = window.getComputedStyle(container);
+            const containerWidth = parseInt(containerStyle.width);
+            const containerHeight = parseInt(containerStyle.height);
+            
+            canvas.width = containerWidth;
+            canvas.height = containerHeight;
+            canvas.style.width = containerWidth + 'px';
+            canvas.style.height = containerHeight + 'px';
+        }}
+
+        // 初期化時とリサイズ時にキャンバスサイズを調整
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
         function updateSelectedWord() {{
             selectedWordDiv.textContent = selectedLetters.join('');
         }}
@@ -615,18 +807,23 @@ elif st.session_state.game_state == 'game':
                 return a.localeCompare(b);
             }});
             
+            // モバイル向けにボックスサイズを調整
+            const isMobileScreen = window.innerWidth <= 600;
+            const boxSize = isMobileScreen ? 22 : 24;
+            const fontSize = isMobileScreen ? 11 : 12;
+            
             for (let word of sortedWords) {{
                 let isFound = foundWords.includes(word);
                 let boxesHtml = "";
                 for (let i = 0; i < word.length; i++) {{
                     let letter = word[i];
                     if (isFound) {{
-                        boxesHtml += '<span style="display: inline-block; width: 26px; height: 26px; border: 1px solid #333; background: white; color: #333; text-align: center; line-height: 26px; margin: 1px; font-size: 14px; font-weight: bold; border-radius: 3px; vertical-align: top;">' + letter + '</span>';
+                        boxesHtml += `<span style="display: inline-block; width: ${{boxSize}}px; height: ${{boxSize}}px; border: 1px solid #333; background: white; color: #333; text-align: center; line-height: ${{boxSize}}px; margin: 1px; font-size: ${{fontSize}}px; font-weight: bold; border-radius: 3px; vertical-align: top;">${{letter}}</span>`;
                     }} else {{
-                        boxesHtml += '<span style="display: inline-block; width: 26px; height: 26px; border: 1px solid #ddd; background: white; text-align: center; line-height: 26px; margin: 1px; border-radius: 3px; vertical-align: top;"></span>';
+                        boxesHtml += `<span style="display: inline-block; width: ${{boxSize}}px; height: ${{boxSize}}px; border: 1px solid #ddd; background: white; text-align: center; line-height: ${{boxSize}}px; margin: 1px; border-radius: 3px; vertical-align: top;"></span>`;
                     }}
                 }}
-                targetBoxesHtml.push('<div style="display: inline-block; margin: 6px; vertical-align: top;">' + boxesHtml + '</div>');
+                targetBoxesHtml.push(`<div style="display: inline-block; margin: 3px; vertical-align: top;">${{boxesHtml}}</div>`);
             }}
             
             targetWordsDiv.innerHTML = targetBoxesHtml.join('');
@@ -700,7 +897,10 @@ elif st.session_state.game_state == 'game':
                 updateSelectedWord();
                 drawLine();
                 
-                button.offsetHeight;
+                // タッチデバイスでのフィードバック
+                if (isTouch && navigator.vibrate) {{
+                    navigator.vibrate(10); // 軽い振動フィードバック
+                }}
             }}
         }}
 
@@ -708,7 +908,6 @@ elif st.session_state.game_state == 'game':
             document.querySelectorAll('.circle-button').forEach(button => {{
                 button.classList.remove('selected');
                 button.classList.remove('hover');
-                button.offsetHeight;
             }});
             selectedLetters = [];
             selectedButtons = [];
@@ -738,7 +937,10 @@ elif st.session_state.game_state == 'game':
                     Math.pow(clientY - buttonCenterY, 2)
                 );
                 
-                if (distance <= 35 && distance < closestDistance) {{
+                // モバイルでは少し大きめの判定領域を設定
+                const hitRadius = isMobile ? 40 : 35;
+                
+                if (distance <= hitRadius && distance < closestDistance) {{
                     closestDistance = distance;
                     closestButton = button;
                 }}
@@ -755,24 +957,32 @@ elif st.session_state.game_state == 'game':
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             if (points.length < 2) return;
 
+            // モバイルでは少し太めの線を描画
+            const lineWidth = isMobile ? 4 : 3;
+            const pointSize = isMobile ? 4 : 3;
+
             ctx.beginPath();
             ctx.moveTo(points[0].x, points[0].y);
             for (let i = 1; i < points.length; i++) {{
                 ctx.lineTo(points[i].x, points[i].y);
             }}
             ctx.strokeStyle = '#333';
-            ctx.lineWidth = 3;
+            ctx.lineWidth = lineWidth;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
             ctx.stroke();
 
             points.forEach(point => {{
                 ctx.beginPath();
-                ctx.arc(point.x, point.y, 3, 0, 2 * Math.PI);
+                ctx.arc(point.x, point.y, pointSize, 0, 2 * Math.PI);
                 ctx.fillStyle = '#333';
                 ctx.fill();
             }});
         }}
 
+        // マウスイベント（デスクトップ用）
         function handleMouseDown(event) {{
+            if (isTouch) return; // タッチデバイスではマウスイベントを無視
             event.preventDefault();
             isDragging = true;
             clearAllSelections();
@@ -784,6 +994,7 @@ elif st.session_state.game_state == 'game':
         }}
 
         function handleMouseMove(event) {{
+            if (isTouch) return;
             event.preventDefault();
             
             if (isDragging) {{
@@ -797,6 +1008,7 @@ elif st.session_state.game_state == 'game':
         }}
 
         function handleMouseUp(event) {{
+            if (isTouch) return;
             event.preventDefault();
             if (isDragging) {{
                 isDragging = false;
@@ -811,6 +1023,7 @@ elif st.session_state.game_state == 'game':
             }});
         }}
 
+        // タッチイベント（モバイル用）
         function handleTouchStart(event) {{
             event.preventDefault();
             isDragging = true;
@@ -845,23 +1058,35 @@ elif st.session_state.game_state == 'game':
             }}
         }}
 
-        document.addEventListener('mousedown', handleMouseDown);
-        document.addEventListener('mousemove', handleMouseMove);
-        document.addEventListener('mouseup', handleMouseUp);
+        // イベントリスナーの設定
+        if (!isTouch) {{
+            // デスクトップ用マウスイベント
+            document.addEventListener('mousedown', handleMouseDown);
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', handleMouseUp);
+        }}
 
+        // タッチイベント（モバイル・タブレット用）
         document.addEventListener('touchstart', handleTouchStart, {{passive: false}});
         document.addEventListener('touchmove', handleTouchMove, {{passive: false}});
         document.addEventListener('touchend', handleTouchEnd, {{passive: false}});
 
+        // 初期化
         updateSelectedWord();
         updateTargetWordsDisplay();
 
+        // 右クリックメニューと選択を無効化
         document.addEventListener('contextmenu', e => e.preventDefault());
         document.addEventListener('selectstart', e => e.preventDefault());
+        
+        // モバイルブラウザでのズームを防止
+        document.addEventListener('gesturestart', e => e.preventDefault());
+        document.addEventListener('gesturechange', e => e.preventDefault());
+        document.addEventListener('gestureend', e => e.preventDefault());
         </script>
     </body>
     </html>
-    """, height=600)
+    """, height=520)
 
     # JavaScriptからのメッセージを受信するためのプレースホルダー
     message_placeholder = st.empty()
@@ -889,10 +1114,10 @@ elif st.session_state.game_state == 'game':
     
     if stage_completed:
         st.success("ステージクリア！")
-        col1, col2, col3 = st.columns([1, 1, 1])
+        col1, col2, col3 = st.columns([0.5, 1, 0.5])
         with col2:
             if st.session_state.current_stage < len(STAGES):
-                if st.button("次のステージへ ", key="next_stage_main", use_container_width=True, type="primary"):
+                if st.button("次のステージへ", key="next_stage_main", use_container_width=True, type="primary"):
                     st.session_state.current_stage += 1
                     next_stage_info = STAGES[st.session_state.current_stage]
                     st.session_state.target_words = next_stage_info['words']
