@@ -705,25 +705,7 @@ elif st.session_state.game_state == 'game':
         const ctx = canvas.getContext('2d');
         const hintButton = document.getElementById('hint-button');
 
-        // ボタン位置を初期化時に計算して保存
-        function initializeButtonPositions() {{
-            const buttons = document.querySelectorAll('.circle-button');
-            buttonPositions = [];
-            
-            buttons.forEach((button, index) => {{
-                const rect = button.getBoundingClientRect();
-                const containerRect = container.getBoundingClientRect();
-                
-                // ボタンの中心座標をコンテナ相対座標で保存
-                buttonPositions.push({{
-                    button: button,
-                    index: index,
-                    centerX: rect.left - containerRect.left + rect.width / 2,
-                    centerY: rect.top - containerRect.top + rect.height / 2,
-                    radius: Math.max(rect.width, rect.height) / 2 + 10 // 当たり判定を少し広げる
-                }});
-            }});
-        }}
+
 
         // ヒントボタンのイベント処理を改善
         function setupHintButton() {{
