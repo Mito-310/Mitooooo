@@ -530,36 +530,14 @@ elif st.session_state.game_state == 'game':
             width: 100%;
             text-align: center;
             font-size: 16px;
-            padding: 20px 15px;
+            padding: 20px 15px;  /* パディングを少し増やす */
             color: #666;
             background: #f9f9f9;
             z-index: 998;
             border-bottom: 1px solid #ddd;
-            min-height: 80px;
-            max-height: 150px;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch; /* スムーズスクロール for iOS */
-            scrollbar-width: thin;
-            scrollbar-color: #ccc #f9f9f9;
-        }}
-        
-        /* カスタムスクロールバー */
-        #target-words::-webkit-scrollbar {{
-            width: 6px;
-        }}
-        
-        #target-words::-webkit-scrollbar-track {{
-            background: #f1f1f1;
-            border-radius: 3px;
-        }}
-        
-        #target-words::-webkit-scrollbar-thumb {{
-            background: #ccc;
-            border-radius: 3px;
-        }}
-        
-        #target-words::-webkit-scrollbar-thumb:hover {{
-            background: #999;
+            min-height: 80px;  /* 最小高さを追加 */
+            max-height: 150px;  /* 最大高さを制限 */
+            overflow-y: auto;   /* スクロール対応 */
         }}
         
         .hint-button {{
@@ -607,433 +585,7 @@ elif st.session_state.game_state == 'game':
             font-weight: bold;
             z-index: 1000;
             opacity: 0;
-        }
-        
-        .complete-message.show {
-            opacity: 1;
-            transform: translate(-50%, -50%) scale(1.1);
-        }
-        
-        canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            z-index: 1;
-            pointer-events: none;
-        }
-        
-        /* モバイル対応 */
-        @media (max-width: 768px) {
-            .circle-container {
-                margin-top: 250px;
-                margin-bottom: 60px;
-            }
-            
-            .hint-button {
-                padding: 12px 20px;
-                font-size: 16px;
-                top: 8px;
-                right: 8px;
-            }
-            
-            #target-words {
-                padding: 15px 10px;
-                font-size: 14px;
-                max-height: 120px;
-            }
-            
-            #selected-word {
-                font-size: 22px;
-                padding: 10px;
-            }
-        }
-        
-        /* 更に小さいスクリーンの場合 */
-        @media (max-width: 480px) {
-            .circle-container {
-                margin-top: 220px;
-                width: 280px;
-                height: 280px;
-            }
-            
-            .circle-button {
-                width: 45px;
-                height: 45px;
-                font-size: 16px;
-            }
-            
-            #target-words {
-                padding: 12px 8px;
-                font-size: 13px;
-                max-height: 100px;
-            }
-        }
-        </style>
-    </head>
-    <body>
-        <div class="game-container">
-            <div id="selected-word"></div>
-            <div id="target-words">TARGET_WORDS_PLACEHOLDER</div>
-            <div id="success-message" class="success-message">正解！</div>
-            <div id="complete-message" class="complete-message">ステージクリア！</div>
-            
-            <button class="hint-button" id="hint-button">ヒント</button>
-
-            <div class="circle-container" id="circle-container">
-                <canvas id="lineCanvas" width="320" height="320"></canvas>
-                BUTTON_HTML_PLACEHOLDER
-            </div>
-        </div>
-
-        <script>
-        let isDragging = false;
-        let selectedLetters = [];
-        let selectedButtons = [];
-        let points = [];
-        let targetWords = TARGET_WORDS_DATA;
-        let foundWords = FOUND_WORDS_DATA;
-        let showHints = SHOW_HINTS_DATA;
-
-        const selectedWordDiv = document.getElementById('selected-word');
-        const targetWordsDiv = document.getElementById('target-words');
-        const successMessageDiv = document.getElementById('success-message');
-        const completeMessageDiv = document.getElementById('complete-message');
-        const container = document.getElementById('circle-container');
-        const canvas = document.getElementById('lineCanvas');
-        const ctx = canvas.getContext('2d');
-        const hintButton = document.getElementById('hint-button');
-
-        function setupHintButton() {
-            hintButton.onclick = null;
-            
-            let touchHandled = false;
-            
-            hintButton.addEventListener('touchstart', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                touchHandled = true;
-                this.style.background = '#222';
-                this.style.borderColor = '#222';
-                this.style.transform = 'translateY(0)';
-            }, {passive: false});
-            
-            hintButton.addEventListener('touchend', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                if (touchHandled) {
-                    this.style.background = '#333';
-                    this.style.borderColor = '#333';
-                    this.style.transform = 'translateY(-1px)';
-                    showHint();
-                    touchHandled = false;
-                }
-            }, {passive: false});
-            
-            hintButton.addEventListener('click', function(e) {
-                if (!touchHandled) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    showHint();
-                }
-            });
-        }
-
-        function updateSelectedWord() {
-            selectedWordDiv.textContent = selectedLetters.join('');
-        }
-
-        function updateTargetWordsDisplay() {
-            let targetBoxesHtml = [];
-            let sortedWords = targetWords.slice().sort((a, b) => {
-                if (a.length !== b.length) {
-                    return a.length - b.length;
-                }
-                return a.localeCompare(b);
-            });
-            
-            for (let word of sortedWords) {
-                let isFound = foundWords.includes(word);
-                let wordHints = showHints[word] || [];
-                let boxesHtml = "";
-                for (let i = 0; i < word.length; i++) {
-                    let letter = word[i];
-                    if (isFound) {
-                        boxesHtml += '<span style="display: inline-block; width: 26px; height: 26px; border: 1px solid #333; background: white; color: #333; text-align: center; line-height: 26px; margin: 1px; font-size: 14px; font-weight: bold; border-radius: 3px; vertical-align: top;">' + letter + '</span>';
-                    } else if (wordHints.includes(i)) {
-                        boxesHtml += '<span style="display: inline-block; width: 26px; height: 26px; border: 1px solid #FF9800; background: #FFF8E1; color: #FF9800; text-align: center; line-height: 26px; margin: 1px; font-size: 14px; font-weight: bold; border-radius: 3px; vertical-align: top;">' + letter + '</span>';
-                    } else {
-                        boxesHtml += '<span style="display: inline-block; width: 26px; height: 26px; border: 1px solid #ddd; background: white; text-align: center; line-height: 26px; margin: 1px; border-radius: 3px; vertical-align: top;"></span>';
-                    }
-                }
-                targetBoxesHtml.push('<div style="display: inline-block; margin: 6px; vertical-align: top;">' + boxesHtml + '</div>');
-            }
-            
-            targetWordsDiv.innerHTML = targetBoxesHtml.join('');
-        }
-
-        function notifyCorrectWord(word) {
-            window.parent.postMessage({
-                type: 'correct_word',
-                word: word
-            }, '*');
-        }
-
-        function checkCorrectWord() {
-            const currentWord = selectedLetters.join('');
-            if (currentWord && targetWords.includes(currentWord) && !foundWords.includes(currentWord)) {
-                foundWords.push(currentWord);
-                updateTargetWordsDisplay();
-                showSuccessMessage();
-                
-                notifyCorrectWord(currentWord);
-                
-                if (foundWords.length === targetWords.length) {
-                    setTimeout(() => {
-                        showCompleteMessage();
-                        window.parent.postMessage({
-                            type: 'stage_complete',
-                            stage: CURRENT_STAGE_NUMBER
-                        }, '*');
-                    }, 1000);
-                }
-                return true;
-            }
-            return false;
-        }
-        
-        function showHint() {
-            let unfoundWords = targetWords.filter(word => !foundWords.includes(word));
-            
-            if (unfoundWords.length > 0) {
-                let randomIndex = Math.floor(Math.random() * unfoundWords.length);
-                let hintWord = unfoundWords[randomIndex];
-                
-                let currentHints = showHints[hintWord] || [];
-                
-                let availablePositions = [];
-                for (let i = 0; i < hintWord.length - 1; i++) {
-                    if (!currentHints.includes(i)) {
-                        availablePositions.push(i);
-                    }
-                }
-                
-                if (availablePositions.length > 0) {
-                    let randomPos = Math.floor(Math.random() * availablePositions.length);
-                    let newHintPosition = availablePositions[randomPos];
-                    
-                    if (!showHints[hintWord]) {
-                        showHints[hintWord] = [];
-                    }
-                    showHints[hintWord].push(newHintPosition);
-                    
-                    updateTargetWordsDisplay();
-                    
-                    window.parent.postMessage({
-                        type: 'hint_used',
-                        word: hintWord,
-                        position: newHintPosition,
-                        hints: showHints
-                    }, '*');
-                }
-            }
-        }
-
-        function showSuccessMessage() {
-            successMessageDiv.classList.add('show');
-            setTimeout(() => {
-                successMessageDiv.classList.remove('show');
-            }, 1500);
-        }
-
-        function showCompleteMessage() {
-            completeMessageDiv.classList.add('show');
-            setTimeout(() => {
-                completeMessageDiv.classList.remove('show');
-            }, 2500);
-        }
-
-        function getButtonCenterPosition(button) {
-            const rect = button.getBoundingClientRect();
-            const containerRect = container.getBoundingClientRect();
-            return {
-                x: rect.left - containerRect.left + rect.width / 2,
-                y: rect.top - containerRect.top + rect.height / 2
-            };
-        }
-
-        function selectButton(button) {
-            if (!selectedButtons.includes(button)) {
-                button.classList.add('selected');
-                button.classList.remove('hover');
-                
-                selectedLetters.push(button.dataset.letter);
-                selectedButtons.push(button);
-                points.push(getButtonCenterPosition(button));
-                updateSelectedWord();
-                drawLine();
-                
-                button.offsetHeight;
-            }
-        }
-
-        function clearAllSelections() {
-            document.querySelectorAll('.circle-button').forEach(button => {
-                button.classList.remove('selected');
-                button.classList.remove('hover');
-                button.offsetHeight;
-            });
-            selectedLetters = [];
-            selectedButtons = [];
-            points = [];
-            updateSelectedWord();
-            drawLine();
-        }
-
-        function getButtonAtPosition(clientX, clientY) {
-            const buttons = document.querySelectorAll('.circle-button');
-            let closestButton = null;
-            let closestDistance = Infinity;
-            
-            buttons.forEach(button => {
-                if (!button.classList.contains('selected')) {
-                    button.classList.remove('hover');
-                }
-            });
-            
-            for (let button of buttons) {
-                const rect = button.getBoundingClientRect();
-                const buttonCenterX = rect.left + rect.width / 2;
-                const buttonCenterY = rect.top + rect.height / 2;
-                
-                const distance = Math.sqrt(
-                    Math.pow(clientX - buttonCenterX, 2) + 
-                    Math.pow(clientY - buttonCenterY, 2)
-                );
-                
-                if (distance <= 50 && distance < closestDistance) {
-                    closestDistance = distance;
-                    closestButton = button;
-                }
-            }
-            
-            if (closestButton && !closestButton.classList.contains('selected')) {
-                closestButton.classList.add('hover');
-            }
-            
-            return closestButton;
-        }
-
-        function drawLine() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            if (points.length < 2) return;
-
-            ctx.beginPath();
-            ctx.moveTo(points[0].x, points[0].y);
-            for (let i = 1; i < points.length; i++) {
-                ctx.lineTo(points[i].x, points[i].y);
-            }
-            ctx.strokeStyle = '#333';
-            ctx.lineWidth = 3;
-            ctx.stroke();
-
-            points.forEach(point => {
-                ctx.beginPath();
-                ctx.arc(point.x, point.y, 3, 0, 2 * Math.PI);
-                ctx.fillStyle = '#333';
-                ctx.fill();
-            });
-        }
-
-        function handleInteractionStart(clientX, clientY) {
-            isDragging = true;
-            clearAllSelections();
-            
-            const button = getButtonAtPosition(clientX, clientY);
-            if (button) {
-                selectButton(button);
-            }
-        }
-
-        function handleInteractionMove(clientX, clientY) {
-            if (isDragging) {
-                const button = getButtonAtPosition(clientX, clientY);
-                if (button) {
-                    selectButton(button);
-                }
-            } else {
-                getButtonAtPosition(clientX, clientY);
-            }
-        }
-
-        function handleInteractionEnd() {
-            if (isDragging) {
-                isDragging = false;
-                const isCorrect = checkCorrectWord();
-                
-                setTimeout(() => {
-                    clearAllSelections();
-                }, isCorrect ? 1000 : 200);
-            }
-            document.querySelectorAll('.circle-button').forEach(button => {
-                button.classList.remove('hover');
-            });
-        }
-
-        container.addEventListener('mousedown', function(e) {
-            e.preventDefault();
-            handleInteractionStart(e.clientX, e.clientY);
-        });
-
-        document.addEventListener('mousemove', function(e) {
-            e.preventDefault();
-            handleInteractionMove(e.clientX, e.clientY);
-        });
-
-        document.addEventListener('mouseup', function(e) {
-            e.preventDefault();
-            handleInteractionEnd();
-        });
-
-        container.addEventListener('touchstart', function(e) {
-            e.preventDefault();
-            const touch = e.touches[0];
-            handleInteractionStart(touch.clientX, touch.clientY);
-        }, {passive: false});
-
-        document.addEventListener('touchmove', function(e) {
-            e.preventDefault();
-            if (isDragging && e.touches.length > 0) {
-                const touch = e.touches[0];
-                handleInteractionMove(touch.clientX, touch.clientY);
-            }
-        }, {passive: false});
-
-        document.addEventListener('touchend', function(e) {
-            e.preventDefault();
-            handleInteractionEnd();
-        }, {passive: false});
-
-        setupHintButton();
-        updateSelectedWord();
-        updateTargetWordsDisplay();
-
-        document.addEventListener('contextmenu', e => e.preventDefault());
-        document.addEventListener('selectstart', e => e.preventDefault());
-        </script>
-    </body>
-    </html>
-    """
-    
-    # テンプレートの変数を置換
-    final_html = html_template.replace('TARGET_WORDS_PLACEHOLDER', target_display)
-    final_html = final_html.replace('BUTTON_HTML_PLACEHOLDER', button_html)
-    final_html = final_html.replace('TARGET_WORDS_DATA', json.dumps(st.session_state.target_words))
-    final_html = final_html.replace('FOUND_WORDS_DATA', json.dumps(st.session_state.found_words))
-    final_html = final_html.replace('SHOW_HINTS_DATA', json.dumps(st.session_state.show_hints))
-    final_html = final_html.replace('CURRENT_STAGE_NUMBER', str(st.session_state.current_stage))
-    
-    # HTMLを表示
-    components.html(final_html, height=700)
+            transition: all 0.3s ease;
         }}
         
         .success-message.show {{
@@ -1152,7 +704,7 @@ elif st.session_state.game_state == 'game':
         const hintButton = document.getElementById('hint-button');
 
         // ヒントボタンのイベント処理を改善
-        function setupHintButton() {
+        function setupHintButton() {{
             // 既存のイベントリスナーを削除
             hintButton.onclick = null;
             
@@ -1160,84 +712,84 @@ elif st.session_state.game_state == 'game':
             let touchHandled = false;
             
             // タッチスタート
-            hintButton.addEventListener('touchstart', function(e) {
+            hintButton.addEventListener('touchstart', function(e) {{
                 e.preventDefault();
                 e.stopPropagation();
                 touchHandled = true;
                 this.style.background = '#222';
                 this.style.borderColor = '#222';
                 this.style.transform = 'translateY(0)';
-            }, {passive: false});
+            }}, {{passive: false}});
             
             // タッチエンド
-            hintButton.addEventListener('touchend', function(e) {
+            hintButton.addEventListener('touchend', function(e) {{
                 e.preventDefault();
                 e.stopPropagation();
-                if (touchHandled) {
+                if (touchHandled) {{
                     this.style.background = '#333';
                     this.style.borderColor = '#333';
                     this.style.transform = 'translateY(-1px)';
                     showHint();
                     touchHandled = false;
-                }
-            }, {passive: false});
+                }}
+            }}, {{passive: false}});
             
             // マウスイベント（デスクトップ用）
-            hintButton.addEventListener('click', function(e) {
-                if (!touchHandled) {
+            hintButton.addEventListener('click', function(e) {{
+                if (!touchHandled) {{
                     e.preventDefault();
                     e.stopPropagation();
                     showHint();
-                }
-            });
-        }
+                }}
+            }});
+        }}
 
-        function updateSelectedWord() {
+        function updateSelectedWord() {{
             selectedWordDiv.textContent = selectedLetters.join('');
-        }
+        }}
 
-        function updateTargetWordsDisplay() {
+        function updateTargetWordsDisplay() {{
             let targetBoxesHtml = [];
-            let sortedWords = targetWords.slice().sort((a, b) => {
+            let sortedWords = targetWords.slice().sort((a, b) => {{
                 // 文字数で比較、同じなら辞書順
-                if (a.length !== b.length) {
+                if (a.length !== b.length) {{
                     return a.length - b.length;
-                }
+                }}
                 return a.localeCompare(b);
-            });
+            }});
             
-            for (let word of sortedWords) {
+            for (let word of sortedWords) {{
                 let isFound = foundWords.includes(word);
                 let wordHints = showHints[word] || [];
                 let boxesHtml = "";
-                for (let i = 0; i < word.length; i++) {
+                for (let i = 0; i < word.length; i++) {{
                     let letter = word[i];
-                    if (isFound) {
+                    if (isFound) {{
                         boxesHtml += '<span style="display: inline-block; width: 26px; height: 26px; border: 1px solid #333; background: white; color: #333; text-align: center; line-height: 26px; margin: 1px; font-size: 14px; font-weight: bold; border-radius: 3px; vertical-align: top;">' + letter + '</span>';
-                    } else if (wordHints.includes(i)) {
+                    }} else if (wordHints.includes(i)) {{
                         boxesHtml += '<span style="display: inline-block; width: 26px; height: 26px; border: 1px solid #FF9800; background: #FFF8E1; color: #FF9800; text-align: center; line-height: 26px; margin: 1px; font-size: 14px; font-weight: bold; border-radius: 3px; vertical-align: top;">' + letter + '</span>';
-                    } else {
+                    }} else {{
                         boxesHtml += '<span style="display: inline-block; width: 26px; height: 26px; border: 1px solid #ddd; background: white; text-align: center; line-height: 26px; margin: 1px; border-radius: 3px; vertical-align: top;"></span>';
-                    }
-                }
+                    }}
+                }}
                 targetBoxesHtml.push('<div style="display: inline-block; margin: 6px; vertical-align: top;">' + boxesHtml + '</div>');
-            }
+            }}
             
             targetWordsDiv.innerHTML = targetBoxesHtml.join('');
-        }
+        }}
 
         // Streamlitに正解した単語を通知する関数
-        function notifyCorrectWord(word) {
+        function notifyCorrectWord(word) {{
             // parent.postMessageを使ってStreamlitに通知
-            window.parent.postMessage({
+            window.parent.postMessage({{
                 type: 'correct_word',
                 word: word
-            }, '*');
-        }
+            }}, '*');
+        }}
 
-        function checkCorrectWord() {
+        function checkCorrectWord() {{
             const currentWord = selectedLetters.join('');
-            if (currentWord && targetWords.includes(currentWord) && !foundWords.includes(currentWord)) {
+            if (currentWord && targetWords.includes(currentWord) && !foundWords.includes(currentWord)) {{
                 foundWords.push(currentWord);
                 updateTargetWordsDisplay();
                 showSuccessMessage();
@@ -1245,25 +797,25 @@ elif st.session_state.game_state == 'game':
                 // Streamlitに正解を通知
                 notifyCorrectWord(currentWord);
                 
-                if (foundWords.length === targetWords.length) {
-                    setTimeout(() => {
+                if (foundWords.length === targetWords.length) {{
+                    setTimeout(() => {{
                         showCompleteMessage();
                         // ステージクリア状態をStreamlitに通知
-                        window.parent.postMessage({
+                        window.parent.postMessage({{
                             type: 'stage_complete',
                             stage: {st.session_state.current_stage}
-                        }, '*');
-                    }, 1000);
-                }
+                        }}, '*');
+                    }}, 1000);
+                }}
                 return true;
-            }
+            }}
             return false;
-        }
+        }}
         
-        function showHint() {
+        function showHint() {{
             let unfoundWords = targetWords.filter(word => !foundWords.includes(word));
             
-            if (unfoundWords.length > 0) {
+            if (unfoundWords.length > 0) {{
                 // ランダムに単語を選択
                 let randomIndex = Math.floor(Math.random() * unfoundWords.length);
                 let hintWord = unfoundWords[randomIndex];
@@ -1273,62 +825,61 @@ elif st.session_state.game_state == 'game':
                 
                 // 最後の文字以外で未解放の文字のインデックスを取得
                 let availablePositions = [];
-                for (let i = 0; i < hintWord.length - 1; i++) {
-                    if (!currentHints.includes(i)) {
+                for (let i = 0; i < hintWord.length - 1; i++) {{
+                    if (!currentHints.includes(i)) {{
                         availablePositions.push(i);
-                    }
-                }
+                    }}
+                }}
                 
-                if (availablePositions.length > 0) {
+                if (availablePositions.length > 0) {{
                     // 利用可能な位置からランダムに選択
                     let randomPos = Math.floor(Math.random() * availablePositions.length);
                     let newHintPosition = availablePositions[randomPos];
                     
                     // ヒントを追加
-                    if (!showHints[hintWord]) {
+                    if (!showHints[hintWord]) {{
                         showHints[hintWord] = [];
-                    }
+                    }}
                     showHints[hintWord].push(newHintPosition);
                     
                     updateTargetWordsDisplay();
                     
                     // Streamlitにヒント情報を通知
-                    window.parent.postMessage({
+                    window.parent.postMessage({{
                         type: 'hint_used',
                         word: hintWord,
                         position: newHintPosition,
                         hints: showHints
-                    }, '*');
-                }
-            }
-        }
+                    }}, '*');
+                }}
+            }}
+        }}
 
-        function showSuccessMessage() {
+        function showSuccessMessage() {{
             successMessageDiv.classList.add('show');
-            setTimeout(() => {
+            setTimeout(() => {{
                 successMessageDiv.classList.remove('show');
-            }, 1500);
-        }
+            }}, 1500);
+        }}
 
-        function showCompleteMessage() {
+        function showCompleteMessage() {{
             completeMessageDiv.classList.add('show');
-            setTimeout(() => {
+            setTimeout(() => {{
                 completeMessageDiv.classList.remove('show');
-            }, 2500);
-        }
+            }}, 2500);
+        }}
 
-        // 改善された座標取得関数
-        function getButtonCenterPosition(button) {
+        function getButtonCenterPosition(button) {{
             const rect = button.getBoundingClientRect();
             const containerRect = container.getBoundingClientRect();
-            return {
+            return {{
                 x: rect.left - containerRect.left + rect.width / 2,
                 y: rect.top - containerRect.top + rect.height / 2
-            };
-        }
+            }};
+        }}
 
-        function selectButton(button) {
-            if (!selectedButtons.includes(button)) {
+        function selectButton(button) {{
+            if (!selectedButtons.includes(button)) {{
                 button.classList.add('selected');
                 button.classList.remove('hover');
                 
@@ -1339,37 +890,34 @@ elif st.session_state.game_state == 'game':
                 drawLine();
                 
                 button.offsetHeight;
-            }
-        }
+            }}
+        }}
 
-        function clearAllSelections() {
-            document.querySelectorAll('.circle-button').forEach(button => {
+        function clearAllSelections() {{
+            document.querySelectorAll('.circle-button').forEach(button => {{
                 button.classList.remove('selected');
                 button.classList.remove('hover');
                 button.offsetHeight;
-            });
+            }});
             selectedLetters = [];
             selectedButtons = [];
             points = [];
             updateSelectedWord();
             drawLine();
-        }
+        }}
 
-        // 改善された当たり判定関数
-        function getButtonAtPosition(clientX, clientY) {
+        function getButtonAtPosition(clientX, clientY) {{
             const buttons = document.querySelectorAll('.circle-button');
             let closestButton = null;
             let closestDistance = Infinity;
             
-            // 現在のhoverクラスを一時的にクリア（選択中でないもののみ）
-            buttons.forEach(button => {
-                if (!button.classList.contains('selected')) {
+            buttons.forEach(button => {{
+                if (!button.classList.contains('selected')) {{
                     button.classList.remove('hover');
-                }
-            });
+                }}
+            }});
             
-            // 各ボタンとの距離を計算
-            for (let button of buttons) {
+            for (let button of buttons) {{
                 const rect = button.getBoundingClientRect();
                 const buttonCenterX = rect.left + rect.width / 2;
                 const buttonCenterY = rect.top + rect.height / 2;
@@ -1379,115 +927,112 @@ elif st.session_state.game_state == 'game':
                     Math.pow(clientY - buttonCenterY, 2)
                 );
                 
-                // 当たり判定の範囲を少し広げて50pxに設定
-                if (distance <= 50 && distance < closestDistance) {
+                if (distance <= 40 && distance < closestDistance) {{
                     closestDistance = distance;
                     closestButton = button;
-                }
-            }
+                }}
+            }}
             
-            // 最も近いボタンにhoverクラスを追加（選択中でない場合のみ）
-            if (closestButton && !closestButton.classList.contains('selected')) {
+            if (closestButton && !closestButton.classList.contains('selected')) {{
                 closestButton.classList.add('hover');
-            }
+            }}
             
             return closestButton;
-        }
+        }}
 
-        function drawLine() {
+        function drawLine() {{
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             if (points.length < 2) return;
 
             ctx.beginPath();
             ctx.moveTo(points[0].x, points[0].y);
-            for (let i = 1; i < points.length; i++) {
+            for (let i = 1; i < points.length; i++) {{
                 ctx.lineTo(points[i].x, points[i].y);
-            }
+            }}
             ctx.strokeStyle = '#333';
             ctx.lineWidth = 3;
             ctx.stroke();
 
-            points.forEach(point => {
+            points.forEach(point => {{
                 ctx.beginPath();
                 ctx.arc(point.x, point.y, 3, 0, 2 * Math.PI);
                 ctx.fillStyle = '#333';
                 ctx.fill();
-            });
-        }
+            }});
+        }}
 
         // 改善されたイベント処理
-        function handleInteractionStart(clientX, clientY) {
+        function handleInteractionStart(clientX, clientY) {{
             isDragging = true;
             clearAllSelections();
             
             const button = getButtonAtPosition(clientX, clientY);
-            if (button) {
+            if (button) {{
                 selectButton(button);
-            }
-        }
+            }}
+        }}
 
-        function handleInteractionMove(clientX, clientY) {
-            if (isDragging) {
+        function handleInteractionMove(clientX, clientY) {{
+            if (isDragging) {{
                 const button = getButtonAtPosition(clientX, clientY);
-                if (button) {
+                if (button) {{
                     selectButton(button);
-                }
-            } else {
-                // ドラッグ中でない場合もhover効果を適用
+                }}
+            }} else {{
                 getButtonAtPosition(clientX, clientY);
-            }
-        }
+            }}
+        }}
 
-        function handleInteractionEnd() {
-            if (isDragging) {
+        function handleInteractionEnd() {{
+            if (isDragging) {{
                 isDragging = false;
                 const isCorrect = checkCorrectWord();
                 
-                setTimeout(() => {
+                setTimeout(() => {{
                     clearAllSelections();
-                }, isCorrect ? 1000 : 200);
-            }
-            // すべてのhoverクラスをクリア
-            document.querySelectorAll('.circle-button').forEach(button => {
+                }}, isCorrect ? 1000 : 200);
+            }}
+            document.querySelectorAll('.circle-button').forEach(button => {{
                 button.classList.remove('hover');
-            });
-        }
+            }});
+        }}
 
         // マウスイベント
-        container.addEventListener('mousedown', function(e) {
+        container.addEventListener('mousedown', function(e) {{
             e.preventDefault();
             handleInteractionStart(e.clientX, e.clientY);
-        });
+        }});
 
-        document.addEventListener('mousemove', function(e) {
+        document.addEventListener('mousemove', function(e) {{
             e.preventDefault();
             handleInteractionMove(e.clientX, e.clientY);
-        });
+        }});
 
-        document.addEventListener('mouseup', function(e) {
+        document.addEventListener('mouseup', function(e) {{
             e.preventDefault();
             handleInteractionEnd();
-        });
+        }});
 
-        // 改善されたタッチイベント
-        container.addEventListener('touchstart', function(e) {
+        // タッチイベント（改善版）
+        container.addEventListener('touchstart', function(e) {{
             e.preventDefault();
             const touch = e.touches[0];
             handleInteractionStart(touch.clientX, touch.clientY);
-        }, {passive: false});
+        }}, {{passive: false}});
 
-        document.addEventListener('touchmove', function(e) {
+        document.addEventListener('touchmove', function(e) {{
             e.preventDefault();
-            if (isDragging && e.touches.length > 0) {
+            if (isDragging) {{
                 const touch = e.touches[0];
                 handleInteractionMove(touch.clientX, touch.clientY);
-            }
-        }, {passive: false});
+            }}
+        }}, {{passive: false}});
 
-        document.addEventListener('touchend', function(e) {
+        document.addEventListener('touchend', function(e) {{
             e.preventDefault();
             handleInteractionEnd();
-        }, {passive: false});
+        }}, {{passive: false}});
+
         // 初期化
         setupHintButton();
         updateSelectedWord();
