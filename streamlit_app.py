@@ -1062,7 +1062,6 @@ elif st.session_state.game_state == 'game':
             e.preventDefault();
             handleInteractionEnd();
         }, {passive: false});
-
         // 初期化
         setupHintButton();
         updateSelectedWord();
