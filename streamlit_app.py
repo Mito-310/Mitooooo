@@ -518,20 +518,7 @@ elif st.session_state.game_state == 'game':
     
     target_display = ''.join(target_boxes_html)
     
-    # 円形ボタンのHTML生成
-    button_html = ''.join([
-        f'''
-        <div class="circle-button" id="button_{i}"
-                data-letter="{letter}"
-                data-index="{i}"
-                style="left: {140 + 100 * math.cos(2 * math.pi * i / num_letters - math.pi/2) - 22}px;
-                       top:  {140 + 100 * math.sin(2 * math.pi * i / num_letters - math.pi/2) - 22}px;">
-            {letter}
-        </div>
-        ''' for i, letter in enumerate(letters)
-    ])
-
-    # HTMLを表示（モバイル最適化版）
+    # HTMLを表示（モバイル最適化版・円とボタンの位置修正）
     components.html(f"""
     <!DOCTYPE html>
     <html>
@@ -752,8 +739,8 @@ elif st.session_state.game_state == 'game':
         <div id="complete-message" class="complete-message">ステージクリア！</div>
 
         <div class="circle-container" id="circle-container">
-            <canvas id="lineCanvas" width="300" height="300"></canvas>
-            {button_html}
+            <canvas id="lineCanvas"></canvas>
+            <div id="button-container"></div>
         </div>
 
         <script>
@@ -763,12 +750,15 @@ elif st.session_state.game_state == 'game':
         let points = [];
         let targetWords = {json.dumps(st.session_state.target_words)};
         let foundWords = {json.dumps(st.session_state.found_words)};
+        let letters = {json.dumps(letters)};
+        let numLetters = {num_letters};
 
         const selectedWordDiv = document.getElementById('selected-word');
         const targetWordsDiv = document.getElementById('target-words');
         const successMessageDiv = document.getElementById('success-message');
         const completeMessageDiv = document.getElementById('complete-message');
         const container = document.getElementById('circle-container');
+        const buttonContainer = document.getElementById('button-container');
         const canvas = document.getElementById('lineCanvas');
         const ctx = canvas.getContext('2d');
 
@@ -776,22 +766,70 @@ elif st.session_state.game_state == 'game':
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
-        // キャンバスサイズをコンテナサイズに合わせて調整
-        function resizeCanvas() {{
+        // 円とボタンの位置を正確に計算する関数
+        function calculateButtonPositions() {{
             const containerRect = container.getBoundingClientRect();
             const containerStyle = window.getComputedStyle(container);
             const containerWidth = parseInt(containerStyle.width);
             const containerHeight = parseInt(containerStyle.height);
             
-            canvas.width = containerWidth;
-            canvas.height = containerHeight;
-            canvas.style.width = containerWidth + 'px';
-            canvas.style.height = containerHeight + 'px';
+            // 円の中心点
+            const centerX = containerWidth / 2;
+            const centerY = containerHeight / 2;
+            
+            // 円の半径（ボタンが円の内側に配置されるように調整）
+            const radius = Math.min(containerWidth, containerHeight) / 2 - 35; // ボタンサイズを考慮して調整
+            
+            return {{
+                centerX: centerX,
+                centerY: centerY,
+                radius: radius,
+                containerWidth: containerWidth,
+                containerHeight: containerHeight
+            }};
         }}
 
-        // 初期化時とリサイズ時にキャンバスサイズを調整
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
+        // キャンバスサイズをコンテナサイズに合わせて調整
+        function resizeCanvas() {{
+            const positions = calculateButtonPositions();
+            
+            canvas.width = positions.containerWidth;
+            canvas.height = positions.containerHeight;
+            canvas.style.width = positions.containerWidth + 'px';
+            canvas.style.height = positions.containerHeight + 'px';
+        }}
+
+        // ボタンを作成して配置する関数
+        function createButtons() {{
+            const positions = calculateButtonPositions();
+            buttonContainer.innerHTML = ''; // 既存のボタンをクリア
+            
+            for (let i = 0; i < numLetters; i++) {{
+                // 各ボタンの角度を計算（12時方向から開始）
+                const angle = (2 * Math.PI * i / numLetters) - Math.PI / 2;
+                
+                // ボタンの中心位置を計算
+                const buttonCenterX = positions.centerX + positions.radius * Math.cos(angle);
+                const buttonCenterY = positions.centerY + positions.radius * Math.sin(angle);
+                
+                // ボタン要素を作成
+                const button = document.createElement('div');
+                button.className = 'circle-button';
+                button.id = `button_${{i}}`;
+                button.dataset.letter = letters[i];
+                button.dataset.index = i;
+                button.textContent = letters[i];
+                
+                // ボタンサイズを取得（CSSから）
+                const buttonSize = window.innerWidth <= 480 ? 40 : (window.innerWidth <= 600 ? 44 : 46);
+                
+                // ボタンを中心に配置するため、左上の座標を計算
+                button.style.left = (buttonCenterX - buttonSize / 2) + 'px';
+                button.style.top = (buttonCenterY - buttonSize / 2) + 'px';
+                
+                buttonContainer.appendChild(button);
+            }}
+        }}
 
         function updateSelectedWord() {{
             selectedWordDiv.textContent = selectedLetters.join('');
@@ -1058,6 +1096,14 @@ elif st.session_state.game_state == 'game':
             }}
         }}
 
+        // 初期化とリサイズ処理
+        function initialize() {{
+            createButtons();
+            resizeCanvas();
+            updateSelectedWord();
+            updateTargetWordsDisplay();
+        }}
+
         // イベントリスナーの設定
         if (!isTouch) {{
             // デスクトップ用マウスイベント
@@ -1071,9 +1117,13 @@ elif st.session_state.game_state == 'game':
         document.addEventListener('touchmove', handleTouchMove, {{passive: false}});
         document.addEventListener('touchend', handleTouchEnd, {{passive: false}});
 
+        // リサイズイベント
+        window.addEventListener('resize', () => {{
+            initialize();
+        }});
+
         // 初期化
-        updateSelectedWord();
-        updateTargetWordsDisplay();
+        initialize();
 
         // 右クリックメニューと選択を無効化
         document.addEventListener('contextmenu', e => e.preventDefault());
