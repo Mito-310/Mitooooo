@@ -738,7 +738,7 @@ elif st.session_state.game_state == 'game':
                     Math.pow(clientY - buttonCenterY, 2)
                 );
                 
-                if (distance <= 40 && distance < closestDistance) {{
+                if (distance <= 35 && distance < closestDistance) {{
                     closestDistance = distance;
                     closestButton = button;
                 }}
