@@ -124,6 +124,8 @@ if 'shuffled_letters' not in st.session_state:
     st.session_state.shuffled_letters = []
 if 'last_update_time' not in st.session_state:
     st.session_state.last_update_time = time.time()
+if 'game_component_key' not in st.session_state:
+    st.session_state.game_component_key = 0
 
 STAGES = DEFAULT_STAGES
 
@@ -167,27 +169,6 @@ def create_target_words_display(words, found_words, max_width_chars=25):
         html_lines.append('<div style="text-align: center; margin-bottom: 3px;">' + ''.join(line_html) + '</div>')
     
     return ''.join(html_lines)
-
-# URLパラメータから正解単語をチェック
-def check_url_params():
-    """URLパラメータから新しい正解をチェックして状態を更新"""
-    try:
-        # Streamlitの新しいquery_paramsを使用してパラメータを取得
-        query_params = st.query_params
-        
-        # 'new_word'パラメータがあるかチェック
-        if 'new_word' in query_params:
-            new_word = query_params['new_word']
-            if (new_word in st.session_state.target_words and 
-                new_word not in st.session_state.found_words):
-                st.session_state.found_words.append(new_word)
-                st.session_state.last_update_time = time.time()
-                # パラメータをクリア
-                del st.query_params['new_word']
-                return True
-    except:
-        pass
-    return False
 
 # タイトル画面
 if st.session_state.game_state == 'title':
@@ -278,6 +259,7 @@ if st.session_state.game_state == 'title':
             random.shuffle(stage_letters)
             st.session_state.shuffled_letters = stage_letters
             st.session_state.game_state = 'game'
+            st.session_state.game_component_key += 1
             st.rerun()
     
     # 区切り線
@@ -309,6 +291,7 @@ if st.session_state.game_state == 'title':
                         random.shuffle(stage_letters)
                         st.session_state.shuffled_letters = stage_letters
                         st.session_state.game_state = 'game'
+                        st.session_state.game_component_key += 1
                         st.rerun()
             else:
                 # 空のカラム
@@ -321,10 +304,6 @@ if st.session_state.game_state == 'title':
 
 # ゲーム画面
 elif st.session_state.game_state == 'game':
-    # URLパラメータから正解をチェック
-    if check_url_params():
-        st.rerun()
-    
     # ページトップ固定とスクロール無効化のJavaScriptを追加
     st.markdown("""
     <script>
@@ -384,6 +363,7 @@ elif st.session_state.game_state == 'game':
                 stage_letters = next_stage_info['letters'].copy()
                 random.shuffle(stage_letters)
                 st.session_state.shuffled_letters = stage_letters
+                st.session_state.game_component_key += 1
                 st.rerun()
         else:
             # 最後のステージの場合は空のスペース
@@ -671,26 +651,86 @@ elif st.session_state.game_state == 'game':
             selectedWordDiv.textContent = selectedLetters.join('');
         }}
 
-        function updateStreamlitState(newWord) {{
-            // Streamlitに新しい正解を通知（URLパラメータを使用）
-            const currentUrl = new URL(window.location.href);
-            currentUrl.searchParams.set('new_word', newWord);
+        function updateTargetWords() {{
+            // 目標単語の表示を更新
+            let updatedDisplay = createTargetWordsDisplay(targetWords, foundWords);
+            targetWordsDiv.innerHTML = updatedDisplay;
+        }}
+
+        function createTargetWordsDisplay(words, foundWords) {{
+            const sortedWords = words.sort((a, b) => a.length - b.length || a.localeCompare(b));
+            const maxWidthChars = 25;
             
-            // ページをリロード（Streamlitの状態を更新）
-            window.location.href = currentUrl.toString();
+            let lines = [];
+            let currentLine = [];
+            let currentWidth = 0;
+            
+            for (let word of sortedWords) {{
+                let wordWidth = word.length + 1;
+                
+                if (currentWidth + wordWidth > maxWidthChars && currentLine.length > 0) {{
+                    lines.push(currentLine);
+                    currentLine = [word];
+                    currentWidth = wordWidth;
+                }} else {{
+                    currentLine.push(word);
+                    currentWidth += wordWidth;
+                }}
+            }}
+            
+            if (currentLine.length > 0) {{
+                lines.push(currentLine);
+            }}
+            
+            let htmlLines = [];
+            for (let lineWords of lines) {{
+                let lineHtml = [];
+                for (let word of lineWords) {{
+                    let isFound = foundWords.includes(word);
+                    let boxesHtml = "";
+                    for (let letter of word) {{
+                        if (isFound) {{
+                            boxesHtml += `<span style="display: inline-block; width: 16px; height: 16px; border: 1px solid #333; background: white; color: #333; text-align: center; line-height: 16px; margin: 0.5px; font-size: 10px; font-weight: bold; border-radius: 2px; vertical-align: top;">${letter}</span>`;
+                        }} else {{
+                            boxesHtml += `<span style="display: inline-block; width: 16px; height: 16px; border: 1px solid #ddd; background: white; text-align: center; line-height: 16px; margin: 0.5px; border-radius: 2px; vertical-align: top;"></span>`;
+                        }}
+                    }}
+                    lineHtml.push(`<div style="display: inline-block; margin: 2px; vertical-align: top;">${boxesHtml}</div>`);
+                }}
+                htmlLines.push(`<div style="text-align: center; margin-bottom: 3px;">${lineHtml.join('')}</div>`);
+            }}
+            
+            return htmlLines.join('');
+        }}
+
+        // Streamlitとの通信用のメッセージハンドラ
+        function sendWordFound(word) {{
+            // カスタムイベントを使用してStreamlitに通知
+            window.parent.postMessage({{
+                type: 'streamlit:componentReady'
+            }}, '*');
+            
+            // Streamlitコンポーネントにデータを送信
+            window.parent.postMessage({{
+                type: 'streamlit:setComponentValue',
+                value: {{
+                    action: 'word_found',
+                    word: word,
+                    timestamp: Date.now()
+                }}
+            }}, '*');
         }}
 
         function checkCorrectWord() {{
             const currentWord = selectedLetters.join('');
             if (currentWord && targetWords.includes(currentWord) && !foundWords.includes(currentWord)) {{
                 foundWords.push(currentWord);
+                updateTargetWords();
                 showSuccessMessage();
                 playCorrectSound();
                 
-                // Streamlitの状態を更新
-                setTimeout(() => {{
-                    updateStreamlitState(currentWord);
-                }}, 1000);
+                // Streamlitに正解を通知
+                sendWordFound(currentWord);
                 
                 if (foundWords.length === targetWords.length) {{
                     setTimeout(() => {{
@@ -899,6 +939,7 @@ elif st.session_state.game_state == 'game':
 
         // 初期化
         updateSelectedWord();
+        updateTargetWords();
 
         document.addEventListener('contextmenu', e => e.preventDefault());
         document.addEventListener('selectstart', e => e.preventDefault());
@@ -907,8 +948,23 @@ elif st.session_state.game_state == 'game':
     </html>
     """
 
-    # HTMLコンポーネントのレンダリング
-    components.html(html_content, height=400)
+    # HTMLコンポーネントのレンダリング - コールバック機能付き
+    component_value = components.html(
+        html_content, 
+        height=400, 
+        key=f"game_component_{st.session_state.game_component_key}"
+    )
+
+    # コンポーネントからの値を処理
+    if component_value is not None:
+        if isinstance(component_value, dict) and component_value.get('action') == 'word_found':
+            found_word = component_value.get('word')
+            if (found_word and 
+                found_word in st.session_state.target_words and 
+                found_word not in st.session_state.found_words):
+                st.session_state.found_words.append(found_word)
+                st.session_state.last_update_time = time.time()
+                st.rerun()
 
     # ステージクリア状態の確認とUI更新
     stage_completed = len(st.session_state.found_words) == len(st.session_state.target_words)
@@ -927,6 +983,7 @@ elif st.session_state.game_state == 'game':
                     stage_letters = next_stage_info['letters'].copy()
                     random.shuffle(stage_letters)
                     st.session_state.shuffled_letters = stage_letters
+                    st.session_state.game_component_key += 1
                     st.rerun()
             else:
                 st.balloons()
