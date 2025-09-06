@@ -15,14 +15,12 @@ st.set_page_config(
 # カスタムCSS - スマホファースト
 st.markdown("""
 <style>
-/* 全体の基本設定 - スマホファースト */
 .main .block-container {
     max-width: 100vw;
     padding: 0.3rem;
     margin: 0;
 }
 
-/* タイトル画面のボタンスタイル */
 .stButton > button {
     background-color: #333;
     color: white;
@@ -39,22 +37,12 @@ st.markdown("""
     border-color: #555;
 }
 
-/* SUCCESS/エラーメッセージの調整 */
 .stSuccess {
     background-color: #E8F5E8;
     border-left: 3px solid #4CAF50;
     padding: 6px 8px;
     margin: 6px 0;
     font-size: 13px;
-}
-
-/* ステージ選択エリアのスタイル */
-.stage-info {
-    text-align: center;
-    margin-bottom: 4px;
-    color: #555;
-    font-weight: 500;
-    font-size: 11px;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -129,58 +117,25 @@ if 'game_component_key' not in st.session_state:
 
 STAGES = DEFAULT_STAGES
 
-def create_target_words_display(words, found_words, max_width_chars=25):
-    """目標単語を複数行で表示するHTMLを生成 - スマホ用に小さく"""
+def create_target_words_display(words, found_words):
+    """目標単語を表示するHTMLを生成"""
     sorted_words = sorted(words, key=lambda x: (len(x), x))
-    
-    # 単語を配置する
-    lines = []
-    current_line = []
-    current_width = 0
+    html_parts = []
     
     for word in sorted_words:
-        word_width = len(word) + 1  # +1はマージン分
-        
-        # 新しい行が必要かチェック
-        if current_width + word_width > max_width_chars and current_line:
-            lines.append(current_line)
-            current_line = [word]
-            current_width = word_width
-        else:
-            current_line.append(word)
-            current_width += word_width
+        is_found = word in found_words
+        boxes = ""
+        for letter in word:
+            if is_found:
+                boxes += f'<span style="display:inline-block;width:14px;height:14px;border:1px solid #333;background:white;color:#333;text-align:center;line-height:14px;margin:0.5px;font-size:9px;font-weight:bold;">{letter}</span>'
+            else:
+                boxes += '<span style="display:inline-block;width:14px;height:14px;border:1px solid #ddd;background:white;margin:0.5px;"></span>'
+        html_parts.append(f'<div style="display:inline-block;margin:1px;">{boxes}</div>')
     
-    if current_line:
-        lines.append(current_line)
-    
-    # HTMLを生成 - スマホ用に小さく
-    html_lines = []
-    for line_words in lines:
-        line_html = []
-        for word in line_words:
-            is_found = word in found_words
-            boxes_html = ""
-            for letter in word:
-                if is_found:
-                    boxes_html += f'<span style="display: inline-block; width: 16px; height: 16px; border: 1px solid #333; background: white; color: #333; text-align: center; line-height: 16px; margin: 0.5px; font-size: 10px; font-weight: bold; border-radius: 2px; vertical-align: top;">{letter}</span>'
-                else:
-                    boxes_html += f'<span style="display: inline-block; width: 16px; height: 16px; border: 1px solid #ddd; background: white; text-align: center; line-height: 16px; margin: 0.5px; border-radius: 2px; vertical-align: top;"></span>'
-            line_html.append(f'<div style="display: inline-block; margin: 2px; vertical-align: top;">{boxes_html}</div>')
-        html_lines.append('<div style="text-align: center; margin-bottom: 3px;">' + ''.join(line_html) + '</div>')
-    
-    return ''.join(html_lines)
+    return '<div style="text-align:center;">' + ''.join(html_parts) + '</div>'
 
 # タイトル画面
 if st.session_state.game_state == 'title':
-    # タイトル画面ではスクロールを許可
-    st.markdown("""
-    <script>
-    document.body.style.overflow = 'auto';
-    document.documentElement.style.overflow = 'auto';
-    document.body.style.position = 'static';
-    </script>
-    """, unsafe_allow_html=True)
-    
     st.markdown("""
     <style>
     .title-section {
@@ -210,31 +165,8 @@ if st.session_state.game_state == 'title':
         margin-bottom: 0.4rem;
         font-size: 13px;
     }
-    .stage-selection-title {
-        text-align: center;
-        color: #333;
-        margin: 1.5rem 0 1rem 0;
-        font-size: 1.2rem;
-        font-weight: 600;
-    }
     </style>
     """, unsafe_allow_html=True)
-    
-    # 画像表示（利用可能な場合）
-    try:
-        from PIL import Image
-        import os
-        import base64
-        from io import BytesIO
-        
-        if os.path.exists('image.PNG'):
-            image = Image.open('image.PNG')
-            buffered = BytesIO()
-            image.save(buffered, format="PNG")
-            img_str = base64.b64encode(buffered.getvalue()).decode()
-            st.markdown(f'<div style="text-align: center; margin: 10px 0;"><img src="data:image/png;base64,{img_str}" width="80" style="max-width: 100%; border-radius: 4px;"></div>', unsafe_allow_html=True)
-    except:
-        pass
     
     st.markdown("""
     <div class="title-section">
@@ -246,7 +178,6 @@ if st.session_state.game_state == 'title':
     </div>
     """, unsafe_allow_html=True)
 
-    
     # STARTボタン
     col1, col2, col3 = st.columns([1, 1, 1])
     with col2:
@@ -254,7 +185,6 @@ if st.session_state.game_state == 'title':
             st.session_state.current_stage = 1
             st.session_state.target_words = STAGES[1]['words']
             st.session_state.found_words = []
-            # 文字をシャッフルして保存
             stage_letters = STAGES[1]['letters'].copy()
             random.shuffle(stage_letters)
             st.session_state.shuffled_letters = stage_letters
@@ -262,13 +192,10 @@ if st.session_state.game_state == 'title':
             st.session_state.game_component_key += 1
             st.rerun()
     
-    # 区切り線
     st.markdown('<hr style="border: none; height: 1px; background: #ddd; margin: 1.5rem 0;">', unsafe_allow_html=True)
+    st.markdown('<h2 style="text-align: center; color: #333; margin: 1.5rem 0 1rem 0; font-size: 1.2rem; font-weight: 600;">ステージ選択</h2>', unsafe_allow_html=True)
     
     # ステージ選択
-    st.markdown('<h2 class="stage-selection-title">ステージ選択</h2>', unsafe_allow_html=True)
-    
-    # ステージ選択を通常のStreamlitボタンで実装
     for i in range(0, len(STAGES), 4):
         cols = st.columns(4)
         for j in range(4):
@@ -277,16 +204,12 @@ if st.session_state.game_state == 'title':
                 stage_info = STAGES[stage_num]
                 
                 with cols[j]:
-                    # ステージ情報を表示
                     st.markdown(f'<div style="text-align: center; margin-bottom: 4px; color: #555; font-weight: 500; font-size: 11px;">{stage_info["name"]}</div>', unsafe_allow_html=True)
                     
-                    # ボタン
-                    button_text = "▶"
-                    if st.button(button_text, key=f"stage_{stage_num}", use_container_width=True):
+                    if st.button("▶", key=f"stage_{stage_num}", use_container_width=True):
                         st.session_state.current_stage = stage_num
                         st.session_state.target_words = stage_info['words']
                         st.session_state.found_words = []
-                        # 文字をシャッフルして保存
                         stage_letters = stage_info['letters'].copy()
                         random.shuffle(stage_letters)
                         st.session_state.shuffled_letters = stage_letters
@@ -294,43 +217,13 @@ if st.session_state.game_state == 'title':
                         st.session_state.game_component_key += 1
                         st.rerun()
             else:
-                # 空のカラム
                 with cols[j]:
                     st.empty()
-        
-        # 行間のスペース
-        if i + 4 < len(STAGES):
-            st.markdown('<div style="margin: 8px 0;"></div>', unsafe_allow_html=True)
 
 # ゲーム画面
 elif st.session_state.game_state == 'game':
-    # ページトップ固定とスクロール無効化のJavaScriptを追加
-    st.markdown("""
-    <script>
-    // ページが読み込まれたらトップにスクロール
-    window.scrollTo(0, 0);
-    
-    // スクロールを無効化
-    document.body.style.overflow = 'hidden';
-    document.documentElement.style.overflow = 'hidden';
-    document.body.style.position = 'fixed';
-    document.body.style.top = '0';
-    document.body.style.left = '0';
-    document.body.style.width = '100%';
-    document.body.style.height = '100%';
-    
-    // ページがアンロードされる時にスクロールを復元
-    window.addEventListener('beforeunload', function() {
-        document.body.style.overflow = 'auto';
-        document.documentElement.style.overflow = 'auto';
-        document.body.style.position = 'static';
-    });
-    </script>
-    """, unsafe_allow_html=True)
-    
     current_stage_info = STAGES[st.session_state.current_stage]
     
-    # シャッフルされた文字配列を使用（初回の場合は作成）
     if not st.session_state.shuffled_letters or len(st.session_state.shuffled_letters) != len(current_stage_info['letters']):
         stage_letters = current_stage_info['letters'].copy()
         random.shuffle(stage_letters)
@@ -339,7 +232,7 @@ elif st.session_state.game_state == 'game':
     letters = st.session_state.shuffled_letters
     num_letters = len(letters)
     
-    # ヘッダー（3列レイアウト） - スマホ用に小さく
+    # ヘッダー
     col1, col2, col3 = st.columns([1, 2, 1])
     with col1:
         if st.button("戻る", key="back_to_title_header", use_container_width=True):
@@ -352,616 +245,168 @@ elif st.session_state.game_state == 'game':
         </div>
         """, unsafe_allow_html=True)
     with col3:
-        # 次のステージボタン（最後のステージでない場合のみ表示）
         if st.session_state.current_stage < len(STAGES):
             if st.button("次へ", key="next_stage_header", use_container_width=True):
                 st.session_state.current_stage += 1
                 next_stage_info = STAGES[st.session_state.current_stage]
                 st.session_state.target_words = next_stage_info['words']
                 st.session_state.found_words = []
-                # 新しいステージの文字をシャッフル
                 stage_letters = next_stage_info['letters'].copy()
                 random.shuffle(stage_letters)
                 st.session_state.shuffled_letters = stage_letters
                 st.session_state.game_component_key += 1
                 st.rerun()
         else:
-            # 最後のステージの場合は空のスペース
             st.empty()
     
-    # 目標単語の表示（複数行対応版を使用）
     target_display = create_target_words_display(st.session_state.target_words, st.session_state.found_words)
     
-    # 円形ボタンのHTML生成
-    button_html = ''.join([
-        f'''
-        <div class="circle-button" id="button_{i}"
-                data-letter="{letter}"
-                data-index="{i}"
-                style="left: {110 + 65 * math.cos(2 * math.pi * i / num_letters - math.pi/2) - 15}px;
-                       top:  {110 + 65 * math.sin(2 * math.pi * i / num_letters - math.pi/2) - 15}px;">
-            {letter}
-        </div>
-        ''' for i, letter in enumerate(letters)
-    ])
-
-    # HTMLコンテンツ - JavaScriptの構文エラーを修正
+    # 軽量化されたHTMLコンテンツ
     html_content = f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-        <style>
-        body {{
-            margin: 0;
-            font-family: Arial, sans-serif;
-            user-select: none;
-            touch-action: none;
-            overflow-x: hidden;
-            background: #fafafa;
-            height: 100vh;
-            position: relative;
-            max-width: 100vw;
-        }}
-        
-        .circle-container {{
-            position: relative;
-            width: 220px;
-            height: 220px;
-            margin: 110px auto 20px auto;
-        }}
-        
-        .ring-background {{
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 180px;
-            height: 180px;
-            border: 1px solid #333;
-            border-radius: 50%;
-            z-index: 1;
-            background: transparent;
-        }}
-        
-        .circle-button {{
-            position: absolute;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-            color: #333;
-            font-size: 14px;
-            font-weight: bold;
-            border: 1.5px solid #333;
-            cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transition: all 0.15s ease;
-            touch-action: none;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            z-index: 10;
-        }}
-        
-        .circle-button.selected {{
-            background: linear-gradient(135deg, #2c2c2c 0%, #1a1a1a 100%) !important;
-            color: white !important;
-            transform: scale(1.1);
-            box-shadow: 0 2px 6px rgba(0,0,0,0.25);
-            border: 1.5px solid #1a1a1a;
-            transition: all 0.1s ease;
-            z-index: 10;
-        }}
-        
-        .circle-button:not(.selected):hover {{
-            background: linear-gradient(135deg, #f0f0f0 0%, #e9ecef 100%) !important;
-            transform: scale(1.05);
-        }}
-        
-        .circle-button.hover {{
-            background: linear-gradient(135deg, #f0f0f0 0%, #e9ecef 100%) !important;
-            transform: scale(1.05);
-        }}
-        
-        #selected-word {{
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            text-align: center;
-            font-size: 16px;
-            font-weight: bold;
-            padding: 6px;
-            letter-spacing: 1px;
-            min-height: 20px;
-            color: #333;
-            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-            z-index: 999;
-            border-bottom: 1px solid #e9ecef;
-        }}
-        
-        #target-words {{
-            position: fixed;
-            top: 32px;
-            left: 0;
-            width: 100%;
-            text-align: center;
-            font-size: 11px;
-            padding: 6px;
-            color: #666;
-            background: #f9f9f9;
-            z-index: 998;
-            border-bottom: 1px solid #ddd;
-            max-height: 70px;
-            overflow-y: auto;
-        }}
-        
-        .success-message {{
-            position: fixed;
-            top: 40%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
-            color: white;
-            padding: 12px 20px;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: bold;
-            z-index: 1000;
-            opacity: 0;
-            transition: all 0.3s ease;
-        }}
-        .success-message.show {{
-            opacity: 1;
-            transform: translate(-50%, -50%) scale(1.05);
-        }}
-        .complete-message {{
-            position: fixed;
-            top: 40%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
-            color: white;
-            padding: 16px 24px;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            z-index: 1001;
-            opacity: 0;
-            transition: all 0.3s ease;
-        }}
-        .complete-message.show {{
-            opacity: 1;
-            transform: translate(-50%, -50%) scale(1.05);
-        }}
-        canvas {{
-            position: absolute;
-            top: 0;
-            left: 0;
-            z-index: 1;
-            pointer-events: none;
-        }}
-        </style>
-    </head>
-    <body>
-        <div id="selected-word"></div>
-        <div id="target-words">{target_display}</div>
-        <div id="success-message" class="success-message">正解！</div>
-        <div id="complete-message" class="complete-message">ステージクリア！</div>
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<style>
+body{{margin:0;font-family:Arial;user-select:none;touch-action:none;background:#fafafa;height:100vh;}}
+.circle-container{{position:relative;width:220px;height:220px;margin:20px auto;}}
+.circle-button{{position:absolute;width:30px;height:30px;border-radius:50%;background:#fff;color:#333;font-size:14px;font-weight:bold;border:1px solid #333;cursor:pointer;display:flex;justify-content:center;align-items:center;}}
+.selected{{background:#333!important;color:white!important;}}
+#word{{text-align:center;font-size:18px;font-weight:bold;padding:10px;}}
+#targets{{text-align:center;font-size:12px;padding:10px;}}
+#msg{{position:fixed;top:40%;left:50%;transform:translate(-50%,-50%);background:#4CAF50;color:white;padding:10px 20px;border-radius:5px;opacity:0;transition:opacity 0.3s;}}
+.show{{opacity:1!important;}}
+</style>
+</head>
+<body>
+<div id="word"></div>
+<div id="targets">{target_display}</div>
+<div id="msg">正解！</div>
+<div class="circle-container">
+"""
 
-        <div class="circle-container" id="circle-container">
-            <div class="ring-background"></div>
-            <canvas id="lineCanvas" width="220" height="220"></canvas>
-            {button_html}
-        </div>
+    # 円形ボタンの生成
+    for i, letter in enumerate(letters):
+        x = 110 + 65 * math.cos(2 * math.pi * i / num_letters - math.pi/2) - 15
+        y = 110 + 65 * math.sin(2 * math.pi * i / num_letters - math.pi/2) - 15
+        html_content += f'<div class="circle-button" data-letter="{letter}" data-index="{i}" style="left:{x}px;top:{y}px;">{letter}</div>'
 
-        <script>
-        let isDragging = false;
-        let selectedLetters = [];
-        let selectedButtons = [];
-        let points = [];
-        let targetWords = {json.dumps(st.session_state.target_words)};
-        let foundWords = {json.dumps(st.session_state.found_words)};
+    html_content += f"""
+</div>
+<script>
+let isDragging=false,selectedLetters=[],selectedButtons=[],targetWords={json.dumps(st.session_state.target_words)},foundWords={json.dumps(st.session_state.found_words)};
+const wordDiv=document.getElementById('word'),msgDiv=document.getElementById('msg');
 
-        const selectedWordDiv = document.getElementById('selected-word');
-        const targetWordsDiv = document.getElementById('target-words');
-        const successMessageDiv = document.getElementById('success-message');
-        const completeMessageDiv = document.getElementById('complete-message');
-        const container = document.getElementById('circle-container');
-        const canvas = document.getElementById('lineCanvas');
-        const ctx = canvas.getContext('2d');
+function updateWord(){{wordDiv.textContent=selectedLetters.join('');}}
 
-        function createAudioContext() {{
-            try {{
-                return new (window.AudioContext || window.webkitAudioContext)();
-            }} catch (e) {{
-                console.log('Web Audio API not supported');
-                return null;
-            }}
-        }}
+function selectButton(btn){{
+if(!selectedButtons.includes(btn)){{
+btn.classList.add('selected');
+selectedLetters.push(btn.dataset.letter);
+selectedButtons.push(btn);
+updateWord();
+}}
+}}
 
-        const audioCtx = createAudioContext();
+function clearSelection(){{
+document.querySelectorAll('.circle-button').forEach(b=>b.classList.remove('selected'));
+selectedLetters=[];selectedButtons=[];updateWord();
+}}
 
-        function playSelectSound() {{
-            if (!audioCtx) return;
-            const oscillator = audioCtx.createOscillator();
-            const gainNode = audioCtx.createGain();
-            oscillator.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
-            oscillator.frequency.value = 800;
-            oscillator.type = 'sine';
-            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-            oscillator.start(audioCtx.currentTime);
-            oscillator.stop(audioCtx.currentTime + 0.1);
-        }}
+function checkWord(){{
+const word=selectedLetters.join('');
+if(word&&targetWords.includes(word)&&!foundWords.includes(word)){{
+foundWords.push(word);
+msgDiv.classList.add('show');
+setTimeout(()=>msgDiv.classList.remove('show'),2000);
+window.parent.postMessage({{type:'streamlit:setComponentValue',value:{{action:'word_found',word:word}}}}, '*');
+return true;
+}}
+return false;
+}}
 
-        function playCorrectSound() {{
-            if (!audioCtx) return;
-            const frequencies = [523, 659, 784, 1047];
-            frequencies.forEach((freq, index) => {{
-                const oscillator = audioCtx.createOscillator();
-                const gainNode = audioCtx.createGain();
-                oscillator.connect(gainNode);
-                gainNode.connect(audioCtx.destination);
-                oscillator.frequency.value = freq;
-                oscillator.type = 'sine';
-                const startTime = audioCtx.currentTime + index * 0.1;
-                gainNode.gain.setValueAtTime(0.2, startTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.3);
-                oscillator.start(startTime);
-                oscillator.stop(startTime + 0.3);
-            }});
-        }}
+function getButtonAt(x,y){{
+let closest=null,minDist=Infinity;
+document.querySelectorAll('.circle-button').forEach(btn=>{{
+const rect=btn.getBoundingClientRect();
+const dist=Math.sqrt(Math.pow(x-rect.left-15,2)+Math.pow(y-rect.top-15,2));
+if(dist<20&&dist<minDist){{closest=btn;minDist=dist;}}
+}});
+return closest;
+}}
 
-        function playWrongSound() {{
-            if (!audioCtx) return;
-            const oscillator = audioCtx.createOscillator();
-            const gainNode = audioCtx.createGain();
-            oscillator.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
-            oscillator.frequency.value = 200;
-            oscillator.type = 'sawtooth';
-            gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
-            oscillator.start(audioCtx.currentTime);
-            oscillator.stop(audioCtx.currentTime + 0.3);
-        }}
+document.addEventListener('mousedown',e=>{{
+e.preventDefault();isDragging=true;clearSelection();
+const btn=getButtonAt(e.clientX,e.clientY);
+if(btn)selectButton(btn);
+}});
 
-        function playCompleteSound() {{
-            if (!audioCtx) return;
-            const frequencies = [523, 659, 784, 1047, 523];
-            frequencies.forEach((freq, index) => {{
-                const oscillator = audioCtx.createOscillator();
-                const gainNode = audioCtx.createGain();
-                oscillator.connect(gainNode);
-                gainNode.connect(audioCtx.destination);
-                oscillator.frequency.value = freq;
-                oscillator.type = 'sine';
-                const startTime = audioCtx.currentTime + index * 0.15;
-                gainNode.gain.setValueAtTime(0.25, startTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.4);
-                oscillator.start(startTime);
-                oscillator.stop(startTime + 0.4);
-            }});
-        }}
+document.addEventListener('mousemove',e=>{{
+if(isDragging){{
+const btn=getButtonAt(e.clientX,e.clientY);
+if(btn)selectButton(btn);
+}}
+}});
 
-        function updateSelectedWord() {{
-            selectedWordDiv.textContent = selectedLetters.join('');
-        }}
+document.addEventListener('mouseup',e=>{{
+if(isDragging){{
+isDragging=false;
+const correct=checkWord();
+setTimeout(()=>clearSelection(),correct?1000:200);
+}}
+}});
 
-        function updateTargetWords() {{
-            let updatedDisplay = createTargetWordsDisplay(targetWords, foundWords);
-            targetWordsDiv.innerHTML = updatedDisplay;
-        }}
+document.addEventListener('touchstart',e=>{{
+e.preventDefault();isDragging=true;clearSelection();
+const touch=e.touches[0],btn=getButtonAt(touch.clientX,touch.clientY);
+if(btn)selectButton(btn);
+}},{{passive:false}});
 
-        function createTargetWordsDisplay(words, foundWords) {{
-            const sortedWords = words.sort((a, b) => a.length - b.length || a.localeCompare(b));
-            const maxWidthChars = 25;
-            
-            let lines = [];
-            let currentLine = [];
-            let currentWidth = 0;
-            
-            for (let word of sortedWords) {{
-                let wordWidth = word.length + 1;
-                
-                if (currentWidth + wordWidth > maxWidthChars && currentLine.length > 0) {{
-                    lines.push(currentLine);
-                    currentLine = [word];
-                    currentWidth = wordWidth;
-                }} else {{
-                    currentLine.push(word);
-                    currentWidth += wordWidth;
-                }}
-            }}
-            
-            if (currentLine.length > 0) {{
-                lines.push(currentLine);
-            }}
-            
-            let htmlLines = [];
-            for (let lineWords of lines) {{
-                let lineHtml = [];
-                for (let word of lineWords) {{
-                    let isFound = foundWords.includes(word);
-                    let boxesHtml = "";
-                    for (let letter of word) {{
-                        if (isFound) {{
-                            boxesHtml += "<span style=\\"display: inline-block; width: 16px; height: 16px; border: 1px solid #333; background: white; color: #333; text-align: center; line-height: 16px; margin: 0.5px; font-size: 10px; font-weight: bold; border-radius: 2px; vertical-align: top;\\">" + letter + "</span>";
-                        }} else {{
-                            boxesHtml += "<span style=\\"display: inline-block; width: 16px; height: 16px; border: 1px solid #ddd; background: white; text-align: center; line-height: 16px; margin: 0.5px; border-radius: 2px; vertical-align: top;\\"></span>";
-                        }}
-                    }}
-                    lineHtml.push("<div style=\\"display: inline-block; margin: 2px; vertical-align: top;\\">" + boxesHtml + "</div>");
-                }}
-                htmlLines.push('<div style="text-align: center; margin-bottom: 3px;">' + lineHtml.join('') + '</div>');
-            }}
-            
-            return htmlLines.join('');
-        }}
+document.addEventListener('touchmove',e=>{{
+if(isDragging){{
+const touch=e.touches[0],btn=getButtonAt(touch.clientX,touch.clientY);
+if(btn)selectButton(btn);
+}}
+}},{{passive:false}});
 
-        // Streamlitとの通信用のメッセージハンドラ
-        function sendWordFound(word) {{
-            window.parent.postMessage({{
-                type: 'streamlit:componentReady'
-            }}, '*');
-            
-            window.parent.postMessage({{
-                type: 'streamlit:setComponentValue',
-                value: {{
-                    action: 'word_found',
-                    word: word,
-                    timestamp: Date.now()
-                }}
-            }}, '*');
-        }}
+document.addEventListener('touchend',e=>{{
+if(isDragging){{
+isDragging=false;
+const correct=checkWord();
+setTimeout(()=>clearSelection(),correct?1000:200);
+}}
+}},{{passive:false}});
 
-        function checkCorrectWord() {{
-            const currentWord = selectedLetters.join('');
-            if (currentWord && targetWords.includes(currentWord) && !foundWords.includes(currentWord)) {{
-                foundWords.push(currentWord);
-                updateTargetWords();
-                showSuccessMessage();
-                playCorrectSound();
-                
-                sendWordFound(currentWord);
-                
-                if (foundWords.length === targetWords.length) {{
-                    setTimeout(() => {{
-                        showCompleteMessage();
-                        playCompleteSound();
-                    }}, 1000);
-                }}
-                return true;
-            }} else if (currentWord && currentWord.length >= 3) {{
-                playWrongSound();
-            }}
-            return false;
-        }}
-
-        function showSuccessMessage() {{
-            successMessageDiv.classList.add('show');
-            setTimeout(() => {{
-                successMessageDiv.classList.remove('show');
-            }}, 2000);
-        }}
-
-        function showCompleteMessage() {{
-            completeMessageDiv.classList.add('show');
-            setTimeout(() => {{
-                completeMessageDiv.classList.remove('show');
-            }}, 3500);
-        }}
-
-        function getButtonCenterPosition(button) {{
-            const rect = button.getBoundingClientRect();
-            const containerRect = container.getBoundingClientRect();
-            return {{
-                x: rect.left - containerRect.left + rect.width / 2,
-                y: rect.top - containerRect.top + rect.height / 2
-            }};
-        }}
-
-        function selectButton(button) {{
-            if (!selectedButtons.includes(button)) {{
-                if (audioCtx && audioCtx.state === 'suspended') {{
-                    audioCtx.resume();
-                }}
-                
-                button.classList.add('selected');
-                button.classList.remove('hover');
-                
-                selectedLetters.push(button.dataset.letter);
-                selectedButtons.push(button);
-                points.push(getButtonCenterPosition(button));
-                updateSelectedWord();
-                drawLine();
-                playSelectSound();
-                
-                button.offsetHeight;
-            }}
-        }}
-
-        function clearAllSelections() {{
-            document.querySelectorAll('.circle-button').forEach(button => {{
-                button.classList.remove('selected');
-                button.classList.remove('hover');
-                button.offsetHeight;
-            }});
-            selectedLetters = [];
-            selectedButtons = [];
-            points = [];
-            updateSelectedWord();
-            drawLine();
-        }}
-
-        function getButtonAtPosition(clientX, clientY) {{
-            const buttons = document.querySelectorAll('.circle-button');
-            let closestButton = null;
-            let closestDistance = Infinity;
-            
-            buttons.forEach(button => {{
-                if (!button.classList.contains('selected')) {{
-                    button.classList.remove('hover');
-                }}
-            }});
-            
-            for (let button of buttons) {{
-                const rect = button.getBoundingClientRect();
-                const buttonCenterX = rect.left + rect.width / 2;
-                const buttonCenterY = rect.top + rect.height / 2;
-                
-                const distance = Math.sqrt(
-                    Math.pow(clientX - buttonCenterX, 2) + 
-                    Math.pow(clientY - buttonCenterY, 2)
-                );
-                
-                if (distance <= 20 && distance < closestDistance) {{
-                    closestDistance = distance;
-                    closestButton = button;
-                }}
-            }}
-            
-            if (closestButton && !closestButton.classList.contains('selected')) {{
-                closestButton.classList.add('hover');
-            }}
-            
-            return closestButton;
-        }}
-
-        function drawLine() {{
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            if (points.length < 2) return;
-
-            ctx.beginPath();
-            ctx.moveTo(points[0].x, points[0].y);
-            for (let i = 1; i < points.length; i++) {{
-                ctx.lineTo(points[i].x, points[i].y);
-            }}
-            ctx.strokeStyle = '#333';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-
-            points.forEach(point => {{
-                ctx.beginPath();
-                ctx.arc(point.x, point.y, 1.5, 0, 2 * Math.PI);
-                ctx.fillStyle = '#333';
-                ctx.fill();
-            }});
-        }}
-
-        function handleMouseDown(event) {{
-            event.preventDefault();
-            isDragging = true;
-            clearAllSelections();
-            
-            const button = getButtonAtPosition(event.clientX, event.clientY);
-            if (button) {{
-                selectButton(button);
-            }}
-        }}
-
-        function handleMouseMove(event) {{
-            event.preventDefault();
-            
-            if (isDragging) {{
-                const button = getButtonAtPosition(event.clientX, event.clientY);
-                if (button) {{
-                    selectButton(button);
-                }}
-            }} else {{
-                getButtonAtPosition(event.clientX, event.clientY);
-            }}
-        }}
-
-        function handleMouseUp(event) {{
-            event.preventDefault();
-            if (isDragging) {{
-                isDragging = false;
-                const isCorrect = checkCorrectWord();
-                
-                setTimeout(() => {{
-                    clearAllSelections();
-                }}, isCorrect ? 1000 : 200);
-            }}
-            document.querySelectorAll('.circle-button').forEach(button => {{
-                button.classList.remove('hover');
-            }});
-        }}
-
-        function handleTouchStart(event) {{
-            event.preventDefault();
-            isDragging = true;
-            clearAllSelections();
-            
-            const touch = event.touches[0];
-            const button = getButtonAtPosition(touch.clientX, touch.clientY);
-            if (button) {{
-                selectButton(button);
-            }}
-        }}
-
-        function handleTouchMove(event) {{
-            event.preventDefault();
-            if (!isDragging) return;
-            
-            const touch = event.touches[0];
-            const button = getButtonAtPosition(touch.clientX, touch.clientY);
-            if (button) {{
-                selectButton(button);
-            }}
-        }}
-
-        function handleTouchEnd(event) {{
-            event.preventDefault();
-            if (isDragging) {{
-                isDragging = false;
-                const isCorrect = checkCorrectWord();
-                setTimeout(() => {{
-                    clearAllSelections();
-                }}, isCorrect ? 1000 : 200);
-            }}
-        }}
-
-        document.addEventListener('mousedown', handleMouseDown);
-        document.addEventListener('mousemove', handleMouseMove);
-        document.addEventListener('mouseup', handleMouseUp);
-
-        document.addEventListener('touchstart', handleTouchStart, {{passive: false}});
-        document.addEventListener('touchmove', handleTouchMove, {{passive: false}});
-        document.addEventListener('touchend', handleTouchEnd, {{passive: false}});
-
-        updateSelectedWord();
-        updateTargetWords();
-
-        document.addEventListener('contextmenu', e => e.preventDefault());
-        document.addEventListener('selectstart', e => e.preventDefault());
-        </script>
-    </body>
-    </html>
-    """
+updateWord();
+</script>
+</body>
+</html>
+"""
 
     # HTMLコンポーネントのレンダリング
-    component_value = components.html(
-        html_content, 
-        height=400, 
-        key=f"game_component_{st.session_state.game_component_key}"
-    )
+    try:
+        component_value = components.html(
+            html_content, 
+            height=300, 
+            key=f"game_component_{st.session_state.game_component_key}"
+        )
 
-    # コンポーネントからの値を処理
-    if component_value is not None:
-        if isinstance(component_value, dict) and component_value.get('action') == 'word_found':
-            found_word = component_value.get('word')
-            if (found_word and 
-                found_word in st.session_state.target_words and 
-                found_word not in st.session_state.found_words):
-                st.session_state.found_words.append(found_word)
-                st.session_state.last_update_time = time.time()
-                st.rerun()
+        # コンポーネントからの値を処理
+        if component_value is not None:
+            if isinstance(component_value, dict) and component_value.get('action') == 'word_found':
+                found_word = component_value.get('word')
+                if (found_word and 
+                    found_word in st.session_state.target_words and 
+                    found_word not in st.session_state.found_words):
+                    st.session_state.found_words.append(found_word)
+                    st.session_state.last_update_time = time.time()
+                    st.rerun()
 
-    # ステージクリア状態の確認とUI更新
+    except Exception as e:
+        st.error("ゲームの読み込み中にエラーが発生しました。ページを更新してください。")
+        st.write(f"エラー詳細: {str(e)}")
+
+    # ステージクリア状態の確認
     stage_completed = len(st.session_state.found_words) == len(st.session_state.target_words)
     
     if stage_completed:
@@ -984,12 +429,4 @@ elif st.session_state.game_state == 'game':
                 st.success("全ステージクリア！おめでとうございます！")
                 if st.button("タイトルに戻る", key="back_to_title", use_container_width=True, type="primary"):
                     st.session_state.game_state = 'title'
-                    st.markdown("""
-                    <script>
-                    document.body.style.overflow = 'auto';
-                    document.documentElement.style.overflow = 'auto';
-                    document.body.style.position = 'static';
-                    setTimeout(() => window.scrollTo(0, 0), 100);
-                    </script>
-                    """, unsafe_allow_html=True)
                     st.rerun()
