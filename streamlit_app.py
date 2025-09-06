@@ -920,5 +920,7 @@ elif st.session_state.game_state == 'game':
                 st.success("全ステージクリア！おめでとうございます！")
                 if st.button("タイトルに戻る", key="back_to_title", use_container_width=True, type="primary"):
                     st.session_state.game_state = 'title'
+                    # スクロール位置リセット用のJavaScriptを追加
+                    st.markdown('<script>setTimeout(() => window.scrollTo(0, 0), 100);</script>', unsafe_allow_html=True)
                     # ステージクリア状態は維持したままタイトルに戻る
                     st.rerun()
