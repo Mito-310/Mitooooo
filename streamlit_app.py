@@ -647,6 +647,7 @@ elif st.session_state.game_state == 'game':
             const currentWord = selectedLetters.join('');
             if (currentWord && targetWords.includes(currentWord) && !foundWords.includes(currentWord)) {
                 foundWords.push(currentWord);
+                updateTargetWordsDisplay(); // 目標単語表示を更新
                 showSuccessMessage();
                 playCorrectSound();
                 
