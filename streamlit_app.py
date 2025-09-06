@@ -334,7 +334,7 @@ elif st.session_state.game_state == 'game':
             # 最後のステージの場合は空のスペース
             st.empty()
     
-    # JavaScriptから送信された正解単語をチェック
+    # JavaScriptから送信されたアクションをチェック
     query_params = st.query_params
     if "correct_word" in query_params:
         correct_word = query_params["correct_word"]
@@ -343,6 +343,25 @@ elif st.session_state.game_state == 'game':
         # クエリパラメータをクリア
         st.query_params.clear()
         st.rerun()
+    
+    if "action" in query_params:
+        action = query_params["action"]
+        if action == "back_to_title":
+            st.session_state.game_state = 'title'
+            st.query_params.clear()
+            st.rerun()
+        elif action == "next_stage" and st.session_state.current_stage < len(STAGES):
+            st.session_state.current_stage += 1
+            next_stage_info = STAGES[st.session_state.current_stage]
+            st.session_state.target_words = next_stage_info['words']
+            st.session_state.found_words = []
+            st.session_state.temp_found_words = []
+            # 新しいステージの文字をシャッフル
+            stage_letters = next_stage_info['letters'].copy()
+            random.shuffle(stage_letters)
+            st.session_state.shuffled_letters = stage_letters
+            st.query_params.clear()
+            st.rerun()
     
     # 目標単語の表示（複数行対応版を使用）
     target_display = create_target_words_display(st.session_state.target_words, st.session_state.found_words)
