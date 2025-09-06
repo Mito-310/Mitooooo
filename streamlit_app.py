@@ -460,11 +460,11 @@ elif st.session_state.game_state == 'game':
         
         @media (max-width: 600px) {
             .circle-container {
-                margin: 180px auto 60px auto !important;
+                margin: 190px auto 60px auto !important;
             }
             #target-words {
                 font-size: 14px !important;
-                padding: 12px !important;
+                padding: 15px !important;
                 top: 64px !important;
             }
             #selected-word {
