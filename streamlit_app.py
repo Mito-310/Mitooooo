@@ -414,8 +414,8 @@ elif st.session_state.game_state == 'game':
         ''' for i, letter in enumerate(letters)
     ])
 
-    # HTMLを表示
-    components.html(f"""
+    # HTMLを表示 - ここでf-stringの問題を修正
+    html_content = f"""
     <!DOCTYPE html>
     <html>
     <head>
@@ -720,7 +720,7 @@ elif st.session_state.game_state == 'game':
                 let boxesHtml = "";
                 for (let i = 0; i < word.length; i++) {{
                     let letter = word[i];
-                    if (isFound) {{
+                    if (isFound) {
                         boxesHtml += '<span style="display: inline-block; width: 26px; height: 26px; border: 1px solid #333; background: white; color: #333; text-align: center; line-height: 26px; margin: 1px; font-size: 14px; font-weight: bold; border-radius: 3px; vertical-align: top;">' + letter + '</span>';
                     } else {
                         boxesHtml += '<span style="display: inline-block; width: 26px; height: 26px; border: 1px solid #ddd; background: white; text-align: center; line-height: 26px; margin: 1px; border-radius: 3px; vertical-align: top;"></span>';
@@ -861,107 +861,107 @@ elif st.session_state.game_state == 'game':
             return closestButton;
         }
 
-        function drawLine() {{
+        function drawLine() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             if (points.length < 2) return;
 
             ctx.beginPath();
             ctx.moveTo(points[0].x, points[0].y);
-            for (let i = 1; i < points.length; i++) {{
+            for (let i = 1; i < points.length; i++) {
                 ctx.lineTo(points[i].x, points[i].y);
-            }}
+            }
             ctx.strokeStyle = '#333';
             ctx.lineWidth = 3;
             ctx.stroke();
 
-            points.forEach(point => {{
+            points.forEach(point => {
                 ctx.beginPath();
                 ctx.arc(point.x, point.y, 3, 0, 2 * Math.PI);
                 ctx.fillStyle = '#333';
                 ctx.fill();
-            }});
-        }}
+            });
+        }
 
-        function handleMouseDown(event) {{
+        function handleMouseDown(event) {
             event.preventDefault();
             isDragging = true;
             clearAllSelections();
             
             const button = getButtonAtPosition(event.clientX, event.clientY);
-            if (button) {{
+            if (button) {
                 selectButton(button);
-            }}
-        }}
+            }
+        }
 
-        function handleMouseMove(event) {{
+        function handleMouseMove(event) {
             event.preventDefault();
             
-            if (isDragging) {{
+            if (isDragging) {
                 const button = getButtonAtPosition(event.clientX, event.clientY);
-                if (button) {{
+                if (button) {
                     selectButton(button);
-                }}
-            }} else {{
+                }
+            } else {
                 getButtonAtPosition(event.clientX, event.clientY);
-            }}
-        }}
+            }
+        }
 
-        function handleMouseUp(event) {{
+        function handleMouseUp(event) {
             event.preventDefault();
-            if (isDragging) {{
+            if (isDragging) {
                 isDragging = false;
                 const isCorrect = checkCorrectWord();
                 
-                setTimeout(() => {{
+                setTimeout(() => {
                     clearAllSelections();
-                }}, isCorrect ? 1000 : 200);
-            }}
-            document.querySelectorAll('.circle-button').forEach(button => {{
+                }, isCorrect ? 1000 : 200);
+            }
+            document.querySelectorAll('.circle-button').forEach(button => {
                 button.classList.remove('hover');
-            }});
-        }}
+            });
+        }
 
-        function handleTouchStart(event) {{
+        function handleTouchStart(event) {
             event.preventDefault();
             isDragging = true;
             clearAllSelections();
             
             const touch = event.touches[0];
             const button = getButtonAtPosition(touch.clientX, touch.clientY);
-            if (button) {{
+            if (button) {
                 selectButton(button);
-            }}
-        }}
+            }
+        }
 
-        function handleTouchMove(event) {{
+        function handleTouchMove(event) {
             event.preventDefault();
             if (!isDragging) return;
             
             const touch = event.touches[0];
             const button = getButtonAtPosition(touch.clientX, touch.clientY);
-            if (button) {{
+            if (button) {
                 selectButton(button);
-            }}
-        }}
+            }
+        }
 
-        function handleTouchEnd(event) {{
+        function handleTouchEnd(event) {
             event.preventDefault();
-            if (isDragging) {{
+            if (isDragging) {
                 isDragging = false;
                 const isCorrect = checkCorrectWord();
-                setTimeout(() => {{
+                setTimeout(() => {
                     clearAllSelections();
-                }}, isCorrect ? 1000 : 200);
-            }}
-        }}
+                }, isCorrect ? 1000 : 200);
+            }
+        }
 
         document.addEventListener('mousedown', handleMouseDown);
         document.addEventListener('mousemove', handleMouseMove);
         document.addEventListener('mouseup', handleMouseUp);
 
-        document.addEventListener('touchstart', handleTouchStart, {{passive: false}});
-        document.addEventListener('touchmove', handleTouchMove, {{passive: false}});
-        document.addEventListener('touchend', handleTouchEnd, {{passive: false}});
+        document.addEventListener('touchstart', handleTouchStart, {passive: false});
+        document.addEventListener('touchmove', handleTouchMove, {passive: false});
+        document.addEventListener('touchend', handleTouchEnd, {passive: false});
 
         updateSelectedWord();
         updateTargetWordsDisplay();
@@ -971,7 +971,9 @@ elif st.session_state.game_state == 'game':
         </script>
     </body>
     </html>
-    """, height=600)
+    """
+
+    components.html(html_content, height=600)
 
     # JavaScriptからのメッセージを受信するためのプレースホルダー
     message_placeholder = st.empty()
