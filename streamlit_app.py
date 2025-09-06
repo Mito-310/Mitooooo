@@ -697,7 +697,7 @@ elif st.session_state.game_state == 'game':
                     }}
                     lineHtml.push(`<div style="display: inline-block; margin: 2px; vertical-align: top;">${boxesHtml}</div>`);
                 }}
-                htmlLines.push(`<div style="text-align: center; margin-bottom: 3px;">${lineHtml.join('')}</div>`);
+                htmlLines.push('<div style="text-align: center; margin-bottom: 3px;">' + lineHtml.join('') + '</div>');
             }}
             
             return htmlLines.join('');
