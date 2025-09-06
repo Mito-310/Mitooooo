@@ -862,14 +862,8 @@ elif st.session_state.game_state == 'game':
         document.addEventListener('touchmove', handleTouchMove, {passive: false});
         document.addEventListener('touchend', handleTouchEnd, {passive: false});
 
-        // 初期化時に一度実行
+        // 初期化
         updateSelectedWord();
-        updateTargetWordsDisplay();
-        
-        // デバッグ用
-        console.log('Game initialized');
-        console.log('Target words:', targetWords);
-        console.log('Found words:', foundWords);
 
         document.addEventListener('contextmenu', e => e.preventDefault());
         document.addEventListener('selectstart', e => e.preventDefault());
