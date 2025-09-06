@@ -1,10 +1,8 @@
-
 import streamlit as st
 import random
 import math
 import json
 import streamlit.components.v1 as components
-import time
 
 # ページ設定
 st.set_page_config(
@@ -123,13 +121,14 @@ if 'found_words' not in st.session_state:
     st.session_state.found_words = []
 if 'shuffled_letters' not in st.session_state:
     st.session_state.shuffled_letters = []
-if 'last_update_time' not in st.session_state:
-    st.session_state.last_update_time = time.time()
+
+if 'temp_found_words' not in st.session_state:
+    st.session_state.temp_found_words = []
 
 STAGES = DEFAULT_STAGES
 
 def create_target_words_display(words, found_words, max_width_chars=25):
-    """目標単語を複数行で表示するHTMLを生成 - 各文字を個別の四角形として表示"""
+    """目標単語を複数行で表示するHTMLを生成 - スマホ用に小さく"""
     sorted_words = sorted(words, key=lambda x: (len(x), x))
     
     # 単語を配置する
@@ -152,90 +151,25 @@ def create_target_words_display(words, found_words, max_width_chars=25):
     if current_line:
         lines.append(current_line)
     
-    # HTMLを生成 - 各単語を文字ごとの四角形として表示
+    # HTMLを生成 - スマホ用に小さく
     html_lines = []
     for line_words in lines:
         line_html = []
         for word in line_words:
             is_found = word in found_words
-            
-            # 各単語を文字ごとの四角形として生成
-            letter_boxes = []
-            for i, letter in enumerate(word):
+            boxes_html = ""
+            for letter in word:
                 if is_found:
-                    # 正解済み：文字を表示した緑の四角形
-                    letter_box = f'''<span style="
-                        display: inline-block; 
-                        width: 18px; 
-                        height: 18px; 
-                        border: 2px solid #4CAF50; 
-                        background: #e8f5e8; 
-                        color: #2e7d32; 
-                        text-align: center; 
-                        line-height: 14px; 
-                        margin: 1px; 
-                        font-size: 10px; 
-                        font-weight: bold; 
-                        border-radius: 3px; 
-                        vertical-align: top;
-                    ">{letter}</span>'''
+                    boxes_html += f'<span style="display: inline-block; width: 16px; height: 16px; border: 1px solid #333; background: white; color: #333; text-align: center; line-height: 16px; margin: 0.5px; font-size: 10px; font-weight: bold; border-radius: 2px; vertical-align: top;">{letter}</span>'
                 else:
-                    # 未正解：空の白い四角形
-                    letter_box = f'''<span style="
-                        display: inline-block; 
-                        width: 18px; 
-                        height: 18px; 
-                        border: 1px solid #ccc; 
-                        background: white; 
-                        text-align: center; 
-                        line-height: 16px; 
-                        margin: 1px; 
-                        border-radius: 2px; 
-                        vertical-align: top;
-                    "></span>'''
-                
-                letter_boxes.append(letter_box)
-            
-            # 単語全体をまとめる
-            word_html = f'<div style="display: inline-block; margin: 3px; vertical-align: top;">{"".join(letter_boxes)}</div>'
-            line_html.append(word_html)
-        
-        html_lines.append('<div style="text-align: center; margin-bottom: 4px;">' + ''.join(line_html) + '</div>')
+                    boxes_html += f'<span style="display: inline-block; width: 16px; height: 16px; border: 1px solid #ddd; background: white; text-align: center; line-height: 16px; margin: 0.5px; border-radius: 2px; vertical-align: top;"></span>'
+            line_html.append(f'<div style="display: inline-block; margin: 2px; vertical-align: top;">{boxes_html}</div>')
+        html_lines.append('<div style="text-align: center; margin-bottom: 3px;">' + ''.join(line_html) + '</div>')
     
     return ''.join(html_lines)
 
-# URLパラメータから正解単語をチェック
-def check_url_params():
-    """URLパラメータから新しい正解をチェックして状態を更新"""
-    try:
-        # Streamlitの新しいquery_paramsを使用してパラメータを取得
-        query_params = st.query_params
-        
-        # 'new_word'パラメータがあるかチェック
-        if 'new_word' in query_params:
-            new_word = query_params['new_word']
-            if (new_word in st.session_state.target_words and 
-                new_word not in st.session_state.found_words):
-                st.session_state.found_words.append(new_word)
-                st.session_state.last_update_time = time.time()
-                # パラメータをクリア
-                del st.query_params['new_word']
-                return True
-    except:
-        pass
-    return False
-
 # タイトル画面
 if st.session_state.game_state == 'title':
-    # タイトル画面ではスクロールを許可
-    st.markdown("""
-    <script>
-    document.body.style.overflow = 'auto';
-    document.documentElement.style.overflow = 'auto';
-    document.body.style.position = 'static';
-    </script>
-    """, unsafe_allow_html=True)
-    
     st.markdown("""
     <style>
     .title-section {
@@ -309,6 +243,7 @@ if st.session_state.game_state == 'title':
             st.session_state.current_stage = 1
             st.session_state.target_words = STAGES[1]['words']
             st.session_state.found_words = []
+            st.session_state.temp_found_words = []
             # 文字をシャッフルして保存
             stage_letters = STAGES[1]['letters'].copy()
             random.shuffle(stage_letters)
@@ -340,6 +275,7 @@ if st.session_state.game_state == 'title':
                         st.session_state.current_stage = stage_num
                         st.session_state.target_words = stage_info['words']
                         st.session_state.found_words = []
+                        st.session_state.temp_found_words = []
                         # 文字をシャッフルして保存
                         stage_letters = stage_info['letters'].copy()
                         random.shuffle(stage_letters)
@@ -357,34 +293,6 @@ if st.session_state.game_state == 'title':
 
 # ゲーム画面
 elif st.session_state.game_state == 'game':
-    # URLパラメータから正解をチェック
-    if check_url_params():
-        st.rerun()
-    
-    # ページトップ固定とスクロール無効化のJavaScriptを追加
-    st.markdown("""
-    <script>
-    // ページが読み込まれたらトップにスクロール
-    window.scrollTo(0, 0);
-    
-    // スクロールを無効化
-    document.body.style.overflow = 'hidden';
-    document.documentElement.style.overflow = 'hidden';
-    document.body.style.position = 'fixed';
-    document.body.style.top = '0';
-    document.body.style.left = '0';
-    document.body.style.width = '100%';
-    document.body.style.height = '100%';
-    
-    // ページがアンロードされる時にスクロールを復元
-    window.addEventListener('beforeunload', function() {
-        document.body.style.overflow = 'auto';
-        document.documentElement.style.overflow = 'auto';
-        document.body.style.position = 'static';
-    });
-    </script>
-    """, unsafe_allow_html=True)
-    
     current_stage_info = STAGES[st.session_state.current_stage]
     
     # シャッフルされた文字配列を使用（初回の場合は作成）
@@ -416,6 +324,7 @@ elif st.session_state.game_state == 'game':
                 next_stage_info = STAGES[st.session_state.current_stage]
                 st.session_state.target_words = next_stage_info['words']
                 st.session_state.found_words = []
+                st.session_state.temp_found_words = []
                 # 新しいステージの文字をシャッフル
                 stage_letters = next_stage_info['letters'].copy()
                 random.shuffle(stage_letters)
@@ -425,10 +334,43 @@ elif st.session_state.game_state == 'game':
             # 最後のステージの場合は空のスペース
             st.empty()
     
-    # 目標単語の表示（改善版を使用）
+    # JavaScriptから送信されたアクションをチェック
+    query_params = st.query_params
+    if "correct_word" in query_params:
+        correct_word = query_params["correct_word"]
+        if correct_word not in st.session_state.found_words:
+            st.session_state.found_words.append(correct_word)
+        # クエリパラメータをクリア
+        st.query_params.clear()
+        st.rerun()
+    
+    if "action" in query_params:
+        action = query_params["action"]
+        if action == "back_to_title":
+            st.session_state.game_state = 'title'
+            st.query_params.clear()
+            st.rerun()
+        elif action == "next_stage" and st.session_state.current_stage < len(STAGES):
+            st.session_state.current_stage += 1
+            next_stage_info = STAGES[st.session_state.current_stage]
+            st.session_state.target_words = next_stage_info['words']
+            st.session_state.found_words = []
+            st.session_state.temp_found_words = []
+            # 新しいステージの文字をシャッフル
+            stage_letters = next_stage_info['letters'].copy()
+            random.shuffle(stage_letters)
+            st.session_state.shuffled_letters = stage_letters
+            st.query_params.clear()
+            st.rerun()
+    
+    # 目標単語の表示（複数行対応版を使用）
     target_display = create_target_words_display(st.session_state.target_words, st.session_state.found_words)
     
-    # 円形ボタンのHTML生成
+    # 円形ボタンのHTML生成 - 完全に中央に配置、均等な余白
+    # コンテナサイズ: 220px, 中心: 110px
+    # 外側円: 直径180px, 半径90px
+    # ボタン: 直径30px, 半径15px  
+    # ボタン配置半径: 90px - 15px - 10px = 65px (10pxの余白)
     button_html = ''.join([
         f'''
         <div class="circle-button" id="button_{i}"
@@ -442,13 +384,13 @@ elif st.session_state.game_state == 'game':
     ])
 
     # 完全に分離したHTMLコンテンツ - スマホファースト
-    html_content = f"""
+    html_content = """
     <!DOCTYPE html>
     <html>
     <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
         <style>
-        body {{
+        body {
             margin: 0;
             font-family: Arial, sans-serif;
             user-select: none;
@@ -458,16 +400,16 @@ elif st.session_state.game_state == 'game':
             height: 100vh;
             position: relative;
             max-width: 100vw;
-        }}
+        }
         
-        .circle-container {{
+        .circle-container {
             position: relative;
             width: 220px;
             height: 220px;
             margin: 110px auto 20px auto;
-        }}
+        }
         
-        .ring-background {{
+        .ring-background {
             position: absolute;
             top: 50%;
             left: 50%;
@@ -478,9 +420,9 @@ elif st.session_state.game_state == 'game':
             border-radius: 50%;
             z-index: 1;
             background: transparent;
-        }}
+        }
         
-        .circle-button {{
+        .circle-button {
             position: absolute;
             width: 30px;
             height: 30px;
@@ -498,9 +440,9 @@ elif st.session_state.game_state == 'game':
             touch-action: none;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             z-index: 10;
-        }}
+        }
         
-        .circle-button.selected {{
+        .circle-button.selected {
             background: linear-gradient(135deg, #2c2c2c 0%, #1a1a1a 100%) !important;
             color: white !important;
             transform: scale(1.1);
@@ -508,19 +450,19 @@ elif st.session_state.game_state == 'game':
             border: 1.5px solid #1a1a1a;
             transition: all 0.1s ease;
             z-index: 10;
-        }}
+        }
         
-        .circle-button:not(.selected):hover {{
+        .circle-button:not(.selected):hover {
             background: linear-gradient(135deg, #f0f0f0 0%, #e9ecef 100%) !important;
             transform: scale(1.05);
-        }}
+        }
         
-        .circle-button.hover {{
+        .circle-button.hover {
             background: linear-gradient(135deg, #f0f0f0 0%, #e9ecef 100%) !important;
             transform: scale(1.05);
-        }}
+        }
         
-        #selected-word {{
+        #selected-word {
             position: fixed;
             top: 0;
             left: 0;
@@ -535,9 +477,9 @@ elif st.session_state.game_state == 'game':
             background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
             z-index: 999;
             border-bottom: 1px solid #e9ecef;
-        }}
+        }
         
-        #target-words {{
+        #target-words {
             position: fixed;
             top: 32px;
             left: 0;
@@ -551,9 +493,9 @@ elif st.session_state.game_state == 'game':
             border-bottom: 1px solid #ddd;
             max-height: 70px;
             overflow-y: auto;
-        }}
+        }
         
-        .success-message {{
+        .success-message {
             position: fixed;
             top: 40%;
             left: 50%;
@@ -567,12 +509,12 @@ elif st.session_state.game_state == 'game':
             z-index: 1000;
             opacity: 0;
             transition: all 0.3s ease;
-        }}
-        .success-message.show {{
+        }
+        .success-message.show {
             opacity: 1;
             transform: translate(-50%, -50%) scale(1.05);
-        }}
-        .complete-message {{
+        }
+        .complete-message {
             position: fixed;
             top: 40%;
             left: 50%;
@@ -586,30 +528,30 @@ elif st.session_state.game_state == 'game':
             z-index: 1001;
             opacity: 0;
             transition: all 0.3s ease;
-        }}
-        .complete-message.show {{
+        }
+        .complete-message.show {
             opacity: 1;
             transform: translate(-50%, -50%) scale(1.05);
-        }}
-        canvas {{
+        }
+        canvas {
             position: absolute;
             top: 0;
             left: 0;
             z-index: 1;
             pointer-events: none;
-        }}
+        }
         </style>
     </head>
     <body>
         <div id="selected-word"></div>
-        <div id="target-words">{target_display}</div>
+        <div id="target-words">TARGET_WORDS_PLACEHOLDER</div>
         <div id="success-message" class="success-message">正解！</div>
         <div id="complete-message" class="complete-message">ステージクリア！</div>
 
         <div class="circle-container" id="circle-container">
             <div class="ring-background"></div>
             <canvas id="lineCanvas" width="220" height="220"></canvas>
-            {button_html}
+            BUTTON_HTML_PLACEHOLDER
         </div>
 
         <script>
@@ -617,8 +559,8 @@ elif st.session_state.game_state == 'game':
         let selectedLetters = [];
         let selectedButtons = [];
         let points = [];
-        let targetWords = {json.dumps(st.session_state.target_words)};
-        let foundWords = {json.dumps(st.session_state.found_words)};
+        let targetWords = TARGET_WORDS_JSON;
+        let foundWords = FOUND_WORDS_JSON;
 
         const selectedWordDiv = document.getElementById('selected-word');
         const targetWordsDiv = document.getElementById('target-words');
@@ -628,18 +570,18 @@ elif st.session_state.game_state == 'game':
         const canvas = document.getElementById('lineCanvas');
         const ctx = canvas.getContext('2d');
 
-        function createAudioContext() {{
-            try {{
+        function createAudioContext() {
+            try {
                 return new (window.AudioContext || window.webkitAudioContext)();
-            }} catch (e) {{
+            } catch (e) {
                 console.log('Web Audio API not supported');
                 return null;
-            }}
-        }}
+            }
+        }
 
         const audioCtx = createAudioContext();
 
-        function playSelectSound() {{
+        function playSelectSound() {
             if (!audioCtx) return;
             const oscillator = audioCtx.createOscillator();
             const gainNode = audioCtx.createGain();
@@ -651,12 +593,12 @@ elif st.session_state.game_state == 'game':
             gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
             oscillator.start(audioCtx.currentTime);
             oscillator.stop(audioCtx.currentTime + 0.1);
-        }}
+        }
 
-        function playCorrectSound() {{
+        function playCorrectSound() {
             if (!audioCtx) return;
             const frequencies = [523, 659, 784, 1047];
-            frequencies.forEach((freq, index) => {{
+            frequencies.forEach((freq, index) => {
                 const oscillator = audioCtx.createOscillator();
                 const gainNode = audioCtx.createGain();
                 oscillator.connect(gainNode);
@@ -668,10 +610,10 @@ elif st.session_state.game_state == 'game':
                 gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.3);
                 oscillator.start(startTime);
                 oscillator.stop(startTime + 0.3);
-            }});
-        }}
+            });
+        }
 
-        function playWrongSound() {{
+        function playWrongSound() {
             if (!audioCtx) return;
             const oscillator = audioCtx.createOscillator();
             const gainNode = audioCtx.createGain();
@@ -683,92 +625,78 @@ elif st.session_state.game_state == 'game':
             gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
             oscillator.start(audioCtx.currentTime);
             oscillator.stop(audioCtx.currentTime + 0.3);
-        }}
+        }
 
-        function playCompleteSound() {{
-            if (!audioCtx) return;
-            const frequencies = [523, 659, 784, 1047, 523];
-            frequencies.forEach((freq, index) => {{
-                const oscillator = audioCtx.createOscillator();
-                const gainNode = audioCtx.createGain();
-                oscillator.connect(gainNode);
-                gainNode.connect(audioCtx.destination);
-                oscillator.frequency.value = freq;
-                oscillator.type = 'sine';
-                const startTime = audioCtx.currentTime + index * 0.15;
-                gainNode.gain.setValueAtTime(0.25, startTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.4);
-                oscillator.start(startTime);
-                oscillator.stop(startTime + 0.4);
-            }});
-        }}
-
-        function updateSelectedWord() {{
+        function updateSelectedWord() {
             selectedWordDiv.textContent = selectedLetters.join('');
-        }}
+        }
 
-        function updateStreamlitState(newWord) {{
-            // Streamlitに新しい正解を通知（URLパラメータを使用）
-            const currentUrl = new URL(window.location.href);
-            currentUrl.searchParams.set('new_word', newWord);
-            
-            // ページをリロード（Streamlitの状態を更新）
-            window.location.href = currentUrl.toString();
-        }}
+        function updateTargetWordsDisplay() {
+            // この関数はPythonで生成されたHTMLを使用するため、JavaScriptでの更新は不要
+            // ただし、必要に応じて動的更新のためのコードをここに配置できます
+        }
 
-        function checkCorrectWord() {{
+        function notifyCorrectWord(word) {
+            window.parent.postMessage({
+                type: 'correct_word',
+                word: word
+            }, '*');
+        }
+
+        function checkCorrectWord() {
             const currentWord = selectedLetters.join('');
-            if (currentWord && targetWords.includes(currentWord) && !foundWords.includes(currentWord)) {{
+            if (currentWord && targetWords.includes(currentWord) && !foundWords.includes(currentWord)) {
                 foundWords.push(currentWord);
                 showSuccessMessage();
                 playCorrectSound();
                 
-                // Streamlitの状態を更新
-                setTimeout(() => {{
-                    updateStreamlitState(currentWord);
-                }}, 1000);
+                notifyCorrectWord(currentWord);
                 
-                if (foundWords.length === targetWords.length) {{
-                    setTimeout(() => {{
+                if (foundWords.length === targetWords.length) {
+                    setTimeout(() => {
                         showCompleteMessage();
                         playCompleteSound();
-                    }}, 1000);
-                }}
+                        window.parent.postMessage({
+                            type: 'stage_complete',
+                            stage: CURRENT_STAGE_NUM
+                        }, '*');
+                    }, 1000);
+                }
                 return true;
-            }} else if (currentWord && currentWord.length >= 3) {{
+            } else if (currentWord && currentWord.length >= 3) {
                 playWrongSound();
-            }}
+            }
             return false;
-        }}
+        }
 
-        function showSuccessMessage() {{
+        function showSuccessMessage() {
             successMessageDiv.classList.add('show');
-            setTimeout(() => {{
+            setTimeout(() => {
                 successMessageDiv.classList.remove('show');
-            }}, 2000);
-        }}
+            }, 1500);
+        }
 
-        function showCompleteMessage() {{
+        function showCompleteMessage() {
             completeMessageDiv.classList.add('show');
-            setTimeout(() => {{
+            setTimeout(() => {
                 completeMessageDiv.classList.remove('show');
-            }}, 3500);
-        }}
+            }, 2500);
+        }
 
-        function getButtonCenterPosition(button) {{
+        function getButtonCenterPosition(button) {
             const rect = button.getBoundingClientRect();
             const containerRect = container.getBoundingClientRect();
-            return {{
+            return {
                 x: rect.left - containerRect.left + rect.width / 2,
                 y: rect.top - containerRect.top + rect.height / 2
-            }};
-        }}
+            };
+        }
 
-        function selectButton(button) {{
-            if (!selectedButtons.includes(button)) {{
-                if (audioCtx && audioCtx.state === 'suspended') {{
+        function selectButton(button) {
+            if (!selectedButtons.includes(button)) {
+                if (audioCtx && audioCtx.state === 'suspended') {
                     audioCtx.resume();
-                }}
+                }
                 
                 button.classList.add('selected');
                 button.classList.remove('hover');
@@ -781,34 +709,34 @@ elif st.session_state.game_state == 'game':
                 playSelectSound();
                 
                 button.offsetHeight;
-            }}
-        }}
+            }
+        }
 
-        function clearAllSelections() {{
-            document.querySelectorAll('.circle-button').forEach(button => {{
+        function clearAllSelections() {
+            document.querySelectorAll('.circle-button').forEach(button => {
                 button.classList.remove('selected');
                 button.classList.remove('hover');
                 button.offsetHeight;
-            }});
+            });
             selectedLetters = [];
             selectedButtons = [];
             points = [];
             updateSelectedWord();
             drawLine();
-        }}
+        }
 
-        function getButtonAtPosition(clientX, clientY) {{
+        function getButtonAtPosition(clientX, clientY) {
             const buttons = document.querySelectorAll('.circle-button');
             let closestButton = null;
             let closestDistance = Infinity;
             
-            buttons.forEach(button => {{
-                if (!button.classList.contains('selected')) {{
+            buttons.forEach(button => {
+                if (!button.classList.contains('selected')) {
                     button.classList.remove('hover');
-                }}
-            }});
+                }
+            });
             
-            for (let button of buttons) {{
+            for (let button of buttons) {
                 const rect = button.getBoundingClientRect();
                 const buttonCenterX = rect.left + rect.width / 2;
                 const buttonCenterY = rect.top + rect.height / 2;
@@ -818,123 +746,123 @@ elif st.session_state.game_state == 'game':
                     Math.pow(clientY - buttonCenterY, 2)
                 );
                 
-                if (distance <= 20 && distance < closestDistance) {{
+                if (distance <= 20 && distance < closestDistance) {
                     closestDistance = distance;
                     closestButton = button;
-                }}
-            }}
+                }
+            }
             
-            if (closestButton && !closestButton.classList.contains('selected')) {{
+            if (closestButton && !closestButton.classList.contains('selected')) {
                 closestButton.classList.add('hover');
-            }}
+            }
             
             return closestButton;
-        }}
+        }
 
-        function drawLine() {{
+        function drawLine() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             if (points.length < 2) return;
 
             ctx.beginPath();
             ctx.moveTo(points[0].x, points[0].y);
-            for (let i = 1; i < points.length; i++) {{
+            for (let i = 1; i < points.length; i++) {
                 ctx.lineTo(points[i].x, points[i].y);
-            }}
+            }
             ctx.strokeStyle = '#333';
             ctx.lineWidth = 2;
             ctx.stroke();
 
-            points.forEach(point => {{
+            points.forEach(point => {
                 ctx.beginPath();
                 ctx.arc(point.x, point.y, 1.5, 0, 2 * Math.PI);
                 ctx.fillStyle = '#333';
                 ctx.fill();
-            }});
-        }}
+            });
+        }
 
-        function handleMouseDown(event) {{
+        function handleMouseDown(event) {
             event.preventDefault();
             isDragging = true;
             clearAllSelections();
             
             const button = getButtonAtPosition(event.clientX, event.clientY);
-            if (button) {{
+            if (button) {
                 selectButton(button);
-            }}
-        }}
+            }
+        }
 
-        function handleMouseMove(event) {{
+        function handleMouseMove(event) {
             event.preventDefault();
             
-            if (isDragging) {{
+            if (isDragging) {
                 const button = getButtonAtPosition(event.clientX, event.clientY);
-                if (button) {{
+                if (button) {
                     selectButton(button);
-                }}
-            }} else {{
+                }
+            } else {
                 getButtonAtPosition(event.clientX, event.clientY);
-            }}
-        }}
+            }
+        }
 
-        function handleMouseUp(event) {{
+        function handleMouseUp(event) {
             event.preventDefault();
-            if (isDragging) {{
+            if (isDragging) {
                 isDragging = false;
                 const isCorrect = checkCorrectWord();
                 
-                setTimeout(() => {{
+                setTimeout(() => {
                     clearAllSelections();
-                }}, isCorrect ? 1000 : 200);
-            }}
-            document.querySelectorAll('.circle-button').forEach(button => {{
+                }, isCorrect ? 1000 : 200);
+            }
+            document.querySelectorAll('.circle-button').forEach(button => {
                 button.classList.remove('hover');
-            }});
-        }}
+            });
+        }
 
-        function handleTouchStart(event) {{
+        function handleTouchStart(event) {
             event.preventDefault();
             isDragging = true;
             clearAllSelections();
             
             const touch = event.touches[0];
             const button = getButtonAtPosition(touch.clientX, touch.clientY);
-            if (button) {{
+            if (button) {
                 selectButton(button);
-            }}
-        }}
+            }
+        }
 
-        function handleTouchMove(event) {{
+        function handleTouchMove(event) {
             event.preventDefault();
             if (!isDragging) return;
             
             const touch = event.touches[0];
             const button = getButtonAtPosition(touch.clientX, touch.clientY);
-            if (button) {{
+            if (button) {
                 selectButton(button);
-            }}
-        }}
+            }
+        }
 
-        function handleTouchEnd(event) {{
+        function handleTouchEnd(event) {
             event.preventDefault();
-            if (isDragging) {{
+            if (isDragging) {
                 isDragging = false;
                 const isCorrect = checkCorrectWord();
-                setTimeout(() => {{
+                setTimeout(() => {
                     clearAllSelections();
-                }}, isCorrect ? 1000 : 200);
-            }}
-        }}
+                }, isCorrect ? 1000 : 200);
+            }
+        }
 
         document.addEventListener('mousedown', handleMouseDown);
         document.addEventListener('mousemove', handleMouseMove);
         document.addEventListener('mouseup', handleMouseUp);
 
-        document.addEventListener('touchstart', handleTouchStart, {{passive: false}});
-        document.addEventListener('touchmove', handleTouchMove, {{passive: false}});
-        document.addEventListener('touchend', handleTouchEnd, {{passive: false}});
+        document.addEventListener('touchstart', handleTouchStart, {passive: false});
+        document.addEventListener('touchmove', handleTouchMove, {passive: false});
+        document.addEventListener('touchend', handleTouchEnd, {passive: false});
 
-        // 初期化
         updateSelectedWord();
+        updateTargetWordsDisplay();
 
         document.addEventListener('contextmenu', e => e.preventDefault());
         document.addEventListener('selectstart', e => e.preventDefault());
@@ -943,10 +871,37 @@ elif st.session_state.game_state == 'game':
     </html>
     """
 
-    # HTMLコンポーネントのレンダリング
-    components.html(html_content, height=400)
+    # プレースホルダーを実際の値で置換
+    html_content = html_content.replace('TARGET_WORDS_PLACEHOLDER', target_display)
+    html_content = html_content.replace('BUTTON_HTML_PLACEHOLDER', button_html)
+    html_content = html_content.replace('TARGET_WORDS_JSON', json.dumps(st.session_state.target_words))
+    html_content = html_content.replace('FOUND_WORDS_JSON', json.dumps(st.session_state.found_words))
+    html_content = html_content.replace('CURRENT_STAGE_NUM', str(st.session_state.current_stage))
 
-    # ステージクリア状態の確認とUI更新
+    components.html(html_content, height=320)
+
+    # JavaScriptからのメッセージを受信するためのプレースホルダー
+    message_placeholder = st.empty()
+    
+    # postMessageを監視するためのJavaScript
+    components.html("""
+    <script>
+    window.addEventListener('message', function(event) {
+        if (event.data.type === 'correct_word') {
+            // URLパラメータを使ってStreamlitに正解した単語を通知
+            const currentUrl = new URL(window.location);
+            currentUrl.searchParams.set('correct_word', event.data.word);
+            window.location.href = currentUrl.toString();
+        }
+        if (event.data.type === 'stage_complete') {
+            // ステージクリア通知（特別な処理は不要）
+            console.log('Stage completed:', event.data.stage);
+        }
+    });
+    </script>
+    """, height=0)
+    
+    # ステージクリア状態の確認
     stage_completed = len(st.session_state.found_words) == len(st.session_state.target_words)
     
     if stage_completed:
@@ -959,6 +914,7 @@ elif st.session_state.game_state == 'game':
                     next_stage_info = STAGES[st.session_state.current_stage]
                     st.session_state.target_words = next_stage_info['words']
                     st.session_state.found_words = []
+                    st.session_state.temp_found_words = []
                     # 新しいステージの文字をシャッフル
                     stage_letters = next_stage_info['letters'].copy()
                     random.shuffle(stage_letters)
@@ -969,13 +925,7 @@ elif st.session_state.game_state == 'game':
                 st.success("全ステージクリア！おめでとうございます！")
                 if st.button("タイトルに戻る", key="back_to_title", use_container_width=True, type="primary"):
                     st.session_state.game_state = 'title'
-                    # スクロールを復元してからタイトルに戻る
-                    st.markdown("""
-                    <script>
-                    document.body.style.overflow = 'auto';
-                    document.documentElement.style.overflow = 'auto';
-                    document.body.style.position = 'static';
-                    setTimeout(() => window.scrollTo(0, 0), 100);
-                    </script>
-                    """, unsafe_allow_html=True)
+                    # スクロール位置リセット用のJavaScriptを追加
+                    st.markdown('<script>setTimeout(() => window.scrollTo(0, 0), 100);</script>', unsafe_allow_html=True)
+                    # ステージクリア状態は維持したままタイトルに戻る
                     st.rerun()
