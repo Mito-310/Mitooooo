@@ -392,12 +392,6 @@ elif st.session_state.game_state == 'game':
     # 目標単語の表示（複数行対応版を使用）
     target_display = create_target_words_display(st.session_state.target_words, st.session_state.found_words)
     
-    # デバッグ表示（開発中のみ）
-    if len(st.session_state.found_words) > 0:
-        st.info(f"発見済み単語: {', '.join(st.session_state.found_words)} ({len(st.session_state.found_words)}/{len(st.session_state.target_words)})")
-    else:
-        st.info("まだ単語が見つかっていません")
-    
     # 円形ボタンのHTML生成
     button_html = ''.join([
         f'''
