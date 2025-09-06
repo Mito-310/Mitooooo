@@ -711,14 +711,14 @@ elif st.session_state.game_state == 'game':
             successMessageDiv.classList.add('show');
             setTimeout(() => {{
                 successMessageDiv.classList.remove('show');
-            }}, 1500);
+            }}, 2000);  // 2秒間表示（元は1.5秒）
         }}
 
         function showCompleteMessage() {{
             completeMessageDiv.classList.add('show');
             setTimeout(() => {{
                 completeMessageDiv.classList.remove('show');
-            }}, 2500);
+            }}, 3500);  // 3.5秒間表示（元は2.5秒）
         }}
 
         function getButtonCenterPosition(button) {{
