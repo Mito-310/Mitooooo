@@ -383,8 +383,6 @@ elif st.session_state.game_state == 'game':
         st.query_params.clear()
         st.rerun()
     
-
-    
     # 目標単語の表示（文字数→アルファベット順でソート）
     sorted_words = sorted(st.session_state.target_words, key=lambda x: (len(x), x))
     target_boxes_html = []
@@ -601,6 +599,109 @@ elif st.session_state.game_state == 'game':
         const canvas = document.getElementById('lineCanvas');
         const ctx = canvas.getContext('2d');
 
+        // 効果音生成関数
+        function createAudioContext() {{
+            try {{
+                return new (window.AudioContext || window.webkitAudioContext)();
+            }} catch (e) {{
+                console.log('Web Audio API not supported');
+                return null;
+            }}
+        }}
+
+        const audioCtx = createAudioContext();
+
+        // ボタン選択時の効果音
+        function playSelectSound() {{
+            if (!audioCtx) return;
+            
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            oscillator.frequency.value = 800;
+            oscillator.type = 'sine';
+            
+            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+            
+            oscillator.start(audioCtx.currentTime);
+            oscillator.stop(audioCtx.currentTime + 0.1);
+        }}
+
+        // 正解時の効果音
+        function playCorrectSound() {{
+            if (!audioCtx) return;
+            
+            const frequencies = [523, 659, 784, 1047]; // C, E, G, C (メジャーコード)
+            
+            frequencies.forEach((freq, index) => {{
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                
+                oscillator.frequency.value = freq;
+                oscillator.type = 'sine';
+                
+                const startTime = audioCtx.currentTime + index * 0.1;
+                gainNode.gain.setValueAtTime(0.2, startTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.3);
+                
+                oscillator.start(startTime);
+                oscillator.stop(startTime + 0.3);
+            }});
+        }}
+
+        // ステージクリア時の効果音
+        function playCompleteSound() {{
+            if (!audioCtx) return;
+            
+            // ファンファーレ風の音
+            const melody = [523, 659, 784, 1047, 1319]; // C, E, G, C, E
+            
+            melody.forEach((freq, index) => {{
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                
+                oscillator.frequency.value = freq;
+                oscillator.type = 'triangle';
+                
+                const startTime = audioCtx.currentTime + index * 0.15;
+                gainNode.gain.setValueAtTime(0.3, startTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.4);
+                
+                oscillator.start(startTime);
+                oscillator.stop(startTime + 0.4);
+            }});
+        }}
+
+        // 不正解時の効果音
+        function playWrongSound() {{
+            if (!audioCtx) return;
+            
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            oscillator.frequency.value = 200;
+            oscillator.type = 'sawtooth';
+            
+            gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            
+            oscillator.start(audioCtx.currentTime);
+            oscillator.stop(audioCtx.currentTime + 0.3);
+        }}
+
         function updateSelectedWord() {{
             selectedWordDiv.textContent = selectedLetters.join('');
         }}
@@ -608,7 +709,6 @@ elif st.session_state.game_state == 'game':
         function updateTargetWordsDisplay() {{
             let targetBoxesHtml = [];
             let sortedWords = targetWords.slice().sort((a, b) => {{
-                // 文字数で比較、同じなら辞書順
                 if (a.length !== b.length) {{
                     return a.length - b.length;
                 }}
@@ -622,75 +722,84 @@ elif st.session_state.game_state == 'game':
                     let letter = word[i];
                     if (isFound) {{
                         boxesHtml += '<span style="display: inline-block; width: 26px; height: 26px; border: 1px solid #333; background: white; color: #333; text-align: center; line-height: 26px; margin: 1px; font-size: 14px; font-weight: bold; border-radius: 3px; vertical-align: top;">' + letter + '</span>';
-                    }} else {{
+                    } else {
                         boxesHtml += '<span style="display: inline-block; width: 26px; height: 26px; border: 1px solid #ddd; background: white; text-align: center; line-height: 26px; margin: 1px; border-radius: 3px; vertical-align: top;"></span>';
-                    }}
-                }}
+                    }
+                }
                 targetBoxesHtml.push('<div style="display: inline-block; margin: 6px; vertical-align: top;">' + boxesHtml + '</div>');
-            }}
+            }
             
             targetWordsDiv.innerHTML = targetBoxesHtml.join('');
-        }}
+        }
 
         // Streamlitに正解した単語を通知する関数
-        function notifyCorrectWord(word) {{
-            // parent.postMessageを使ってStreamlitに通知
-            window.parent.postMessage({{
+        function notifyCorrectWord(word) {
+            window.parent.postMessage({
                 type: 'correct_word',
                 word: word
-            }}, '*');
-        }}
+            }, '*');
+        }
 
-        function checkCorrectWord() {{
+        function checkCorrectWord() {
             const currentWord = selectedLetters.join('');
-            if (currentWord && targetWords.includes(currentWord) && !foundWords.includes(currentWord)) {{
+            if (currentWord && targetWords.includes(currentWord) && !foundWords.includes(currentWord)) {
                 foundWords.push(currentWord);
                 updateTargetWordsDisplay();
                 showSuccessMessage();
+                playCorrectSound();
                 
                 // Streamlitに正解を通知
                 notifyCorrectWord(currentWord);
                 
-                if (foundWords.length === targetWords.length) {{
-                    setTimeout(() => {{
+                if (foundWords.length === targetWords.length) {
+                    setTimeout(() => {
                         showCompleteMessage();
+                        playCompleteSound();
                         // ステージクリア状態をStreamlitに通知
-                        window.parent.postMessage({{
+                        window.parent.postMessage({
                             type: 'stage_complete',
                             stage: {st.session_state.current_stage}
-                        }}, '*');
-                    }}, 1000);
-                }}
+                        }, '*');
+                    }, 1000);
+                }
                 return true;
-            }}
+            } else if (currentWord && currentWord.length >= 3) {
+                // 3文字以上の単語で不正解の場合、効果音を再生
+                playWrongSound();
+            }
             return false;
-        }}
+        }
 
-        function showSuccessMessage() {{
+        function showSuccessMessage() {
             successMessageDiv.classList.add('show');
-            setTimeout(() => {{
+            setTimeout(() => {
                 successMessageDiv.classList.remove('show');
-            }}, 1500);
-        }}
+            }, 1500);
+        }
 
-        function showCompleteMessage() {{
+        function showCompleteMessage() {
             completeMessageDiv.classList.add('show');
-            setTimeout(() => {{
+            setTimeout(() => {
                 completeMessageDiv.classList.remove('show');
-            }}, 2500);
-        }}
+            }, 2500);
+        }
 
-        function getButtonCenterPosition(button) {{
+        function getButtonCenterPosition(button) {
             const rect = button.getBoundingClientRect();
             const containerRect = container.getBoundingClientRect();
-            return {{
+            return {
                 x: rect.left - containerRect.left + rect.width / 2,
                 y: rect.top - containerRect.top + rect.height / 2
-            }};
-        }}
+            };
+        }
 
-        function selectButton(button) {{
-            if (!selectedButtons.includes(button)) {{
+        function selectButton(button) {
+            if (!selectedButtons.includes(button)) {
+                // AudioContextを有効化（ユーザーインタラクションが必要）
+                if (audioCtx && audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                
                 button.classList.add('selected');
                 button.classList.remove('hover');
                 
@@ -699,36 +808,37 @@ elif st.session_state.game_state == 'game':
                 points.push(getButtonCenterPosition(button));
                 updateSelectedWord();
                 drawLine();
+                playSelectSound();
                 
                 button.offsetHeight;
-            }}
-        }}
+            }
+        }
 
-        function clearAllSelections() {{
-            document.querySelectorAll('.circle-button').forEach(button => {{
+        function clearAllSelections() {
+            document.querySelectorAll('.circle-button').forEach(button => {
                 button.classList.remove('selected');
                 button.classList.remove('hover');
                 button.offsetHeight;
-            }});
+            });
             selectedLetters = [];
             selectedButtons = [];
             points = [];
             updateSelectedWord();
             drawLine();
-        }}
+        }
 
-        function getButtonAtPosition(clientX, clientY) {{
+        function getButtonAtPosition(clientX, clientY) {
             const buttons = document.querySelectorAll('.circle-button');
             let closestButton = null;
             let closestDistance = Infinity;
             
-            buttons.forEach(button => {{
-                if (!button.classList.contains('selected')) {{
+            buttons.forEach(button => {
+                if (!button.classList.contains('selected')) {
                     button.classList.remove('hover');
-                }}
-            }});
+                }
+            });
             
-            for (let button of buttons) {{
+            for (let button of buttons) {
                 const rect = button.getBoundingClientRect();
                 const buttonCenterX = rect.left + rect.width / 2;
                 const buttonCenterY = rect.top + rect.height / 2;
@@ -738,120 +848,120 @@ elif st.session_state.game_state == 'game':
                     Math.pow(clientY - buttonCenterY, 2)
                 );
                 
-                if (distance <= 35 && distance < closestDistance) {{
+                if (distance <= 35 && distance < closestDistance) {
                     closestDistance = distance;
                     closestButton = button;
-                }}
-            }}
+                }
+            }
             
-            if (closestButton && !closestButton.classList.contains('selected')) {{
+            if (closestButton && !closestButton.classList.contains('selected')) {
                 closestButton.classList.add('hover');
-            }}
+            }
             
             return closestButton;
-        }}
+        }
 
-        function drawLine() {{
+        function drawLine() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             if (points.length < 2) return;
 
             ctx.beginPath();
             ctx.moveTo(points[0].x, points[0].y);
-            for (let i = 1; i < points.length; i++) {{
+            for (let i = 1; i < points.length; i++) {
                 ctx.lineTo(points[i].x, points[i].y);
-            }}
+            }
             ctx.strokeStyle = '#333';
             ctx.lineWidth = 3;
             ctx.stroke();
 
-            points.forEach(point => {{
+            points.forEach(point => {
                 ctx.beginPath();
                 ctx.arc(point.x, point.y, 3, 0, 2 * Math.PI);
                 ctx.fillStyle = '#333';
                 ctx.fill();
-            }});
-        }}
+            });
+        }
 
-        function handleMouseDown(event) {{
+        function handleMouseDown(event) {
             event.preventDefault();
             isDragging = true;
             clearAllSelections();
             
             const button = getButtonAtPosition(event.clientX, event.clientY);
-            if (button) {{
+            if (button) {
                 selectButton(button);
-            }}
-        }}
+            }
+        }
 
-        function handleMouseMove(event) {{
+        function handleMouseMove(event) {
             event.preventDefault();
             
-            if (isDragging) {{
+            if (isDragging) {
                 const button = getButtonAtPosition(event.clientX, event.clientY);
-                if (button) {{
+                if (button) {
                     selectButton(button);
-                }}
-            }} else {{
+                }
+            } else {
                 getButtonAtPosition(event.clientX, event.clientY);
-            }}
-        }}
+            }
+        }
 
-        function handleMouseUp(event) {{
+        function handleMouseUp(event) {
             event.preventDefault();
-            if (isDragging) {{
+            if (isDragging) {
                 isDragging = false;
                 const isCorrect = checkCorrectWord();
                 
-                setTimeout(() => {{
+                setTimeout(() => {
                     clearAllSelections();
-                }}, isCorrect ? 1000 : 200);
-            }}
-            document.querySelectorAll('.circle-button').forEach(button => {{
+                }, isCorrect ? 1000 : 200);
+            }
+            document.querySelectorAll('.circle-button').forEach(button => {
                 button.classList.remove('hover');
-            }});
-        }}
+            });
+        }
 
-        function handleTouchStart(event) {{
+        function handleTouchStart(event) {
             event.preventDefault();
             isDragging = true;
             clearAllSelections();
             
             const touch = event.touches[0];
             const button = getButtonAtPosition(touch.clientX, touch.clientY);
-            if (button) {{
+            if (button) {
                 selectButton(button);
-            }}
-        }}
+            }
+        }
 
-        function handleTouchMove(event) {{
+        function handleTouchMove(event) {
             event.preventDefault();
             if (!isDragging) return;
             
             const touch = event.touches[0];
             const button = getButtonAtPosition(touch.clientX, touch.clientY);
-            if (button) {{
+            if (button) {
                 selectButton(button);
-            }}
-        }}
+            }
+        }
 
-        function handleTouchEnd(event) {{
+        function handleTouchEnd(event) {
             event.preventDefault();
-            if (isDragging) {{
+            if (isDragging) {
                 isDragging = false;
                 const isCorrect = checkCorrectWord();
-                setTimeout(() => {{
+                setTimeout(() => {
                     clearAllSelections();
-                }}, isCorrect ? 1000 : 200);
-            }}
-        }}
+                }, isCorrect ? 1000 : 200);
+            }
+        }
 
         document.addEventListener('mousedown', handleMouseDown);
         document.addEventListener('mousemove', handleMouseMove);
         document.addEventListener('mouseup', handleMouseUp);
 
-        document.addEventListener('touchstart', handleTouchStart, {{passive: false}});
-        document.addEventListener('touchmove', handleTouchMove, {{passive: false}});
-        document.addEventListener('touchend', handleTouchEnd, {{passive: false}});
+        document.addEventListener('touchstart', handleTouchStart, {passive: false});
+        document.addEventListener('touchmove', handleTouchMove, {passive: false});
+        document.addEventListener('touchend', handleTouchEnd, {passive: false});
 
         updateSelectedWord();
         updateTargetWordsDisplay();
