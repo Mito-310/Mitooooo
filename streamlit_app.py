@@ -385,7 +385,7 @@ elif st.session_state.game_state == 'game':
         ''' for i, letter in enumerate(letters)
     ])
 
-    # 完全に分離したHTMLコンテンツ - スマホファースト
+    # HTMLコンテンツ - JavaScriptの構文エラーを修正
     html_content = f"""
     <!DOCTYPE html>
     <html>
@@ -652,7 +652,6 @@ elif st.session_state.game_state == 'game':
         }}
 
         function updateTargetWords() {{
-            // 目標単語の表示を更新
             let updatedDisplay = createTargetWordsDisplay(targetWords, foundWords);
             targetWordsDiv.innerHTML = updatedDisplay;
         }}
@@ -690,12 +689,12 @@ elif st.session_state.game_state == 'game':
                     let boxesHtml = "";
                     for (let letter of word) {{
                         if (isFound) {{
-                            boxesHtml += `<span style="display: inline-block; width: 16px; height: 16px; border: 1px solid #333; background: white; color: #333; text-align: center; line-height: 16px; margin: 0.5px; font-size: 10px; font-weight: bold; border-radius: 2px; vertical-align: top;">${letter}</span>`;
+                            boxesHtml += "<span style=\\"display: inline-block; width: 16px; height: 16px; border: 1px solid #333; background: white; color: #333; text-align: center; line-height: 16px; margin: 0.5px; font-size: 10px; font-weight: bold; border-radius: 2px; vertical-align: top;\\">" + letter + "</span>";
                         }} else {{
-                            boxesHtml += `<span style="display: inline-block; width: 16px; height: 16px; border: 1px solid #ddd; background: white; text-align: center; line-height: 16px; margin: 0.5px; border-radius: 2px; vertical-align: top;"></span>`;
+                            boxesHtml += "<span style=\\"display: inline-block; width: 16px; height: 16px; border: 1px solid #ddd; background: white; text-align: center; line-height: 16px; margin: 0.5px; border-radius: 2px; vertical-align: top;\\"></span>";
                         }}
                     }}
-                    lineHtml.push(`<div style="display: inline-block; margin: 2px; vertical-align: top;">${boxesHtml}</div>`);
+                    lineHtml.push("<div style=\\"display: inline-block; margin: 2px; vertical-align: top;\\">" + boxesHtml + "</div>");
                 }}
                 htmlLines.push('<div style="text-align: center; margin-bottom: 3px;">' + lineHtml.join('') + '</div>');
             }}
@@ -705,12 +704,10 @@ elif st.session_state.game_state == 'game':
 
         // Streamlitとの通信用のメッセージハンドラ
         function sendWordFound(word) {{
-            // カスタムイベントを使用してStreamlitに通知
             window.parent.postMessage({{
                 type: 'streamlit:componentReady'
             }}, '*');
             
-            // Streamlitコンポーネントにデータを送信
             window.parent.postMessage({{
                 type: 'streamlit:setComponentValue',
                 value: {{
@@ -729,7 +726,6 @@ elif st.session_state.game_state == 'game':
                 showSuccessMessage();
                 playCorrectSound();
                 
-                // Streamlitに正解を通知
                 sendWordFound(currentWord);
                 
                 if (foundWords.length === targetWords.length) {{
@@ -937,7 +933,6 @@ elif st.session_state.game_state == 'game':
         document.addEventListener('touchmove', handleTouchMove, {{passive: false}});
         document.addEventListener('touchend', handleTouchEnd, {{passive: false}});
 
-        // 初期化
         updateSelectedWord();
         updateTargetWords();
 
@@ -948,7 +943,7 @@ elif st.session_state.game_state == 'game':
     </html>
     """
 
-    # HTMLコンポーネントのレンダリング - コールバック機能付き
+    # HTMLコンポーネントのレンダリング
     component_value = components.html(
         html_content, 
         height=400, 
@@ -979,7 +974,6 @@ elif st.session_state.game_state == 'game':
                     next_stage_info = STAGES[st.session_state.current_stage]
                     st.session_state.target_words = next_stage_info['words']
                     st.session_state.found_words = []
-                    # 新しいステージの文字をシャッフル
                     stage_letters = next_stage_info['letters'].copy()
                     random.shuffle(stage_letters)
                     st.session_state.shuffled_letters = stage_letters
@@ -990,7 +984,6 @@ elif st.session_state.game_state == 'game':
                 st.success("全ステージクリア！おめでとうございます！")
                 if st.button("タイトルに戻る", key="back_to_title", use_container_width=True, type="primary"):
                     st.session_state.game_state = 'title'
-                    # スクロールを復元してからタイトルに戻る
                     st.markdown("""
                     <script>
                     document.body.style.overflow = 'auto';
