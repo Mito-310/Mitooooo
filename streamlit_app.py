@@ -172,19 +172,18 @@ def create_target_words_display(words, found_words, max_width_chars=25):
 def check_url_params():
     """URLパラメータから新しい正解をチェックして状態を更新"""
     try:
-        # Streamlitのquery_paramsを使用してパラメータを取得
-        query_params = st.experimental_get_query_params() if hasattr(st, 'experimental_get_query_params') else {}
+        # Streamlitの新しいquery_paramsを使用してパラメータを取得
+        query_params = st.query_params
         
         # 'new_word'パラメータがあるかチェック
         if 'new_word' in query_params:
-            new_word = query_params['new_word'][0]
+            new_word = query_params['new_word']
             if (new_word in st.session_state.target_words and 
                 new_word not in st.session_state.found_words):
                 st.session_state.found_words.append(new_word)
                 st.session_state.last_update_time = time.time()
                 # パラメータをクリア
-                if hasattr(st, 'experimental_set_query_params'):
-                    st.experimental_set_query_params()
+                del st.query_params['new_word']
                 return True
     except:
         pass
