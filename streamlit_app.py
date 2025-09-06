@@ -406,7 +406,7 @@ elif st.session_state.game_state == 'game':
             position: relative;
             width: 220px;
             height: 220px;
-            margin: 80px auto 20px auto;
+            margin: 110px auto 20px auto;
         }
         
         .ring-background {
