@@ -854,7 +854,299 @@ elif st.session_state.game_state == 'game':
                 }
             }
             
-            if (closestButton && !closestButton.classList.contains('selected')) {
+            if (closestButton && !closestButton.classList.contains('selected')) {{
+                closestButton.classList.add('hover');
+            }}
+            
+            return closestButton;
+        }}
+
+        function drawLine() {{
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (points.length < 2) return;
+
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+            for (let i = 1; i < points.length; i++) {{
+                ctx.lineTo(points[i].x, points[i].y);
+            }}
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            points.forEach(point => {{
+                ctx.beginPath();
+                ctx.arc(point.x, point.y, 3, 0, 2 * Math.PI);
+                ctx.fillStyle = '#333';
+                ctx.fill();
+            }});
+        }}
+
+        function handleMouseDown(event) {{
+            event.preventDefault();
+            isDragging = true;
+            clearAllSelections();
+            
+            const button = getButtonAtPosition(event.clientX, event.clientY);
+            if (button) {{
+                selectButton(button);
+            }}
+        }}
+
+        function handleMouseMove(event) {{
+            event.preventDefault();
+            
+            if (isDragging) {{
+                const button = getButtonAtPosition(event.clientX, event.clientY);
+                if (button) {{
+                    selectButton(button);
+                }}
+            }} else {{
+                getButtonAtPosition(event.clientX, event.clientY);
+            }}
+        }}
+
+        function handleMouseUp(event) {{
+            event.preventDefault();
+            if (isDragging) {{
+                isDragging = false;
+                const isCorrect = checkCorrectWord();
+                
+                setTimeout(() => {{
+                    clearAllSelections();
+                }}, isCorrect ? 1000 : 200);
+            }}
+            document.querySelectorAll('.circle-button').forEach(button => {{
+                button.classList.remove('hover');
+            }});
+        }}
+
+        function handleTouchStart(event) {{
+            event.preventDefault();
+            isDragging = true;
+            clearAllSelections();
+            
+            const touch = event.touches[0];
+            const button = getButtonAtPosition(touch.clientX, touch.clientY);
+            if (button) {{
+                selectButton(button);
+            }}
+        }}
+
+        function handleTouchMove(event) {{
+            event.preventDefault();
+            if (!isDragging) return;
+            
+            const touch = event.touches[0];
+            const button = getButtonAtPosition(touch.clientX, touch.clientY);
+            if (button) {{
+                selectButton(button);
+            }}
+        }}
+
+        function handleTouchEnd(event) {{
+            event.preventDefault();
+            if (isDragging) {{
+                isDragging = false;
+                const isCorrect = checkCorrectWord();
+                setTimeout(() => {{
+                    clearAllSelections();
+                }}, isCorrect ? 1000 : 200);
+            }}
+        }}
+
+        document.addEventListener('mousedown', handleMouseDown);
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+
+        document.addEventListener('touchstart', handleTouchStart, {{passive: false}});
+        document.addEventListener('touchmove', handleTouchMove, {{passive: false}});
+        document.addEventListener('touchend', handleTouchEnd, {{passive: false}});
+
+        updateSelectedWord();
+        updateTargetWordsDisplay();
+
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('selectstart', e => e.preventDefault());
+    """
+
+    # HTMLコンテンツを構築
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+        <style>
+        body {{
+            margin: 0;
+            font-family: Arial, sans-serif;
+            user-select: none;
+            touch-action: none;
+            overflow-x: hidden;
+            background: #fafafa;
+            min-height: 100vh;
+            position: relative;
+        }}
+        
+        /* モバイル向けレイアウト調整 */
+        @media (max-width: 600px) {{
+            .circle-container {{
+                margin: 80px auto 60px auto !important;
+            }}
+            #target-words {{
+                font-size: 14px !important;
+                padding: 12px !important;
+                top: 64px !important;
+            }}
+            #selected-word {{
+                font-size: 22px !important;
+                padding: 10px !important;
+            }}
+        }}
+        
+        .circle-container {{
+            position: relative;
+            width: 320px;
+            height: 320px;
+            margin: 120px auto 40px auto;
+            border: 3px solid #ddd;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+        }}
+        .circle-button {{
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            color: #333;
+            font-size: 18px;
+            font-weight: bold;
+            border: 2px solid #333;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.2s ease;
+            touch-action: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            z-index: 10;
+        }}
+        .circle-button.selected {{
+            background: linear-gradient(135deg, #2c2c2c 0%, #1a1a1a 100%) !important;
+            color: white !important;
+            transform: scale(1.15);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+            border: 2px solid #1a1a1a;
+            transition: all 0.1s ease;
+            z-index: 10;
+        }}
+        .circle-button:not(.selected):hover {{
+            background: linear-gradient(135deg, #f0f0f0 0%, #e9ecef 100%) !important;
+            transform: scale(1.05);
+            box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+        }}
+        .circle-button.hover {{
+            background: linear-gradient(135deg, #f0f0f0 0%, #e9ecef 100%) !important;
+            transform: scale(1.05);
+            box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+        }}
+        #selected-word {{
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 26px;
+            font-weight: bold;
+            padding: 12px;
+            letter-spacing: 4px;
+            min-height: 40px;
+            color: #333;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            z-index: 999;
+            border-bottom: 2px solid #e9ecef;
+        }}
+        #target-words {{
+            position: fixed;
+            top: 64px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 16px;
+            padding: 15px;
+            color: #666;
+            background: #f9f9f9;
+            z-index: 998;
+            border-bottom: 1px solid #ddd;
+        }}
+        .success-message {{
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            z-index: 1000;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }}
+        .success-message.show {{
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1.1);
+        }}
+        .complete-message {{
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+            color: white;
+            padding: 30px 40px;
+            border-radius: 12px;
+            font-size: 24px;
+            font-weight: bold;
+            z-index: 1001;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }}
+        .complete-message.show {{
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1.1);
+        }}
+        canvas {{
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+            pointer-events: none;
+        }}
+        </style>
+    </head>
+    <body>
+        <div id="selected-word"></div>
+        <div id="target-words">{target_display}</div>
+        <div id="success-message" class="success-message">正解！</div>
+        <div id="complete-message" class="complete-message">ステージクリア！</div>
+
+        <div class="circle-container" id="circle-container">
+            <canvas id="lineCanvas" width="320" height="320"></canvas>
+            {button_html}
+        </div>
+
+        <script>
+        {javascript_code}
+        </script>
+    </body>
+    </html>
+    """
+
+    components.html(html_content, height=600)('selected')) {
                 closestButton.classList.add('hover');
             }
             
