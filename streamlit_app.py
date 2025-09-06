@@ -410,8 +410,8 @@ elif st.session_state.game_state == 'game':
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 160px;
-            height: 160px;
+            width: 180px;
+            height: 180px;
             border: 1px solid #333;
             border-radius: 50%;
             z-index: 1;
