@@ -412,9 +412,10 @@ elif st.session_state.game_state == 'game':
             transform: translate(-50%, -50%);
             width: 160px;
             height: 160px;
-            border: 10px solid rgba(51, 51, 51, 0.1);
+            border: 1px solid #333;
             border-radius: 50%;
             z-index: 1;
+            background: transparent;
         }
         
         .circle-button {
