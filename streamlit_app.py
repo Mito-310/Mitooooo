@@ -366,14 +366,14 @@ elif st.session_state.game_state == 'game':
     # 目標単語の表示（複数行対応版を使用）
     target_display = create_target_words_display(st.session_state.target_words, st.session_state.found_words)
     
-    # 円形ボタンのHTML生成 - スマホ用に小さく
+    # 円形ボタンのHTML生成 - 外側の円の線上に配置
     button_html = ''.join([
         f'''
         <div class="circle-button" id="button_{i}"
                 data-letter="{letter}"
                 data-index="{i}"
-                style="left: {110 + 70 * math.cos(2 * math.pi * i / num_letters - math.pi/2) - 15}px;
-                       top:  {110 + 70 * math.sin(2 * math.pi * i / num_letters - math.pi/2) - 15}px;">
+                style="left: {110 + 90 * math.cos(2 * math.pi * i / num_letters - math.pi/2) - 15}px;
+                       top:  {110 + 90 * math.sin(2 * math.pi * i / num_letters - math.pi/2) - 15}px;">
             {letter}
         </div>
         ''' for i, letter in enumerate(letters)
