@@ -1,3 +1,4 @@
+
 import streamlit as st
 import random
 import math
@@ -128,7 +129,7 @@ if 'last_update_time' not in st.session_state:
 STAGES = DEFAULT_STAGES
 
 def create_target_words_display(words, found_words, max_width_chars=25):
-    """目標単語を複数行で表示するHTMLを生成 - 正解した単語は実際の文字で表示"""
+    """目標単語を複数行で表示するHTMLを生成 - 各文字を個別の四角形として表示"""
     sorted_words = sorted(words, key=lambda x: (len(x), x))
     
     # 単語を配置する
@@ -151,24 +152,55 @@ def create_target_words_display(words, found_words, max_width_chars=25):
     if current_line:
         lines.append(current_line)
     
-    # HTMLを生成 - 正解済みは文字で表示、未正解は空の四角形で表示
+    # HTMLを生成 - 各単語を文字ごとの四角形として表示
     html_lines = []
     for line_words in lines:
         line_html = []
         for word in line_words:
             is_found = word in found_words
-            if is_found:
-                # 正解済みの場合：実際の文字を表示
-                word_html = f'<div style="display: inline-block; margin: 2px; padding: 2px 4px; background: #e8f5e8; border: 1px solid #4CAF50; border-radius: 3px; font-size: 11px; font-weight: bold; color: #2e7d32; vertical-align: top;">{word}</div>'
-            else:
-                # 未正解の場合：空の四角形を表示
-                boxes_html = ""
-                for letter in word:
-                    boxes_html += f'<span style="display: inline-block; width: 16px; height: 16px; border: 1px solid #ddd; background: white; text-align: center; line-height: 16px; margin: 0.5px; border-radius: 2px; vertical-align: top;"></span>'
-                word_html = f'<div style="display: inline-block; margin: 2px; vertical-align: top;">{boxes_html}</div>'
             
+            # 各単語を文字ごとの四角形として生成
+            letter_boxes = []
+            for i, letter in enumerate(word):
+                if is_found:
+                    # 正解済み：文字を表示した緑の四角形
+                    letter_box = f'''<span style="
+                        display: inline-block; 
+                        width: 18px; 
+                        height: 18px; 
+                        border: 2px solid #4CAF50; 
+                        background: #e8f5e8; 
+                        color: #2e7d32; 
+                        text-align: center; 
+                        line-height: 14px; 
+                        margin: 1px; 
+                        font-size: 10px; 
+                        font-weight: bold; 
+                        border-radius: 3px; 
+                        vertical-align: top;
+                    ">{letter}</span>'''
+                else:
+                    # 未正解：空の白い四角形
+                    letter_box = f'''<span style="
+                        display: inline-block; 
+                        width: 18px; 
+                        height: 18px; 
+                        border: 1px solid #ccc; 
+                        background: white; 
+                        text-align: center; 
+                        line-height: 16px; 
+                        margin: 1px; 
+                        border-radius: 2px; 
+                        vertical-align: top;
+                    "></span>'''
+                
+                letter_boxes.append(letter_box)
+            
+            # 単語全体をまとめる
+            word_html = f'<div style="display: inline-block; margin: 3px; vertical-align: top;">{"".join(letter_boxes)}</div>'
             line_html.append(word_html)
-        html_lines.append('<div style="text-align: center; margin-bottom: 3px;">' + ''.join(line_html) + '</div>')
+        
+        html_lines.append('<div style="text-align: center; margin-bottom: 4px;">' + ''.join(line_html) + '</div>')
     
     return ''.join(html_lines)
 
