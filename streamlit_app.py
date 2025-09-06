@@ -861,107 +861,107 @@ elif st.session_state.game_state == 'game':
             return closestButton;
         }
 
-        function drawLine() {
+        function drawLine() {{
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             if (points.length < 2) return;
 
             ctx.beginPath();
             ctx.moveTo(points[0].x, points[0].y);
-            for (let i = 1; i < points.length; i++) {
+            for (let i = 1; i < points.length; i++) {{
                 ctx.lineTo(points[i].x, points[i].y);
-            }
+            }}
             ctx.strokeStyle = '#333';
             ctx.lineWidth = 3;
             ctx.stroke();
 
-            points.forEach(point => {
+            points.forEach(point => {{
                 ctx.beginPath();
                 ctx.arc(point.x, point.y, 3, 0, 2 * Math.PI);
                 ctx.fillStyle = '#333';
                 ctx.fill();
-            });
-        }
+            }});
+        }}
 
-        function handleMouseDown(event) {
+        function handleMouseDown(event) {{
             event.preventDefault();
             isDragging = true;
             clearAllSelections();
             
             const button = getButtonAtPosition(event.clientX, event.clientY);
-            if (button) {
+            if (button) {{
                 selectButton(button);
-            }
-        }
+            }}
+        }}
 
-        function handleMouseMove(event) {
+        function handleMouseMove(event) {{
             event.preventDefault();
             
-            if (isDragging) {
+            if (isDragging) {{
                 const button = getButtonAtPosition(event.clientX, event.clientY);
-                if (button) {
+                if (button) {{
                     selectButton(button);
-                }
-            } else {
+                }}
+            }} else {{
                 getButtonAtPosition(event.clientX, event.clientY);
-            }
-        }
+            }}
+        }}
 
-        function handleMouseUp(event) {
+        function handleMouseUp(event) {{
             event.preventDefault();
-            if (isDragging) {
+            if (isDragging) {{
                 isDragging = false;
                 const isCorrect = checkCorrectWord();
                 
-                setTimeout(() => {
+                setTimeout(() => {{
                     clearAllSelections();
-                }, isCorrect ? 1000 : 200);
-            }
-            document.querySelectorAll('.circle-button').forEach(button => {
+                }}, isCorrect ? 1000 : 200);
+            }}
+            document.querySelectorAll('.circle-button').forEach(button => {{
                 button.classList.remove('hover');
-            });
-        }
+            }});
+        }}
 
-        function handleTouchStart(event) {
+        function handleTouchStart(event) {{
             event.preventDefault();
             isDragging = true;
             clearAllSelections();
             
             const touch = event.touches[0];
             const button = getButtonAtPosition(touch.clientX, touch.clientY);
-            if (button) {
+            if (button) {{
                 selectButton(button);
-            }
-        }
+            }}
+        }}
 
-        function handleTouchMove(event) {
+        function handleTouchMove(event) {{
             event.preventDefault();
             if (!isDragging) return;
             
             const touch = event.touches[0];
             const button = getButtonAtPosition(touch.clientX, touch.clientY);
-            if (button) {
+            if (button) {{
                 selectButton(button);
-            }
-        }
+            }}
+        }}
 
-        function handleTouchEnd(event) {
+        function handleTouchEnd(event) {{
             event.preventDefault();
-            if (isDragging) {
+            if (isDragging) {{
                 isDragging = false;
                 const isCorrect = checkCorrectWord();
-                setTimeout(() => {
+                setTimeout(() => {{
                     clearAllSelections();
-                }, isCorrect ? 1000 : 200);
-            }
-        }
+                }}, isCorrect ? 1000 : 200);
+            }}
+        }}
 
         document.addEventListener('mousedown', handleMouseDown);
         document.addEventListener('mousemove', handleMouseMove);
         document.addEventListener('mouseup', handleMouseUp);
 
-        document.addEventListener('touchstart', handleTouchStart, {passive: false});
-        document.addEventListener('touchmove', handleTouchMove, {passive: false});
-        document.addEventListener('touchend', handleTouchEnd, {passive: false});
+        document.addEventListener('touchstart', handleTouchStart, {{passive: false}});
+        document.addEventListener('touchmove', handleTouchMove, {{passive: false}});
+        document.addEventListener('touchend', handleTouchEnd, {{passive: false}});
 
         updateSelectedWord();
         updateTargetWordsDisplay();
