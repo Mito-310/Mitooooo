@@ -440,7 +440,7 @@ elif st.session_state.game_state == 'game':
         ''' for i, letter in enumerate(letters)
     ])
 
-    # 完全に分離したHTMLコンテンツ
+    # 完全に分離したHTMLコンテンツ - 円の背景を削除し位置を大幅に下に移動
     html_content = """
     <!DOCTYPE html>
     <html>
@@ -460,7 +460,7 @@ elif st.session_state.game_state == 'game':
         
         @media (max-width: 600px) {
             .circle-container {
-                margin: 200px auto 60px auto !important;
+                margin: 220px auto 60px auto !important;
             }
             #target-words {
                 font-size: 14px !important;
@@ -477,11 +477,7 @@ elif st.session_state.game_state == 'game':
             position: relative;
             width: 320px;
             height: 320px;
-            margin: 140px auto 40px auto;
-            border: 3px solid #ddd;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+            margin: 320px auto 40px auto;
         }
         .circle-button {
             position: absolute;
@@ -666,24 +662,6 @@ elif st.session_state.game_state == 'game':
                 gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.3);
                 oscillator.start(startTime);
                 oscillator.stop(startTime + 0.3);
-            });
-        }
-
-        function playCompleteSound() {
-            if (!audioCtx) return;
-            const melody = [523, 659, 784, 1047, 1319];
-            melody.forEach((freq, index) => {
-                const oscillator = audioCtx.createOscillator();
-                const gainNode = audioCtx.createGain();
-                oscillator.connect(gainNode);
-                gainNode.connect(audioCtx.destination);
-                oscillator.frequency.value = freq;
-                oscillator.type = 'triangle';
-                const startTime = audioCtx.currentTime + index * 0.15;
-                gainNode.gain.setValueAtTime(0.3, startTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.4);
-                oscillator.start(startTime);
-                oscillator.stop(startTime + 0.4);
             });
         }
 
