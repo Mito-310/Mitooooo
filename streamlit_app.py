@@ -11,49 +11,117 @@ st.set_page_config(
     initial_sidebar_state="auto"
 )
 
-# カスタムCSS - スマホファースト
+# カスタムCSS
 st.markdown("""
 <style>
-/* 全体の基本設定 - スマホファースト */
-.main .block-container {
-    max-width: 100vw;
-    padding: 0.3rem;
-    margin: 0;
-}
-
 /* タイトル画面のボタンスタイル */
 .stButton > button {
     background-color: #333;
     color: white;
-    border: 1px solid #333;
-    border-radius: 4px;
-    font-weight: 500;
-    transition: all 0.2s ease;
-    height: 32px;
-    font-size: 13px;
+    border: 2px solid #333;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    height: 50px;
 }
 
 .stButton > button:hover {
     background-color: #555;
     border-color: #555;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.stButton > button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* プログレスバーの色調整 */
+.stProgress .st-bo {
+    background-color: #4CAF50;
+}
+
+/* サイドバーのスタイル調整 */
+.stSidebar .stButton > button {
+    background-color: #2196F3;
+    border-color: #2196F3;
+}
+
+.stSidebar .stButton > button:hover {
+    background-color: #1976D2;
+    border-color: #1976D2;
 }
 
 /* SUCCESS/エラーメッセージの調整 */
 .stSuccess {
     background-color: #E8F5E8;
-    border-left: 3px solid #4CAF50;
-    padding: 6px 8px;
-    margin: 6px 0;
-    font-size: 13px;
+    border-left: 4px solid #4CAF50;
+}
+
+.stWarning {
+    background-color: #FFF8E1;
+    border-left: 4px solid #FF9800;
+}
+
+.stError {
+    background-color: #FFEBEE;
+    border-left: 4px solid #F44336;
 }
 
 /* ステージ選択エリアのスタイル */
+.stage-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.stage-row {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    flex-wrap: wrap;
+}
+
+.stage-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 120px;
+}
+
 .stage-info {
     text-align: center;
-    margin-bottom: 4px;
+    margin-bottom: 8px;
     color: #555;
     font-weight: 500;
-    font-size: 11px;
+    font-size: 14px;
+}
+
+/* 通常のステージボタン */
+.stage-button {
+    width: 120px;
+    height: 50px;
+    background-color: #333;
+    color: white;
+    border: 2px solid #333;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.stage-button:hover {
+    background-color: #555;
+    border-color: #555;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
 </style>
 """, unsafe_allow_html=True)
@@ -127,8 +195,8 @@ if 'temp_found_words' not in st.session_state:
 
 STAGES = DEFAULT_STAGES
 
-def create_target_words_display(words, found_words, max_width_chars=25):
-    """目標単語を複数行で表示するHTMLを生成 - スマホ用に小さく"""
+def create_target_words_display(words, found_words, max_width_chars=20):
+    """目標単語を複数行で表示するHTMLを生成"""
     sorted_words = sorted(words, key=lambda x: (len(x), x))
     
     # 単語を配置する
@@ -151,7 +219,7 @@ def create_target_words_display(words, found_words, max_width_chars=25):
     if current_line:
         lines.append(current_line)
     
-    # HTMLを生成 - スマホ用に小さく
+    # HTMLを生成
     html_lines = []
     for line_words in lines:
         line_html = []
@@ -160,11 +228,11 @@ def create_target_words_display(words, found_words, max_width_chars=25):
             boxes_html = ""
             for letter in word:
                 if is_found:
-                    boxes_html += f'<span style="display: inline-block; width: 16px; height: 16px; border: 1px solid #333; background: white; color: #333; text-align: center; line-height: 16px; margin: 0.5px; font-size: 10px; font-weight: bold; border-radius: 2px; vertical-align: top;">{letter}</span>'
+                    boxes_html += f'<span style="display: inline-block; width: 26px; height: 26px; border: 1px solid #333; background: white; color: #333; text-align: center; line-height: 26px; margin: 1px; font-size: 14px; font-weight: bold; border-radius: 3px; vertical-align: top;">{letter}</span>'
                 else:
-                    boxes_html += f'<span style="display: inline-block; width: 16px; height: 16px; border: 1px solid #ddd; background: white; text-align: center; line-height: 16px; margin: 0.5px; border-radius: 2px; vertical-align: top;"></span>'
-            line_html.append(f'<div style="display: inline-block; margin: 2px; vertical-align: top;">{boxes_html}</div>')
-        html_lines.append('<div style="text-align: center; margin-bottom: 3px;">' + ''.join(line_html) + '</div>')
+                    boxes_html += f'<span style="display: inline-block; width: 26px; height: 26px; border: 1px solid #ddd; background: white; text-align: center; line-height: 26px; margin: 1px; border-radius: 3px; vertical-align: top;"></span>'
+            line_html.append(f'<div style="display: inline-block; margin: 6px; vertical-align: top;">{boxes_html}</div>')
+        html_lines.append('<div style="text-align: center; margin-bottom: 8px;">' + ''.join(line_html) + '</div>')
     
     return ''.join(html_lines)
 
@@ -174,36 +242,47 @@ if st.session_state.game_state == 'title':
     <style>
     .title-section {
         text-align: center;
-        padding: 0.5rem 0.3rem;
-        margin-bottom: 0.5rem;
+        padding: 2rem 1rem;
+        margin-bottom: 2rem;
     }
     .game-title {
-        font-size: 1.8rem;
+        font-size: 3rem;
         font-weight: 700;
         color: #333;
-        margin-bottom: 0.5rem;
-        letter-spacing: 1px;
+        margin-bottom: 1rem;
+        letter-spacing: 2px;
+        text-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+    }
+    .game-subtitle {
+        font-size: 1.3rem;
+        color: #555;
+        margin-bottom: 2rem;
+        font-weight: 400;
     }
     .game-rules {
-        max-width: 95vw;
+        max-width: 600px;
         margin: 0 auto;
-        padding: 0.8rem;
-        background: #f8f9fa;
-        border-radius: 6px;
+        padding: 2rem;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-radius: 12px;
         text-align: left;
-        margin-bottom: 0.8rem;
+        margin-bottom: 1rem;
+    }
+    .game-rules h3 {
+        color: #333;
+        margin-bottom: 1rem;
+        font-size: 1.2rem;
     }
     .game-rules p {
         color: #555;
-        line-height: 1.4;
-        margin-bottom: 0.4rem;
-        font-size: 13px;
+        line-height: 1.6;
+        margin-bottom: 0.8rem;
     }
     .stage-selection-title {
         text-align: center;
         color: #333;
-        margin: 1.5rem 0 1rem 0;
-        font-size: 1.2rem;
+        margin: 3rem 0 2rem 0;
+        font-size: 1.8rem;
         font-weight: 600;
     }
     </style>
@@ -221,7 +300,7 @@ if st.session_state.game_state == 'title':
             buffered = BytesIO()
             image.save(buffered, format="PNG")
             img_str = base64.b64encode(buffered.getvalue()).decode()
-            st.markdown(f'<div style="text-align: center; margin: 10px 0;"><img src="data:image/png;base64,{img_str}" width="80" style="max-width: 100%; border-radius: 4px;"></div>', unsafe_allow_html=True)
+            st.markdown(f'<div style="text-align: center; margin: 20px 0;"><img src="data:image/png;base64,{img_str}" width="200" style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"></div>', unsafe_allow_html=True)
     except:
         pass
     
@@ -252,22 +331,22 @@ if st.session_state.game_state == 'title':
             st.rerun()
     
     # 区切り線
-    st.markdown('<hr style="border: none; height: 1px; background: #ddd; margin: 1.5rem 0;">', unsafe_allow_html=True)
+    st.markdown('<hr style="border: none; height: 2px; background: linear-gradient(90deg, transparent 0%, #ddd 50%, transparent 100%); margin: 3rem 0;">', unsafe_allow_html=True)
     
     # ステージ選択
     st.markdown('<h2 class="stage-selection-title">ステージ選択</h2>', unsafe_allow_html=True)
     
     # ステージ選択を通常のStreamlitボタンで実装
-    for i in range(0, len(STAGES), 4):
-        cols = st.columns(4)
-        for j in range(4):
+    for i in range(0, len(STAGES), 3):
+        cols = st.columns(3)
+        for j in range(3):
             stage_num = i + j + 1
             if stage_num <= len(STAGES):
                 stage_info = STAGES[stage_num]
                 
                 with cols[j]:
                     # ステージ情報を表示
-                    st.markdown(f'<div style="text-align: center; margin-bottom: 4px; color: #555; font-weight: 500; font-size: 11px;">{stage_info["name"]}</div>', unsafe_allow_html=True)
+                    st.markdown(f'<div style="text-align: center; margin-bottom: 8px; color: #555; font-weight: 500; font-size: 14px;">{stage_info["name"]}</div>', unsafe_allow_html=True)
                     
                     # ボタン
                     button_text = "▶"
@@ -288,8 +367,8 @@ if st.session_state.game_state == 'title':
                     st.empty()
         
         # 行間のスペース
-        if i + 4 < len(STAGES):
-            st.markdown('<div style="margin: 8px 0;"></div>', unsafe_allow_html=True)
+        if i + 3 < len(STAGES):
+            st.markdown('<div style="margin: 20px 0;"></div>', unsafe_allow_html=True)
 
 # ゲーム画面
 elif st.session_state.game_state == 'game':
@@ -304,16 +383,17 @@ elif st.session_state.game_state == 'game':
     letters = st.session_state.shuffled_letters
     num_letters = len(letters)
     
-    # ヘッダー（3列レイアウト） - スマホ用に小さく
+    # ヘッダー（3列レイアウト）
     col1, col2, col3 = st.columns([1, 2, 1])
     with col1:
-        if st.button("戻る", key="back_to_title_header", use_container_width=True):
+        if st.button("タイトルに戻る", key="back_to_title_header", use_container_width=True):
             st.session_state.game_state = 'title'
+            # ステージクリア状態は維持したままタイトルに戻る
             st.rerun()
     with col2:
         st.markdown(f"""
-        <div style="display: flex; justify-content: center; align-items: center; height: 32px;">
-            <h3 style="text-align: center; color: #333; margin: 0; line-height: 1.2; font-size: 16px;">{current_stage_info['name']}</h3>
+        <div style="display: flex; justify-content: center; align-items: center; height: 50px;">
+            <h2 style="text-align: center; color: #333; margin: 0; line-height: 1.2;">{current_stage_info['name']}</h2>
         </div>
         """, unsafe_allow_html=True)
     with col3:
@@ -347,20 +427,20 @@ elif st.session_state.game_state == 'game':
     # 目標単語の表示（複数行対応版を使用）
     target_display = create_target_words_display(st.session_state.target_words, st.session_state.found_words)
     
-    # 円形ボタンのHTML生成 - スマホ用に小さく
+    # 円形ボタンのHTML生成
     button_html = ''.join([
         f'''
         <div class="circle-button" id="button_{i}"
                 data-letter="{letter}"
                 data-index="{i}"
-                style="left: {110 + 70 * math.cos(2 * math.pi * i / num_letters - math.pi/2) - 15}px;
-                       top:  {110 + 70 * math.sin(2 * math.pi * i / num_letters - math.pi/2) - 15}px;">
+                style="left: {160 + 120 * math.cos(2 * math.pi * i / num_letters - math.pi/2) - 25}px;
+                       top:  {160 + 120 * math.sin(2 * math.pi * i / num_letters - math.pi/2) - 25}px;">
             {letter}
         </div>
         ''' for i, letter in enumerate(letters)
     ])
 
-    # 完全に分離したHTMLコンテンツ - スマホファースト
+    # 完全に分離したHTMLコンテンツ
     html_content = """
     <!DOCTYPE html>
     <html>
@@ -374,113 +454,114 @@ elif st.session_state.game_state == 'game':
             touch-action: none;
             overflow-x: hidden;
             background: #fafafa;
-            height: 100vh;
+            min-height: 100vh;
             position: relative;
-            max-width: 100vw;
+        }
+        
+        @media (max-width: 600px) {
+            .circle-container {
+                margin: 80px auto 60px auto !important;
+            }
+            #target-words {
+                font-size: 14px !important;
+                padding: 12px !important;
+                top: 64px !important;
+            }
+            #selected-word {
+                font-size: 22px !important;
+                padding: 10px !important;
+            }
         }
         
         .circle-container {
             position: relative;
-            width: 220px;
-            height: 220px;
-            margin: 80px auto 20px auto;
-        }
-        
-        .ring-background {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 160px;
-            height: 160px;
-            border: 10px solid rgba(51, 51, 51, 0.1);
+            width: 320px;
+            height: 320px;
+            margin: 140px auto 40px auto;
+            border: 3px solid #ddd;
             border-radius: 50%;
-            z-index: 1;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
         }
-        
         .circle-button {
             position: absolute;
-            width: 30px;
-            height: 30px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
             color: #333;
-            font-size: 14px;
+            font-size: 18px;
             font-weight: bold;
-            border: 1.5px solid #333;
+            border: 2px solid #333;
             cursor: pointer;
             display: flex;
             justify-content: center;
             align-items: center;
-            transition: all 0.15s ease;
+            transition: all 0.2s ease;
             touch-action: none;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             z-index: 10;
         }
-        
         .circle-button.selected {
             background: linear-gradient(135deg, #2c2c2c 0%, #1a1a1a 100%) !important;
             color: white !important;
-            transform: scale(1.1);
-            box-shadow: 0 2px 6px rgba(0,0,0,0.25);
-            border: 1.5px solid #1a1a1a;
+            transform: scale(1.15);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+            border: 2px solid #1a1a1a;
             transition: all 0.1s ease;
             z-index: 10;
         }
-        
         .circle-button:not(.selected):hover {
             background: linear-gradient(135deg, #f0f0f0 0%, #e9ecef 100%) !important;
             transform: scale(1.05);
+            box-shadow: 0 3px 6px rgba(0,0,0,0.15);
         }
-        
         .circle-button.hover {
             background: linear-gradient(135deg, #f0f0f0 0%, #e9ecef 100%) !important;
             transform: scale(1.05);
+            box-shadow: 0 3px 6px rgba(0,0,0,0.15);
         }
-        
         #selected-word {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             text-align: center;
-            font-size: 16px;
+            font-size: 26px;
             font-weight: bold;
-            padding: 6px;
-            letter-spacing: 1px;
-            min-height: 20px;
+            padding: 12px;
+            letter-spacing: 4px;
+            min-height: 40px;
             color: #333;
             background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
             z-index: 999;
-            border-bottom: 1px solid #e9ecef;
+            border-bottom: 2px solid #e9ecef;
         }
-        
         #target-words {
             position: fixed;
-            top: 32px;
+            top: 64px;
             left: 0;
             width: 100%;
             text-align: center;
-            font-size: 11px;
-            padding: 6px;
+            font-size: 16px;
+            padding: 15px;
             color: #666;
             background: #f9f9f9;
             z-index: 998;
             border-bottom: 1px solid #ddd;
-            max-height: 70px;
+            max-height: 120px;
             overflow-y: auto;
         }
-        
         .success-message {
             position: fixed;
-            top: 40%;
+            top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
             color: white;
-            padding: 12px 20px;
-            border-radius: 6px;
-            font-size: 14px;
+            padding: 20px 30px;
+            border-radius: 8px;
+            font-size: 18px;
             font-weight: bold;
             z-index: 1000;
             opacity: 0;
@@ -488,18 +569,18 @@ elif st.session_state.game_state == 'game':
         }
         .success-message.show {
             opacity: 1;
-            transform: translate(-50%, -50%) scale(1.05);
+            transform: translate(-50%, -50%) scale(1.1);
         }
         .complete-message {
             position: fixed;
-            top: 40%;
+            top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
             color: white;
-            padding: 16px 24px;
-            border-radius: 8px;
-            font-size: 16px;
+            padding: 30px 40px;
+            border-radius: 12px;
+            font-size: 24px;
             font-weight: bold;
             z-index: 1001;
             opacity: 0;
@@ -507,7 +588,7 @@ elif st.session_state.game_state == 'game':
         }
         .complete-message.show {
             opacity: 1;
-            transform: translate(-50%, -50%) scale(1.05);
+            transform: translate(-50%, -50%) scale(1.1);
         }
         canvas {
             position: absolute;
@@ -525,8 +606,7 @@ elif st.session_state.game_state == 'game':
         <div id="complete-message" class="complete-message">ステージクリア！</div>
 
         <div class="circle-container" id="circle-container">
-            <div class="ring-background"></div>
-            <canvas id="lineCanvas" width="220" height="220"></canvas>
+            <canvas id="lineCanvas" width="320" height="320"></canvas>
             BUTTON_HTML_PLACEHOLDER
         </div>
 
@@ -586,6 +666,24 @@ elif st.session_state.game_state == 'game':
                 gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.3);
                 oscillator.start(startTime);
                 oscillator.stop(startTime + 0.3);
+            });
+        }
+
+        function playCompleteSound() {
+            if (!audioCtx) return;
+            const melody = [523, 659, 784, 1047, 1319];
+            melody.forEach((freq, index) => {
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                oscillator.frequency.value = freq;
+                oscillator.type = 'triangle';
+                const startTime = audioCtx.currentTime + index * 0.15;
+                gainNode.gain.setValueAtTime(0.3, startTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.4);
+                oscillator.start(startTime);
+                oscillator.stop(startTime + 0.4);
             });
         }
 
@@ -722,7 +820,7 @@ elif st.session_state.game_state == 'game':
                     Math.pow(clientY - buttonCenterY, 2)
                 );
                 
-                if (distance <= 20 && distance < closestDistance) {
+                if (distance <= 35 && distance < closestDistance) {
                     closestDistance = distance;
                     closestButton = button;
                 }
@@ -745,12 +843,12 @@ elif st.session_state.game_state == 'game':
                 ctx.lineTo(points[i].x, points[i].y);
             }
             ctx.strokeStyle = '#333';
-            ctx.lineWidth = 2;
+            ctx.lineWidth = 3;
             ctx.stroke();
 
             points.forEach(point => {
                 ctx.beginPath();
-                ctx.arc(point.x, point.y, 1.5, 0, 2 * Math.PI);
+                ctx.arc(point.x, point.y, 3, 0, 2 * Math.PI);
                 ctx.fillStyle = '#333';
                 ctx.fill();
             });
@@ -854,7 +952,7 @@ elif st.session_state.game_state == 'game':
     html_content = html_content.replace('FOUND_WORDS_JSON', json.dumps(st.session_state.found_words))
     html_content = html_content.replace('CURRENT_STAGE_NUM', str(st.session_state.current_stage))
 
-    components.html(html_content, height=320)
+    components.html(html_content, height=600)
 
     # JavaScriptからのメッセージを受信するためのプレースホルダー
     message_placeholder = st.empty()
