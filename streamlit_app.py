@@ -195,6 +195,47 @@ if 'temp_found_words' not in st.session_state:
 
 STAGES = DEFAULT_STAGES
 
+def create_target_words_display(words, found_words, max_width_chars=20):
+    """目標単語を複数行で表示するHTMLを生成"""
+    sorted_words = sorted(words, key=lambda x: (len(x), x))
+    
+    # 単語を配置する
+    lines = []
+    current_line = []
+    current_width = 0
+    
+    for word in sorted_words:
+        word_width = len(word) + 1  # +1はマージン分
+        
+        # 新しい行が必要かチェック
+        if current_width + word_width > max_width_chars and current_line:
+            lines.append(current_line)
+            current_line = [word]
+            current_width = word_width
+        else:
+            current_line.append(word)
+            current_width += word_width
+    
+    if current_line:
+        lines.append(current_line)
+    
+    # HTMLを生成
+    html_lines = []
+    for line_words in lines:
+        line_html = []
+        for word in line_words:
+            is_found = word in found_words
+            boxes_html = ""
+            for letter in word:
+                if is_found:
+                    boxes_html += f'<span style="display: inline-block; width: 26px; height: 26px; border: 1px solid #333; background: white; color: #333; text-align: center; line-height: 26px; margin: 1px; font-size: 14px; font-weight: bold; border-radius: 3px; vertical-align: top;">{letter}</span>'
+                else:
+                    boxes_html += f'<span style="display: inline-block; width: 26px; height: 26px; border: 1px solid #ddd; background: white; text-align: center; line-height: 26px; margin: 1px; border-radius: 3px; vertical-align: top;"></span>'
+            line_html.append(f'<div style="display: inline-block; margin: 6px; vertical-align: top;">{boxes_html}</div>')
+        html_lines.append('<div style="text-align: center; margin-bottom: 8px;">' + ''.join(line_html) + '</div>')
+    
+    return ''.join(html_lines)
+
 # タイトル画面
 if st.session_state.game_state == 'title':
     st.markdown("""
@@ -383,23 +424,8 @@ elif st.session_state.game_state == 'game':
         st.query_params.clear()
         st.rerun()
     
-    # 目標単語の表示（文字数→アルファベット順でソート）
-    sorted_words = sorted(st.session_state.target_words, key=lambda x: (len(x), x))
-    target_boxes_html = []
-    
-    for word in sorted_words:
-        is_found = word in st.session_state.found_words
-        boxes_html = ""
-        for i, letter in enumerate(word):
-            if is_found:
-                # 正解済みの単語は全文字表示
-                boxes_html += f'<span style="display: inline-block; width: 26px; height: 26px; border: 1px solid #333; background: white; color: #333; text-align: center; line-height: 26px; margin: 1px; font-size: 14px; font-weight: bold; border-radius: 3px; vertical-align: top;">{letter}</span>'
-            else:
-                # 通常の空白枠
-                boxes_html += f'<span style="display: inline-block; width: 26px; height: 26px; border: 1px solid #ddd; background: white; text-align: center; line-height: 26px; margin: 1px; border-radius: 3px; vertical-align: top;"></span>'
-        target_boxes_html.append(f'<div style="display: inline-block; margin: 6px; vertical-align: top;">{boxes_html}</div>')
-    
-    target_display = ''.join(target_boxes_html)
+    # 目標単語の表示（複数行対応版を使用）
+    target_display = create_target_words_display(st.session_state.target_words, st.session_state.found_words)
     
     # 円形ボタンのHTML生成
     button_html = ''.join([
@@ -451,7 +477,7 @@ elif st.session_state.game_state == 'game':
             position: relative;
             width: 320px;
             height: 320px;
-            margin: 120px auto 40px auto;
+            margin: 140px auto 40px auto;
             border: 3px solid #ddd;
             border-radius: 50%;
             background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
@@ -523,6 +549,8 @@ elif st.session_state.game_state == 'game':
             background: #f9f9f9;
             z-index: 998;
             border-bottom: 1px solid #ddd;
+            max-height: 120px;
+            overflow-y: auto;
         }
         .success-message {
             position: fixed;
@@ -678,29 +706,8 @@ elif st.session_state.game_state == 'game':
         }
 
         function updateTargetWordsDisplay() {
-            let targetBoxesHtml = [];
-            let sortedWords = targetWords.slice().sort((a, b) => {
-                if (a.length !== b.length) {
-                    return a.length - b.length;
-                }
-                return a.localeCompare(b);
-            });
-            
-            for (let word of sortedWords) {
-                let isFound = foundWords.includes(word);
-                let boxesHtml = "";
-                for (let i = 0; i < word.length; i++) {
-                    let letter = word[i];
-                    if (isFound) {
-                        boxesHtml += '<span style="display: inline-block; width: 26px; height: 26px; border: 1px solid #333; background: white; color: #333; text-align: center; line-height: 26px; margin: 1px; font-size: 14px; font-weight: bold; border-radius: 3px; vertical-align: top;">' + letter + '</span>';
-                    } else {
-                        boxesHtml += '<span style="display: inline-block; width: 26px; height: 26px; border: 1px solid #ddd; background: white; text-align: center; line-height: 26px; margin: 1px; border-radius: 3px; vertical-align: top;"></span>';
-                    }
-                }
-                targetBoxesHtml.push('<div style="display: inline-block; margin: 6px; vertical-align: top;">' + boxesHtml + '</div>');
-            }
-            
-            targetWordsDiv.innerHTML = targetBoxesHtml.join('');
+            // この関数はPythonで生成されたHTMLを使用するため、JavaScriptでの更新は不要
+            // ただし、必要に応じて動的更新のためのコードをここに配置できます
         }
 
         function notifyCorrectWord(word) {
@@ -714,7 +721,6 @@ elif st.session_state.game_state == 'game':
             const currentWord = selectedLetters.join('');
             if (currentWord && targetWords.includes(currentWord) && !foundWords.includes(currentWord)) {
                 foundWords.push(currentWord);
-                updateTargetWordsDisplay();
                 showSuccessMessage();
                 playCorrectSound();
                 
