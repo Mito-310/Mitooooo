@@ -689,9 +689,9 @@ elif st.session_state.game_state == 'game':
                 playCorrectSound();
                 
                 // Streamlitの状態を更新
-                setTimeout(() => {
+                setTimeout(() => {{
                     updateStreamlitState(currentWord);
-                }, 1000);
+                }}, 1000);
                 
                 if (foundWords.length === targetWords.length) {{
                     setTimeout(() => {{
