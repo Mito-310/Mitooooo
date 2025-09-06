@@ -366,18 +366,14 @@ elif st.session_state.game_state == 'game':
     # 目標単語の表示（複数行対応版を使用）
     target_display = create_target_words_display(st.session_state.target_words, st.session_state.found_words)
     
-    # 円形ボタンのHTML生成 - 完全に中央に配置、均等な余白
-    # コンテナサイズ: 220px, 中心: 110px
-    # 外側円: 直径180px, 半径90px
-    # ボタン: 直径30px, 半径15px  
-    # ボタン配置半径: 90px - 15px - 10px = 65px (10pxの余白)
+    # 円形ボタンのHTML生成 - スマホ用に小さく
     button_html = ''.join([
         f'''
         <div class="circle-button" id="button_{i}"
                 data-letter="{letter}"
                 data-index="{i}"
-                style="left: {110 + 65 * math.cos(2 * math.pi * i / num_letters - math.pi/2) - 15}px;
-                       top:  {110 + 65 * math.sin(2 * math.pi * i / num_letters - math.pi/2) - 15}px;">
+                style="left: {110 + 70 * math.cos(2 * math.pi * i / num_letters - math.pi/2) - 15}px;
+                       top:  {110 + 70 * math.sin(2 * math.pi * i / num_letters - math.pi/2) - 15}px;">
             {letter}
         </div>
         ''' for i, letter in enumerate(letters)
@@ -406,7 +402,7 @@ elif st.session_state.game_state == 'game':
             position: relative;
             width: 220px;
             height: 220px;
-            margin: 110px auto 20px auto;
+            margin: 80px auto 20px auto;
         }
         
         .ring-background {
@@ -414,12 +410,11 @@ elif st.session_state.game_state == 'game':
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 180px;
-            height: 180px;
-            border: 1px solid #333;
+            width: 160px;
+            height: 160px;
+            border: 10px solid rgba(51, 51, 51, 0.1);
             border-radius: 50%;
             z-index: 1;
-            background: transparent;
         }
         
         .circle-button {
