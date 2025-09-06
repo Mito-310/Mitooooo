@@ -460,7 +460,7 @@ elif st.session_state.game_state == 'game':
         
         @media (max-width: 600px) {
             .circle-container {
-                margin: 220px auto 60px auto !important;
+                margin: 180px auto 60px auto !important;
             }
             #target-words {
                 font-size: 14px !important;
@@ -477,8 +477,9 @@ elif st.session_state.game_state == 'game':
             position: relative;
             width: 320px;
             height: 320px;
-            margin: 320px auto 40px auto;
+            margin: 200px auto 40px auto;
         }
+        
         .circle-button {
             position: absolute;
             width: 50px;
