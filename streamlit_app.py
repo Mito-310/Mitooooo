@@ -479,7 +479,7 @@ elif st.session_state.game_state == 'game':
             height: 320px;
             margin: 200px auto 40px auto;
         }
-        
+
         .circle-button {
             position: absolute;
             width: 50px;
