@@ -510,7 +510,7 @@ elif st.session_state.game_state == 'game':
         ''' for i, letter in enumerate(letters)
     ])
 
-    # 完全に分離したHTMLコンテンツ（スマホ最適化、ヒント機能追加）
+    # HTMLコンテンツを生成
     html_content = f"""
     <!DOCTYPE html>
     <html>
@@ -923,7 +923,8 @@ elif st.session_state.game_state == 'game':
 
         function showHint(word) {{
             if (wordHints[word]) {{
-                hintWordDiv.textContent = word;
+                // 英単語は表示せず、意味のみを表示
+                hintWordDiv.textContent = "";
                 hintMeaningDiv.textContent = wordHints[word];
                 hintPopupDiv.classList.add('show');
                 playHintSound();
@@ -940,9 +941,12 @@ elif st.session_state.game_state == 'game':
         }}
 
         function notifyCorrectWord(word) {{
-            const currentUrl = new URL(window.location);
-            currentUrl.searchParams.set('correct_word', word);
-            window.location.href = currentUrl.toString();
+            // 遅延してStreamlitに通知することで、表示効果を保持
+            setTimeout(() => {{
+                const currentUrl = new URL(window.location);
+                currentUrl.searchParams.set('correct_word', word);
+                window.location.href = currentUrl.toString();
+            }}, 3000); // 3秒後に通知
         }}
 
         function checkCorrectWord() {{
@@ -953,6 +957,7 @@ elif st.session_state.game_state == 'game':
                 showSuccessMessage();
                 playCorrectSound();
                 
+                // Streamlitへの通知を遅延実行
                 notifyCorrectWord(currentWord);
                 
                 if (foundWords.length === targetWords.length) {{
@@ -1199,27 +1204,6 @@ elif st.session_state.game_state == 'game':
 
     components.html(html_content, height=450)
 
-    # JavaScriptからのメッセージを受信するためのプレースホルダー
-    message_placeholder = st.empty()
-    
-    # postMessageを監視するためのJavaScript
-    components.html("""
-    <script>
-    window.addEventListener('message', function(event) {
-        if (event.data.type === 'correct_word') {
-            // URLパラメータを使ってStreamlitに正解した単語を通知
-            const currentUrl = new URL(window.location);
-            currentUrl.searchParams.set('correct_word', event.data.word);
-            window.location.href = currentUrl.toString();
-        }
-        if (event.data.type === 'stage_complete') {
-            // ステージクリア通知（特別な処理は不要）
-            console.log('Stage completed:', event.data.stage);
-        }
-    });
-    </script>
-    """, height=0)
-    
     # ヒント使用方法の説明
     st.info("💡 **ヒント機能**: 目標単語の枠をタップすると、その単語の意味が表示されます")
     
