@@ -382,7 +382,7 @@ elif st.session_state.game_state == 'game':
     # ヘッダー（3列レイアウト、スマホ最適化）
     col1, col2, col3 = st.columns([1, 2, 1])
     with col1:
-        if st.button("タイトル", key="back_to_title_header", use_container_width=True):
+        if st.button("戻る", key="back_to_title_header", use_container_width=True):
             st.session_state.game_state = 'title'
             # ステージクリア状態は維持したままタイトルに戻る
             st.rerun()
@@ -393,7 +393,7 @@ elif st.session_state.game_state == 'game':
         </div>
         """, unsafe_allow_html=True)
     with col3:
-        # 次のステージボタン（最後のステージでない場合のみ表示）
+        # 次のステージボタン（常に表示、最後のステージでは無効化）
         if st.session_state.current_stage < len(STAGES):
             if st.button("次へ", key="next_stage_header", use_container_width=True):
                 st.session_state.current_stage += 1
@@ -407,8 +407,8 @@ elif st.session_state.game_state == 'game':
                 st.session_state.shuffled_letters = stage_letters
                 st.rerun()
         else:
-            # 最後のステージの場合は空のスペース
-            st.empty()
+            # 最後のステージの場合は無効化されたボタンを表示
+            st.button("次へ", key="next_stage_disabled", use_container_width=True, disabled=True)
     
     # JavaScriptから送信された正解単語をチェック
     query_params = st.query_params
