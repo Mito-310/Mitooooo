@@ -148,55 +148,112 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# デフォルトの問題
+# デフォルトの問題（ヒント情報を追加）
 DEFAULT_STAGES = {
     1: {
         'name': 'ステージ 1',
         'problem_text': 'practice',
         'letters': ['P', 'R', 'A', 'C', 'T', 'I', 'C', 'E'],
-        'words': ['ACT', 'AIR', 'PRICE', 'RACE', 'RICE', 'PRACTICE']
+        'words': ['ACT', 'AIR', 'PRICE', 'RACE', 'RICE', 'PRACTICE'],
+        'hints': {
+            'ACT': '行動する、演技する',
+            'AIR': '空気、空中',
+            'PRICE': '価格、値段',
+            'RACE': '競争、レース',
+            'RICE': 'お米、ご飯',
+            'PRACTICE': '練習、実践'
+        }
     },
     2: {
         'name': 'ステージ 2',
         'problem_text': 'however',
         'letters': ['H', 'O', 'W', 'E', 'V', 'E', 'R'],
-        'words': ['HOW', 'EVER', 'WHERE', 'HOWEVER']
+        'words': ['HOW', 'EVER', 'WHERE', 'HOWEVER'],
+        'hints': {
+            'HOW': 'どのように、方法',
+            'EVER': 'いつも、これまでに',
+            'WHERE': 'どこで、場所',
+            'HOWEVER': 'しかし、けれども'
+        }
     },
     3: {
         'name': 'ステージ 3',
         'problem_text': 'discover',
         'letters': ['D', 'I', 'S', 'C', 'O', 'V', 'E', 'R'],
-        'words': ['COVER', 'RIDE', 'DIVE', 'DISCOVER']
+        'words': ['COVER', 'RIDE', 'DIVE', 'DISCOVER'],
+        'hints': {
+            'COVER': '覆う、カバー',
+            'RIDE': '乗る、ライド',
+            'DIVE': '潜る、飛び込む',
+            'DISCOVER': '発見する、見つける'
+        }
     },
     4: {
         'name': 'ステージ 4',
         'problem_text': 'surface',
         'letters': ['S', 'U', 'R', 'F', 'A', 'C', 'E'],
-        'words': ['FACE', 'ACE', 'SURF', 'CAR', 'SURFACE']
+        'words': ['FACE', 'ACE', 'SURF', 'CAR', 'SURFACE'],
+        'hints': {
+            'FACE': '顔、面する',
+            'ACE': 'エース、優秀な',
+            'SURF': '波乗り、サーフィン',
+            'CAR': '車、自動車',
+            'SURFACE': '表面、水面'
+        }
     },
     5: {
         'name': 'ステージ 5',
         'problem_text': 'suggest',
         'letters': ['S', 'U', 'G', 'G', 'E', 'S', 'T'],
-        'words': ['SET', 'GET', 'GUESS', 'GUEST', 'SUGGEST']
+        'words': ['SET', 'GET', 'GUESS', 'GUEST', 'SUGGEST'],
+        'hints': {
+            'SET': 'セット、設定する',
+            'GET': '得る、手に入れる',
+            'GUESS': '推測する、当てる',
+            'GUEST': 'お客さん、ゲスト',
+            'SUGGEST': '提案する、示唆する'
+        }
     },
     6: {
         'name': 'ステージ 6',
         'problem_text': 'because',
         'letters': ['B', 'E', 'C', 'A', 'U', 'S', 'E'],
-        'words': ['CAUSE', 'USE', 'CASE', 'SEED', 'BECAUSE']
+        'words': ['CAUSE', 'USE', 'CASE', 'SEED', 'BECAUSE'],
+        'hints': {
+            'CAUSE': '原因、引き起こす',
+            'USE': '使う、利用する',
+            'CASE': '場合、ケース',
+            'SEED': '種、種子',
+            'BECAUSE': 'なぜなら、理由'
+        }
     },
     7: {
         'name': 'ステージ 7',
         'problem_text': 'graduate',
         'letters': ['G', 'R', 'A', 'D', 'U', 'A', 'T', 'E'],
-        'words': ['GATE', 'GET', 'DATE', 'RED', 'GRADE', 'GRADUATE']
+        'words': ['GATE', 'GET', 'DATE', 'RED', 'GRADE', 'GRADUATE'],
+        'hints': {
+            'GATE': '門、ゲート',
+            'GET': '得る、手に入れる',
+            'DATE': '日付、デート',
+            'RED': '赤い、赤色',
+            'GRADE': '成績、学年',
+            'GRADUATE': '卒業する、大学院生'
+        }
     },
     8: {
         'name': 'ステージ 8',
         'problem_text': 'attractive',
         'letters': ['A', 'T', 'T', 'R', 'A', 'C', 'T', 'I', 'V', 'E'],
-        'words': ['ACT', 'RATE', 'RARE', 'ACTIVE', 'ATTRACT', 'ATTRACTIVE']
+        'words': ['ACT', 'RATE', 'RARE', 'ACTIVE', 'ATTRACT', 'ATTRACTIVE'],
+        'hints': {
+            'ACT': '行動する、演技する',
+            'RATE': '率、割合',
+            'RARE': '珍しい、稀な',
+            'ACTIVE': '活発な、積極的',
+            'ATTRACT': '引き付ける、魅力的',
+            'ATTRACTIVE': '魅力的な、素敵な'
+        }
     }
 }
 
@@ -308,6 +365,7 @@ if st.session_state.game_state == 'title':
         <div class="game-rules">
             <p>リング状に配置された文字をなぞって繋げて単語を作るゲームです</p>
             <p>すべての目標単語を見つけるとステージクリア！</p>
+            <p><strong>💡 ヒント機能:</strong> 目標単語の枠をタップすると意味が表示されます</p>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -434,7 +492,8 @@ elif st.session_state.game_state == 'game':
             else:
                 # 通常の空白枠
                 boxes_html += f'<span style="display: inline-block; width: 22px; height: 22px; border: 1px solid #ddd; background: white; text-align: center; line-height: 22px; margin: 1px; border-radius: 3px; vertical-align: top;"></span>'
-        target_boxes_html.append(f'<div style="display: inline-block; margin: 4px; vertical-align: top;">{boxes_html}</div>')
+        # ヒント機能のためのクリッカブルな要素として作成
+        target_boxes_html.append(f'<div class="word-hint-target" data-word="{word}" style="display: inline-block; margin: 4px; vertical-align: top; cursor: pointer; transition: transform 0.2s ease;" onmouseover="this.style.transform=\'scale(1.05)\'" onmouseout="this.style.transform=\'scale(1)\'">{boxes_html}</div>')
     
     target_display = ''.join(target_boxes_html)
     
@@ -451,7 +510,7 @@ elif st.session_state.game_state == 'game':
         ''' for i, letter in enumerate(letters)
     ])
 
-    # 完全に分離したHTMLコンテンツ（スマホ最適化）
+    # 完全に分離したHTMLコンテンツ（スマホ最適化、ヒント機能追加）
     html_content = """
     <!DOCTYPE html>
     <html>
@@ -595,6 +654,46 @@ elif st.session_state.game_state == 'game':
             transform: translate(-50%, -50%) scale(1.1);
         }
         
+        /* ヒントポップアップのスタイル */
+        .hint-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            border: 2px solid #f39c12;
+            color: #333;
+            padding: 20px 25px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            z-index: 1002;
+            opacity: 0;
+            transition: all 0.3s ease;
+            max-width: 280px;
+            text-align: center;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+        }
+        
+        .hint-popup.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1.05);
+        }
+        
+        .hint-popup::before {
+            content: '💡';
+            display: block;
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        
+        .hint-word {
+            font-weight: bold;
+            color: #d35400;
+            margin-bottom: 8px;
+            font-size: 18px;
+        }
+        
         canvas {
             position: absolute;
             top: 0;
@@ -633,6 +732,16 @@ elif st.session_state.game_state == 'game':
                 font-size: 14px;
                 padding: 12px 20px;
             }
+            
+            .hint-popup {
+                font-size: 14px;
+                padding: 15px 20px;
+                max-width: 250px;
+            }
+            
+            .hint-word {
+                font-size: 16px;
+            }
         }
         </style>
     </head>
@@ -641,6 +750,10 @@ elif st.session_state.game_state == 'game':
         <div id="target-words">TARGET_WORDS_PLACEHOLDER</div>
         <div id="success-message" class="success-message">正解！</div>
         <div id="complete-message" class="complete-message">ステージクリア！</div>
+        <div id="hint-popup" class="hint-popup">
+            <div class="hint-word" id="hint-word"></div>
+            <div id="hint-meaning"></div>
+        </div>
 
         <div class="circle-container" id="circle-container">
             <canvas id="lineCanvas" width="260" height="260"></canvas>
@@ -654,11 +767,15 @@ elif st.session_state.game_state == 'game':
         let points = [];
         let targetWords = TARGET_WORDS_JSON;
         let foundWords = FOUND_WORDS_JSON;
+        let wordHints = WORD_HINTS_JSON;
 
         const selectedWordDiv = document.getElementById('selected-word');
         const targetWordsDiv = document.getElementById('target-words');
         const successMessageDiv = document.getElementById('success-message');
         const completeMessageDiv = document.getElementById('complete-message');
+        const hintPopupDiv = document.getElementById('hint-popup');
+        const hintWordDiv = document.getElementById('hint-word');
+        const hintMeaningDiv = document.getElementById('hint-meaning');
         const container = document.getElementById('circle-container');
         const canvas = document.getElementById('lineCanvas');
         const ctx = canvas.getContext('2d');
@@ -738,6 +855,20 @@ elif st.session_state.game_state == 'game':
             oscillator.stop(audioCtx.currentTime + 0.3);
         }
 
+        function playHintSound() {
+            if (!audioCtx) return;
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            oscillator.frequency.value = 1000;
+            oscillator.type = 'sine';
+            gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+            oscillator.start(audioCtx.currentTime);
+            oscillator.stop(audioCtx.currentTime + 0.2);
+        }
+
         function updateSelectedWord() {
             selectedWordDiv.textContent = selectedLetters.join('');
         }
@@ -762,10 +893,40 @@ elif st.session_state.game_state == 'game':
                         boxesHtml += '<span style="display: inline-block; width: 22px; height: 22px; border: 1px solid #ddd; background: white; text-align: center; line-height: 22px; margin: 1px; border-radius: 3px; vertical-align: top;"></span>';
                     }
                 }
-                targetBoxesHtml.push('<div style="display: inline-block; margin: 4px; vertical-align: top;">' + boxesHtml + '</div>');
+                targetBoxesHtml.push('<div class="word-hint-target" data-word="' + word + '" style="display: inline-block; margin: 4px; vertical-align: top; cursor: pointer; transition: transform 0.2s ease;" onmouseover="this.style.transform=\'scale(1.05)\'" onmouseout="this.style.transform=\'scale(1)\'">' + boxesHtml + '</div>');
             }
             
             targetWordsDiv.innerHTML = targetBoxesHtml.join('');
+            
+            // ヒント機能のイベントリスナーを追加
+            document.querySelectorAll('.word-hint-target').forEach(element => {
+                element.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    showHint(this.dataset.word);
+                });
+                element.addEventListener('touchend', function(e) {
+                    e.preventDefault();
+                    showHint(this.dataset.word);
+                });
+            });
+        }
+
+        function showHint(word) {
+            if (wordHints[word]) {
+                hintWordDiv.textContent = word;
+                hintMeaningDiv.textContent = wordHints[word];
+                hintPopupDiv.classList.add('show');
+                playHintSound();
+                
+                // 3秒後に自動的に隠す
+                setTimeout(() => {
+                    hideHint();
+                }, 3000);
+            }
+        }
+
+        function hideHint() {
+            hintPopupDiv.classList.remove('show');
         }
 
         function notifyCorrectWord(word) {
@@ -917,6 +1078,7 @@ elif st.session_state.game_state == 'game':
             event.preventDefault();
             isDragging = true;
             clearAllSelections();
+            hideHint(); // ヒントを隠す
             
             const button = getButtonAtPosition(event.clientX, event.clientY);
             if (button) {
@@ -956,6 +1118,7 @@ elif st.session_state.game_state == 'game':
             event.preventDefault();
             isDragging = true;
             clearAllSelections();
+            hideHint(); // ヒントを隠す
             
             const touch = event.touches[0];
             const button = getButtonAtPosition(touch.clientX, touch.clientY);
@@ -986,6 +1149,20 @@ elif st.session_state.game_state == 'game':
             }
         }
 
+        // ヒントポップアップをクリックで隠す機能
+        hintPopupDiv.addEventListener('click', hideHint);
+        hintPopupDiv.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            hideHint();
+        });
+
+        // メインのゲームエリア外をクリックした時にヒントを隠す
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.word-hint-target') && !e.target.closest('.hint-popup')) {
+                hideHint();
+            }
+        });
+
         document.addEventListener('mousedown', handleMouseDown);
         document.addEventListener('mousemove', handleMouseMove);
         document.addEventListener('mouseup', handleMouseUp);
@@ -996,9 +1173,6 @@ elif st.session_state.game_state == 'game':
 
         updateSelectedWord();
         updateTargetWordsDisplay();
-        
-        // 初期ボタン配置
-        repositionButtons();
 
         document.addEventListener('contextmenu', e => e.preventDefault());
         document.addEventListener('selectstart', e => e.preventDefault());
@@ -1012,6 +1186,7 @@ elif st.session_state.game_state == 'game':
     html_content = html_content.replace('BUTTON_HTML_PLACEHOLDER', button_html)
     html_content = html_content.replace('TARGET_WORDS_JSON', json.dumps(st.session_state.target_words))
     html_content = html_content.replace('FOUND_WORDS_JSON', json.dumps(st.session_state.found_words))
+    html_content = html_content.replace('WORD_HINTS_JSON', json.dumps(current_stage_info['hints']))
     html_content = html_content.replace('CURRENT_STAGE_NUM', str(st.session_state.current_stage))
 
     components.html(html_content, height=450)
@@ -1036,6 +1211,9 @@ elif st.session_state.game_state == 'game':
     });
     </script>
     """, height=0)
+    
+    # ヒント使用方法の説明
+    st.info("**ヒント機能**: 目標単語の枠をタップすると、その単語の意味が表示されます")
     
     # ステージクリア状態の確認
     stage_completed = len(st.session_state.found_words) == len(st.session_state.target_words)
