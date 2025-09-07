@@ -1034,8 +1034,7 @@ elif st.session_state.game_state == 'game':
     </script>
     """, height=0)
     
-    # ステージクリア状態の確認
-    stage_completed = len(st.session_state.found_words) == len(st.session_state.target_words)
+    # ステージクリア状態の確認（移動済み）
     
     if stage_completed:
         st.success("ステージクリア！")
