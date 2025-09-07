@@ -1014,7 +1014,7 @@ elif st.session_state.game_state == 'game':
     html_content = html_content.replace('FOUND_WORDS_JSON', json.dumps(st.session_state.found_words))
     html_content = html_content.replace('CURRENT_STAGE_NUM', str(st.session_state.current_stage))
 
-    components.html(html_content, height=600)
+    components.html(html_content, height=450)
 
     # JavaScriptからのメッセージを受信するためのプレースホルダー
     message_placeholder = st.empty()
