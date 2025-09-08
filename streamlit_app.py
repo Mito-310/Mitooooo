@@ -11,7 +11,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# カスタムCSS（スマホ最適化）
+# カスタムCSS（スマホ最適化 + 自動スクロール）
 st.markdown("""
 <style>
 /* 全体のレスポンシブ調整 */
@@ -148,6 +148,20 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# ページトップにスクロールするJavaScript
+def scroll_to_top():
+    scroll_js = """
+    <script>
+    // ページロード時とボタンクリック時にトップにスクロール
+    setTimeout(function() {
+        window.scrollTo(0, 0);
+        document.body.scrollTop = 0;
+        document.documentElement.scrollTop = 0;
+    }, 100);
+    </script>
+    """
+    st.markdown(scroll_js, unsafe_allow_html=True)
+
 # デフォルトの問題（ヒント情報を追加）
 DEFAULT_STAGES = {
     1: {
@@ -273,6 +287,9 @@ if 'temp_found_words' not in st.session_state:
     st.session_state.temp_found_words = []
 
 STAGES = DEFAULT_STAGES
+
+# ページロード時に自動的にトップにスクロール
+scroll_to_top()
 
 # タイトル画面
 if st.session_state.game_state == 'title':
@@ -510,7 +527,7 @@ elif st.session_state.game_state == 'game':
         ''' for i, letter in enumerate(letters)
     ])
 
-    # HTMLコンテンツを生成
+    # HTMLコンテンツを生成（トップスクロール機能を含む）
     html_content = f"""
     <!DOCTYPE html>
     <html>
@@ -765,6 +782,22 @@ elif st.session_state.game_state == 'game':
         </div>
 
         <script>
+        // ページ読み込み時に即座にトップにスクロール
+        window.addEventListener('load', function() {{
+            setTimeout(function() {{
+                window.scrollTo(0, 0);
+                document.body.scrollTop = 0;
+                document.documentElement.scrollTop = 0;
+            }}, 50);
+        }});
+
+        // DOMContentLoaded時にもスクロール
+        document.addEventListener('DOMContentLoaded', function() {{
+            window.scrollTo(0, 0);
+            document.body.scrollTop = 0;
+            document.documentElement.scrollTop = 0;
+        }});
+
         let isDragging = false;
         let selectedLetters = [];
         let selectedButtons = [];
