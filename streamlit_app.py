@@ -1236,9 +1236,6 @@ elif st.session_state.game_state == 'game':
     """
 
     components.html(html_content, height=450)
-
-    # ヒント使用方法の説明
-    st.info("💡 **ヒント機能**: 目標単語の枠をタップすると、その単語の意味が表示されます")
     
     # ステージクリア状態の確認
     stage_completed = len(st.session_state.found_words) == len(st.session_state.target_words)
