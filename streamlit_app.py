@@ -454,11 +454,12 @@ elif st.session_state.game_state == 'game':
     letters = st.session_state.shuffled_letters
     num_letters = len(letters)
     
-    # ヘッダー（戻るボタンのみ）
+    # ヘッダー（3列レイアウト、スマホ最適化）
     col1, col2, col3 = st.columns([1, 2, 1])
     with col1:
         if st.button("戻る", key="back_to_title_header", use_container_width=True):
             st.session_state.game_state = 'title'
+            # ステージクリア状態は維持したままタイトルに戻る
             st.rerun()
     with col2:
         st.markdown(f"""
@@ -467,8 +468,22 @@ elif st.session_state.game_state == 'game':
         </div>
         """, unsafe_allow_html=True)
     with col3:
-        # 空のスペース（次へボタンは削除）
-        st.empty()
+        # 次のステージボタン（常に表示、最後のステージでは無効化）
+        if st.session_state.current_stage < len(STAGES):
+            if st.button("次へ", key="next_stage_header", use_container_width=True):
+                st.session_state.current_stage += 1
+                next_stage_info = STAGES[st.session_state.current_stage]
+                st.session_state.target_words = next_stage_info['words']
+                st.session_state.found_words = []
+                st.session_state.temp_found_words = []
+                # 新しいステージの文字をシャッフル
+                stage_letters = next_stage_info['letters'].copy()
+                random.shuffle(stage_letters)
+                st.session_state.shuffled_letters = stage_letters
+                st.rerun()
+        else:
+            # 最後のステージの場合は無効化されたボタンを表示
+            st.button("次へ", key="next_stage_disabled", use_container_width=True, disabled=True)
     
     # JavaScriptから送信された正解単語をチェック
     query_params = st.query_params
@@ -477,27 +492,6 @@ elif st.session_state.game_state == 'game':
         if correct_word not in st.session_state.found_words:
             st.session_state.found_words.append(correct_word)
         # クエリパラメータをクリア
-        st.query_params.clear()
-        st.rerun()
-    
-    # 次のステージへの遷移処理（JavaScript側から送信）
-    if "next_stage" in query_params:
-        if st.session_state.current_stage < len(STAGES):
-            st.session_state.current_stage += 1
-            next_stage_info = STAGES[st.session_state.current_stage]
-            st.session_state.target_words = next_stage_info['words']
-            st.session_state.found_words = []
-            st.session_state.temp_found_words = []
-            # 新しいステージの文字をシャッフル
-            stage_letters = next_stage_info['letters'].copy()
-            random.shuffle(stage_letters)
-            st.session_state.shuffled_letters = stage_letters
-        st.query_params.clear()
-        st.rerun()
-    
-    # タイトルに戻る処理（JavaScript側から送信）
-    if "back_to_title" in query_params:
-        st.session_state.game_state = 'title'
         st.query_params.clear()
         st.rerun()
     
@@ -533,7 +527,7 @@ elif st.session_state.game_state == 'game':
         ''' for i, letter in enumerate(letters)
     ])
 
-    # HTMLコンテンツを生成（オーバーレイ機能を含む）
+    # HTMLコンテンツを生成（トップスクロール機能を含む）
     html_content = f"""
     <!DOCTYPE html>
     <html>
@@ -635,13 +629,6 @@ elif st.session_state.game_state == 'game':
             border-bottom: 1px solid #ddd;
         }}
         
-        .word-hint-target:hover {{
-            transform: scale(1.05);
-            background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
-            border-radius: 4px;
-            padding: 2px;
-        }}
-        
         .success-message {{
             position: fixed;
             top: 50%;
@@ -663,165 +650,118 @@ elif st.session_state.game_state == 'game':
             transform: translate(-50%, -50%) scale(1.1);
         }}
         
-        /* ヒントポップアップ */
+        .complete-message {{
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            z-index: 1001;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }}
+        
+        .complete-message.show {{
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1.1);
+        }}
+        
+        /* ヒントポップアップのスタイル */
         .hint-popup {{
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            border: 2px solid #f39c12;
             color: #333;
             padding: 20px 25px;
             border-radius: 10px;
             font-size: 16px;
-            font-weight: bold;
-            z-index: 2001;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            font-weight: 600;
+            z-index: 1002;
             opacity: 0;
             transition: all 0.3s ease;
             max-width: 280px;
-            width: 90%;
             text-align: center;
-            border: 2px solid #4CAF50;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
         }}
         
         .hint-popup.show {{
             opacity: 1;
-            transform: translate(-50%, -50%) scale(1);
+            transform: translate(-50%, -50%) scale(1.05);
+        }}
+        
+        .hint-popup::before {{
+            content: '💡';
+            display: block;
+            font-size: 24px;
+            margin-bottom: 8px;
         }}
         
         .hint-word {{
-            font-size: 18px;
+            font-weight: bold;
+            color: #d35400;
             margin-bottom: 8px;
-            color: #2196F3;
+            font-size: 18px;
         }}
         
-        /* オーバーレイのスタイル */
-        .stage-clear-overlay {{
-            position: fixed;
+        .word-hint-target:hover {{
+            transform: scale(1.05);
+        }}
+        
+        canvas {{
+            position: absolute;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 2000;
-            display: none;
-            justify-content: center;
-            align-items: center;
-            backdrop-filter: blur(2px);
-        }}
-        
-        .stage-clear-overlay.show {{
-            display: flex;
-            animation: fadeIn 0.5s ease-in-out;
-        }}
-        
-        @keyframes fadeIn {{
-            from {{
-                opacity: 0;
-            }}
-            to {{
-                opacity: 1;
-            }}
-        }}
-        
-        .stage-clear-content {{
-            background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
-            padding: 40px 30px;
-            border-radius: 15px;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            max-width: 300px;
-            width: 90%;
-            animation: slideUp 0.5s ease-out;
-        }}
-        
-        @keyframes slideUp {{
-            from {{
-                transform: translateY(50px);
-                opacity: 0;
-            }}
-            to {{
-                transform: translateY(0);
-                opacity: 1;
-            }}
-        }}
-        
-        .stage-clear-title {{
-            font-size: 28px;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 8px;
-        }}
-        
-        .stage-clear-subtitle {{
-            font-size: 18px;
-            color: #666;
-            margin-bottom: 30px;
-        }}
-        
-        .overlay-button {{
-            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 6px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            margin: 5px;
-            transition: all 0.3s ease;
-            min-width: 100px;
-        }}
-        
-        .overlay-button:hover {{
-            background: linear-gradient(135deg, #45a049 0%, #3d8b40 100%);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        }}
-        
-        .overlay-button-secondary {{
-            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
-        }}
-        
-        .overlay-button-secondary:hover {{
-            background: linear-gradient(135deg, #5a6268 0%, #495057 100%);
-        }}
-        
-        /* ゲーム完了時のスペシャルスタイル */
-        .game-complete {{
-            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
-        }}
-        
-        .game-complete .stage-clear-title {{
-            color: #fff;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }}
-        
-        .game-complete .stage-clear-subtitle {{
-            color: #fff;
+            z-index: 1;
+            pointer-events: none;
         }}
         
         /* スマホ専用の調整 */
         @media (max-width: 480px) {{
-            .stage-clear-content {{
-                padding: 30px 20px;
-                max-width: 280px;
+            .circle-container {{
+                width: 240px;
+                height: 240px;
+                margin: 60px auto 25px auto;
             }}
             
-            .stage-clear-title {{
-                font-size: 24px;
-            }}
-            
-            .stage-clear-subtitle {{
-                font-size: 16px;
-                margin-bottom: 25px;
-            }}
-            
-            .overlay-button {{
-                padding: 10px 20px;
+            .circle-button {{
+                width: 35px;
+                height: 35px;
                 font-size: 14px;
-                margin: 3px;
+            }}
+            
+            #selected-word {{
+                font-size: 18px;
+                padding: 8px;
+                letter-spacing: 2px;
+            }}
+            
+            #target-words {{
+                font-size: 12px;
+                padding: 10px 6px;
+                top: 46px;
+            }}
+            
+            .success-message, .complete-message {{
+                font-size: 14px;
+                padding: 12px 20px;
+            }}
+            
+            .hint-popup {{
+                font-size: 14px;
+                padding: 15px 20px;
+                max-width: 250px;
+            }}
+            
+            .hint-word {{
+                font-size: 16px;
             }}
         }}
         </style>
@@ -830,21 +770,10 @@ elif st.session_state.game_state == 'game':
         <div id="selected-word"></div>
         <div id="target-words">{target_display}</div>
         <div id="success-message" class="success-message">正解！</div>
+        <div id="complete-message" class="complete-message">ステージクリア！</div>
         <div id="hint-popup" class="hint-popup">
             <div class="hint-word" id="hint-word"></div>
             <div id="hint-meaning"></div>
-        </div>
-
-        <!-- ステージクリアオーバーレイ -->
-        <div id="stage-clear-overlay" class="stage-clear-overlay">
-            <div class="stage-clear-content" id="stage-clear-content">
-                <div class="stage-clear-title" id="overlay-title">ステージクリア！</div>
-                <div class="stage-clear-subtitle" id="overlay-subtitle">おめでとうございます！</div>
-                <div id="overlay-buttons">
-                    <button class="overlay-button" id="next-stage-btn">次のステージへ</button>
-                    <button class="overlay-button overlay-button-secondary" id="back-title-btn">タイトルへ戻る</button>
-                </div>
-            </div>
         </div>
 
         <div class="circle-container" id="circle-container">
@@ -876,26 +805,17 @@ elif st.session_state.game_state == 'game':
         let targetWords = {json.dumps(st.session_state.target_words)};
         let foundWords = {json.dumps(st.session_state.found_words)};
         let wordHints = {json.dumps(current_stage_info['hints'])};
-        let currentStage = {st.session_state.current_stage};
-        let totalStages = {len(STAGES)};
 
         const selectedWordDiv = document.getElementById('selected-word');
         const targetWordsDiv = document.getElementById('target-words');
         const successMessageDiv = document.getElementById('success-message');
+        const completeMessageDiv = document.getElementById('complete-message');
         const hintPopupDiv = document.getElementById('hint-popup');
         const hintWordDiv = document.getElementById('hint-word');
         const hintMeaningDiv = document.getElementById('hint-meaning');
         const container = document.getElementById('circle-container');
         const canvas = document.getElementById('lineCanvas');
         const ctx = canvas.getContext('2d');
-
-        // オーバーレイ要素
-        const overlayDiv = document.getElementById('stage-clear-overlay');
-        const overlayContentDiv = document.getElementById('stage-clear-content');
-        const overlayTitleDiv = document.getElementById('overlay-title');
-        const overlaySubtitleDiv = document.getElementById('overlay-subtitle');
-        const nextStageBtn = document.getElementById('next-stage-btn');
-        const backTitleBtn = document.getElementById('back-title-btn');
 
         function createAudioContext() {{
             try {{
@@ -1036,11 +956,13 @@ elif st.session_state.game_state == 'game':
 
         function showHint(word) {{
             if (wordHints[word]) {{
+                // 英単語は表示せず、意味のみを表示
                 hintWordDiv.textContent = "";
                 hintMeaningDiv.textContent = wordHints[word];
                 hintPopupDiv.classList.add('show');
                 playHintSound();
                 
+                // 3秒後に自動的に隠す
                 setTimeout(() => {{
                     hideHint();
                 }}, 3000);
@@ -1051,27 +973,13 @@ elif st.session_state.game_state == 'game':
             hintPopupDiv.classList.remove('show');
         }}
 
-        function showStageCompleteOverlay() {{
-            if (currentStage >= totalStages) {{
-                overlayContentDiv.classList.add('game-complete');
-                overlayTitleDiv.textContent = '全ステージクリア！';
-                overlaySubtitleDiv.textContent = 'おめでとうございます！';
-                nextStageBtn.style.display = 'none';
-                backTitleBtn.textContent = 'タイトルへ戻る';
-            }} else {{
-                overlayContentDiv.classList.remove('game-complete');
-                overlayTitleDiv.textContent = 'ステージクリア！';
-                overlaySubtitleDiv.textContent = 'おめでとうございます！';
-                nextStageBtn.style.display = 'inline-block';
-                nextStageBtn.textContent = '次のステージへ';
-                backTitleBtn.textContent = 'タイトルへ戻る';
-            }}
-            
-            overlayDiv.classList.add('show');
-        }}
-
-        function hideStageCompleteOverlay() {{
-            overlayDiv.classList.remove('show');
+        function notifyCorrectWord(word) {{
+            // 遅延してStreamlitに通知することで、表示効果を保持
+            setTimeout(() => {{
+                const currentUrl = new URL(window.location);
+                currentUrl.searchParams.set('correct_word', word);
+                window.location.href = currentUrl.toString();
+            }}, 3000); // 3秒後に通知
         }}
 
         function checkCorrectWord() {{
@@ -1082,12 +990,13 @@ elif st.session_state.game_state == 'game':
                 showSuccessMessage();
                 playCorrectSound();
                 
+                // Streamlitへの通知を遅延実行
+                notifyCorrectWord(currentWord);
+                
                 if (foundWords.length === targetWords.length) {{
                     setTimeout(() => {{
+                        showCompleteMessage();
                         playCompleteSound();
-                        setTimeout(() => {{
-                            showStageCompleteOverlay();
-                        }}, 1500);
                     }}, 1000);
                 }}
                 return true;
@@ -1102,6 +1011,13 @@ elif st.session_state.game_state == 'game':
             setTimeout(() => {{
                 successMessageDiv.classList.remove('show');
             }}, 1500);
+        }}
+
+        function showCompleteMessage() {{
+            completeMessageDiv.classList.add('show');
+            setTimeout(() => {{
+                completeMessageDiv.classList.remove('show');
+            }}, 2500);
         }}
 
         function getButtonCenterPosition(button) {{
@@ -1202,7 +1118,8 @@ elif st.session_state.game_state == 'game':
             event.preventDefault();
             const target = event.target;
             
-            if (target.closest('.word-hint-target') || target.closest('.hint-popup') || target.closest('.stage-clear-overlay')) {{
+            // ヒントターゲットがクリックされた場合は、ゲーム操作を開始しない
+            if (target.closest('.word-hint-target')) {{
                 return;
             }}
             
@@ -1248,7 +1165,8 @@ elif st.session_state.game_state == 'game':
             event.preventDefault();
             const target = event.target;
             
-            if (target.closest('.word-hint-target') || target.closest('.hint-popup') || target.closest('.stage-clear-overlay')) {{
+            // ヒントターゲットがタッチされた場合は、ゲーム操作を開始しない
+            if (target.closest('.word-hint-target')) {{
                 return;
             }}
             
@@ -1285,32 +1203,14 @@ elif st.session_state.game_state == 'game':
             }}
         }}
 
-        // オーバーレイのボタンイベント
-        nextStageBtn.addEventListener('click', function() {{
-            hideStageCompleteOverlay();
-            window.parent.postMessage({{ type: 'next_stage' }}, '*');
-        }});
-
-        backTitleBtn.addEventListener('click', function() {{
-            hideStageCompleteOverlay();
-            window.parent.postMessage({{ type: 'back_to_title' }}, '*');
-        }});
-
-        // Streamlitとの通信を受信
-        window.addEventListener('message', function(event) {{
-            if (event.data.type === 'next_stage' || event.data.type === 'back_to_title') {{
-                const params = new URLSearchParams(window.location.search);
-                params.set(event.data.type, 'true');
-                window.location.href = window.location.pathname + '?' + params.toString();
-            }}
-        }});
-
+        // ヒントポップアップをクリックで隠す機能
         hintPopupDiv.addEventListener('click', hideHint);
         hintPopupDiv.addEventListener('touchend', function(e) {{
             e.preventDefault();
             hideHint();
         }});
 
+        // メインのゲームエリアをクリックした時にヒントを隠す
         container.addEventListener('click', function(e) {{
             if (!e.target.closest('.word-hint-target') && !e.target.closest('.hint-popup')) {{
                 hideHint();
@@ -1336,3 +1236,28 @@ elif st.session_state.game_state == 'game':
     """
 
     components.html(html_content, height=450)
+    
+    # ステージクリア状態の確認
+    stage_completed = len(st.session_state.found_words) == len(st.session_state.target_words)
+    
+    if stage_completed:
+        st.success("ステージクリア！")
+        if st.session_state.current_stage < len(STAGES):
+            if st.button("次のステージへ ", key="next_stage_main", use_container_width=True, type="primary"):
+                st.session_state.current_stage += 1
+                next_stage_info = STAGES[st.session_state.current_stage]
+                st.session_state.target_words = next_stage_info['words']
+                st.session_state.found_words = []
+                st.session_state.temp_found_words = []
+                # 新しいステージの文字をシャッフル
+                stage_letters = next_stage_info['letters'].copy()
+                random.shuffle(stage_letters)
+                st.session_state.shuffled_letters = stage_letters
+                st.rerun()
+        else:
+            st.balloons()
+            st.success("全ステージクリア！おめでとうございます！")
+            if st.button("タイトルに戻る", key="back_to_title", use_container_width=True, type="primary"):
+                st.session_state.game_state = 'title'
+                # ステージクリア状態は維持したままタイトルに戻る
+                st.rerun()
