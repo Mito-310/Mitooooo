@@ -635,6 +635,13 @@ elif st.session_state.game_state == 'game':
             border-bottom: 1px solid #ddd;
         }}
         
+        .word-hint-target:hover {{
+            transform: scale(1.05);
+            background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+            border-radius: 4px;
+            padding: 2px;
+        }}
+        
         .success-message {{
             position: fixed;
             top: 50%;
@@ -654,6 +661,39 @@ elif st.session_state.game_state == 'game':
         .success-message.show {{
             opacity: 1;
             transform: translate(-50%, -50%) scale(1.1);
+        }}
+        
+        /* ヒントポップアップ */
+        .hint-popup {{
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+            color: #333;
+            padding: 20px 25px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            z-index: 2001;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            opacity: 0;
+            transition: all 0.3s ease;
+            max-width: 280px;
+            width: 90%;
+            text-align: center;
+            border: 2px solid #4CAF50;
+        }}
+        
+        .hint-popup.show {{
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }}
+        
+        .hint-word {{
+            font-size: 18px;
+            margin-bottom: 8px;
+            color: #2196F3;
         }}
         
         /* オーバーレイのスタイル */
@@ -790,7 +830,6 @@ elif st.session_state.game_state == 'game':
         <div id="selected-word"></div>
         <div id="target-words">{target_display}</div>
         <div id="success-message" class="success-message">正解！</div>
-        <div id="complete-message" class="complete-message">ステージクリア！</div>
         <div id="hint-popup" class="hint-popup">
             <div class="hint-word" id="hint-word"></div>
             <div id="hint-meaning"></div>
@@ -843,7 +882,6 @@ elif st.session_state.game_state == 'game':
         const selectedWordDiv = document.getElementById('selected-word');
         const targetWordsDiv = document.getElementById('target-words');
         const successMessageDiv = document.getElementById('success-message');
-        const completeMessageDiv = document.getElementById('complete-message');
         const hintPopupDiv = document.getElementById('hint-popup');
         const hintWordDiv = document.getElementById('hint-word');
         const hintMeaningDiv = document.getElementById('hint-meaning');
@@ -998,13 +1036,11 @@ elif st.session_state.game_state == 'game':
 
         function showHint(word) {{
             if (wordHints[word]) {{
-                // 英単語は表示せず、意味のみを表示
                 hintWordDiv.textContent = "";
                 hintMeaningDiv.textContent = wordHints[word];
                 hintPopupDiv.classList.add('show');
                 playHintSound();
                 
-                // 3秒後に自動的に隠す
                 setTimeout(() => {{
                     hideHint();
                 }}, 3000);
@@ -1017,14 +1053,12 @@ elif st.session_state.game_state == 'game':
 
         function showStageCompleteOverlay() {{
             if (currentStage >= totalStages) {{
-                // 全ステージクリア
                 overlayContentDiv.classList.add('game-complete');
                 overlayTitleDiv.textContent = '全ステージクリア！';
                 overlaySubtitleDiv.textContent = 'おめでとうございます！';
                 nextStageBtn.style.display = 'none';
                 backTitleBtn.textContent = 'タイトルへ戻る';
             }} else {{
-                // 通常のステージクリア
                 overlayContentDiv.classList.remove('game-complete');
                 overlayTitleDiv.textContent = 'ステージクリア！';
                 overlaySubtitleDiv.textContent = 'おめでとうございます！';
@@ -1050,9 +1084,7 @@ elif st.session_state.game_state == 'game':
                 
                 if (foundWords.length === targetWords.length) {{
                     setTimeout(() => {{
-                        showCompleteMessage();
                         playCompleteSound();
-                        // オーバーレイを表示
                         setTimeout(() => {{
                             showStageCompleteOverlay();
                         }}, 1500);
@@ -1070,13 +1102,6 @@ elif st.session_state.game_state == 'game':
             setTimeout(() => {{
                 successMessageDiv.classList.remove('show');
             }}, 1500);
-        }}
-
-        function showCompleteMessage() {{
-            completeMessageDiv.classList.add('show');
-            setTimeout(() => {{
-                completeMessageDiv.classList.remove('show');
-            }}, 2500);
         }}
 
         function getButtonCenterPosition(button) {{
@@ -1177,8 +1202,7 @@ elif st.session_state.game_state == 'game':
             event.preventDefault();
             const target = event.target;
             
-            // ヒントターゲットがクリックされた場合は、ゲーム操作を開始しない
-            if (target.closest('.word-hint-target')) {{
+            if (target.closest('.word-hint-target') || target.closest('.hint-popup') || target.closest('.stage-clear-overlay')) {{
                 return;
             }}
             
@@ -1224,8 +1248,7 @@ elif st.session_state.game_state == 'game':
             event.preventDefault();
             const target = event.target;
             
-            // ヒントターゲットがタッチされた場合は、ゲーム操作を開始しない
-            if (target.closest('.word-hint-target')) {{
+            if (target.closest('.word-hint-target') || target.closest('.hint-popup') || target.closest('.stage-clear-overlay')) {{
                 return;
             }}
             
@@ -1265,33 +1288,29 @@ elif st.session_state.game_state == 'game':
         // オーバーレイのボタンイベント
         nextStageBtn.addEventListener('click', function() {{
             hideStageCompleteOverlay();
-            const currentUrl = new URL(window.location);
-            currentUrl.searchParams.set('next_stage', 'true');
-            window.location.href = currentUrl.toString();
+            window.parent.postMessage({{ type: 'next_stage' }}, '*');
         }});
 
         backTitleBtn.addEventListener('click', function() {{
             hideStageCompleteOverlay();
-            const currentUrl = new URL(window.location);
-            currentUrl.searchParams.set('back_to_title', 'true');
-            window.location.href = currentUrl.toString();
+            window.parent.postMessage({{ type: 'back_to_title' }}, '*');
         }});
 
-        // オーバーレイ外をクリックしても閉じないように（必要に応じて有効化）
-        // overlayDiv.addEventListener('click', function(e) {{
-        //     if (e.target === overlayDiv) {{
-        //         hideStageCompleteOverlay();
-        //     }}
-        // }});
+        // Streamlitとの通信を受信
+        window.addEventListener('message', function(event) {{
+            if (event.data.type === 'next_stage' || event.data.type === 'back_to_title') {{
+                const params = new URLSearchParams(window.location.search);
+                params.set(event.data.type, 'true');
+                window.location.href = window.location.pathname + '?' + params.toString();
+            }}
+        }});
 
-        // ヒントポップアップをクリックで隠す機能
         hintPopupDiv.addEventListener('click', hideHint);
         hintPopupDiv.addEventListener('touchend', function(e) {{
             e.preventDefault();
             hideHint();
         }});
 
-        // メインのゲームエリアをクリックした時にヒントを隠す
         container.addEventListener('click', function(e) {{
             if (!e.target.closest('.word-hint-target') && !e.target.closest('.hint-popup')) {{
                 hideHint();
@@ -1317,25 +1336,3 @@ elif st.session_state.game_state == 'game':
     """
 
     components.html(html_content, height=450)
-    
-    # 次のステージへの遷移処理（JavaScript側から送信）
-    query_params = st.query_params
-    if "next_stage" in query_params:
-        if st.session_state.current_stage < len(STAGES):
-            st.session_state.current_stage += 1
-            next_stage_info = STAGES[st.session_state.current_stage]
-            st.session_state.target_words = next_stage_info['words']
-            st.session_state.found_words = []
-            st.session_state.temp_found_words = []
-            # 新しいステージの文字をシャッフル
-            stage_letters = next_stage_info['letters'].copy()
-            random.shuffle(stage_letters)
-            st.session_state.shuffled_letters = stage_letters
-        st.query_params.clear()
-        st.rerun()
-    
-    # タイトルに戻る処理（JavaScript側から送信）
-    if "back_to_title" in query_params:
-        st.session_state.game_state = 'title'
-        st.query_params.clear()
-        st.rerun()
