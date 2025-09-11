@@ -283,12 +283,6 @@ if 'found_words' not in st.session_state:
 if 'shuffled_letters' not in st.session_state:
     st.session_state.shuffled_letters = []
 
-# 正解単語の処理を改善するためのキー
-if 'last_found_word' not in st.session_state:
-    st.session_state.last_found_word = ""
-if 'found_words_persistent' not in st.session_state:
-    st.session_state.found_words_persistent = set()
-
 STAGES = DEFAULT_STAGES
 
 # ページロード時に自動的にトップにスクロール
@@ -396,7 +390,6 @@ if st.session_state.game_state == 'title':
         st.session_state.current_stage = 1
         st.session_state.target_words = STAGES[1]['words']
         st.session_state.found_words = []
-        st.session_state.found_words_persistent = set()
         # 文字をシャッフルして保存
         stage_letters = STAGES[1]['letters'].copy()
         random.shuffle(stage_letters)
@@ -428,7 +421,6 @@ if st.session_state.game_state == 'title':
                         st.session_state.current_stage = stage_num
                         st.session_state.target_words = stage_info['words']
                         st.session_state.found_words = []
-                        st.session_state.found_words_persistent = set()
                         # 文字をシャッフルして保存
                         stage_letters = stage_info['letters'].copy()
                         random.shuffle(stage_letters)
@@ -477,7 +469,6 @@ elif st.session_state.game_state == 'game':
                 next_stage_info = STAGES[st.session_state.current_stage]
                 st.session_state.target_words = next_stage_info['words']
                 st.session_state.found_words = []
-                st.session_state.found_words_persistent = set()
                 # 新しいステージの文字をシャッフル
                 stage_letters = next_stage_info['letters'].copy()
                 random.shuffle(stage_letters)
@@ -487,28 +478,18 @@ elif st.session_state.game_state == 'game':
             # 最後のステージの場合は無効化されたボタンを表示
             st.button("次へ", key="next_stage_disabled", use_container_width=True, disabled=True)
     
-    # 正解された単語の処理（大幅に改善）
-    query_params = st.query_params
-    if "found_word" in query_params:
-        found_word = query_params["found_word"]
-        # 新しい正解単語をpersistent setに追加
-        if found_word in st.session_state.target_words:
-            st.session_state.found_words_persistent.add(found_word)
-            # found_wordsも更新（リスト形式での管理）
-            if found_word not in st.session_state.found_words:
-                st.session_state.found_words.append(found_word)
-            st.session_state.last_found_word = found_word
-        # クエリパラメータをクリア
-        st.query_params.clear()
-        st.rerun()
+    # 新しい正解単語の処理（Streamlitコンポーネント間通信を使用）
+    new_found_word = st.session_state.get('new_found_word', '')
+    if new_found_word and new_found_word not in st.session_state.found_words:
+        st.session_state.found_words.append(new_found_word)
+        st.session_state.new_found_word = ''  # フラグをクリア
     
     # 目標単語の表示（永続的な正解状態を確実に維持）
     sorted_words = sorted(st.session_state.target_words, key=lambda x: (len(x), x))
     target_boxes_html = []
     
-    # persistent setから確実に正解状態を取得
     for word in sorted_words:
-        is_found = word in st.session_state.found_words_persistent or word in st.session_state.found_words
+        is_found = word in st.session_state.found_words
         boxes_html = ""
         for i, letter in enumerate(word):
             if is_found:
@@ -563,10 +544,7 @@ elif st.session_state.game_state == 'game':
     # スマホ用ボタン
     mobile_buttons = generate_button_html(mobile_config, letters, num_letters)
 
-    # 正解単語のリストをJavaScriptに渡す（永続化されたもの）
-    persistent_found_words = list(st.session_state.found_words_persistent)
-
-    # HTMLコンテンツを生成（正解状態の永続化を確実に実装）
+    # HTMLコンテンツを生成（ページ遷移を完全に排除）
     html_content = f"""
     <!DOCTYPE html>
     <html>
@@ -675,13 +653,14 @@ elif st.session_state.game_state == 'game':
             transform: translate(-50%, -50%);
             background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
             color: white;
-            padding: 15px 25px;
-            border-radius: 6px;
-            font-size: 16px;
+            padding: 20px 30px;
+            border-radius: 8px;
+            font-size: 18px;
             font-weight: bold;
             z-index: 1000;
             opacity: 0;
             transition: all 0.3s ease;
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
         }}
         
         .success-message.show {{
@@ -696,13 +675,14 @@ elif st.session_state.game_state == 'game':
             transform: translate(-50%, -50%);
             background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
             color: white;
-            padding: 20px 30px;
-            border-radius: 8px;
-            font-size: 18px;
+            padding: 25px 35px;
+            border-radius: 10px;
+            font-size: 20px;
             font-weight: bold;
             z-index: 1001;
             opacity: 0;
             transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(33, 150, 243, 0.4);
         }}
         
         .complete-message.show {{
@@ -797,8 +777,8 @@ elif st.session_state.game_state == 'game':
             }}
             
             .success-message, .complete-message {{
-                font-size: 14px;
-                padding: 12px 20px;
+                font-size: 16px;
+                padding: 15px 25px;
             }}
             
             .hint-popup {{
@@ -894,17 +874,18 @@ elif st.session_state.game_state == 'game':
 
         window.addEventListener('resize', adjustForScreenSize);
 
+        // ゲーム状態変数
         let isDragging = false;
         let selectedLetters = [];
         let selectedButtons = [];
         let points = [];
         let targetWords = {json.dumps(st.session_state.target_words)};
         
-        // 永続化された正解単語の状態を確実に管理
-        let foundWordsPersistent = new Set({json.dumps(persistent_found_words)});
-        let currentFoundWords = Array.from(foundWordsPersistent);
+        // 正解した単語の永続管理（ページ遷移を使わない）
+        let foundWords = new Set({json.dumps(st.session_state.found_words)});
         let wordHints = {json.dumps(current_stage_info['hints'])};
 
+        // DOM要素の取得
         const selectedWordDiv = document.getElementById('selected-word');
         const targetWordsDiv = document.getElementById('target-words');
         const successMessageDiv = document.getElementById('success-message');
@@ -916,6 +897,7 @@ elif st.session_state.game_state == 'game':
         const canvas = document.getElementById('lineCanvas');
         const ctx = canvas.getContext('2d');
 
+        // オーディオコンテキストの作成
         function createAudioContext() {{
             try {{
                 return new (window.AudioContext || window.webkitAudioContext)();
@@ -927,6 +909,7 @@ elif st.session_state.game_state == 'game':
 
         const audioCtx = createAudioContext();
 
+        // 各種効果音の再生関数
         function playSelectSound() {{
             if (!audioCtx) return;
             const oscillator = audioCtx.createOscillator();
@@ -1005,11 +988,12 @@ elif st.session_state.game_state == 'game':
             oscillator.stop(audioCtx.currentTime + 0.2);
         }}
 
+        // 選択中の単語を表示
         function updateSelectedWord() {{
             selectedWordDiv.textContent = selectedLetters.join('');
         }}
 
-        // 確実に正解状態を永続表示する関数（絶対に消えない仕組み）
+        // 目標単語の表示を更新（正解状態を永続保持）
         function updateTargetWordsDisplay() {{
             let targetBoxesHtml = [];
             let sortedWords = targetWords.slice().sort((a, b) => {{
@@ -1020,13 +1004,13 @@ elif st.session_state.game_state == 'game':
             }});
             
             for (let word of sortedWords) {{
-                // foundWordsPersistentセットから確実に正解状態を判定
-                let isFound = foundWordsPersistent.has(word);
+                // foundWordsセットから確実に正解状態を判定
+                let isFound = foundWords.has(word);
                 let boxesHtml = "";
                 for (let i = 0; i < word.length; i++) {{
                     let letter = word[i];
                     if (isFound) {{
-                        // 正解済み単語は緑色で絶対に永続表示（状態が変わることはない）
+                        // 正解済み単語は緑色で永続表示（絶対に消えない）
                         boxesHtml += '<span style="display: inline-block; width: 22px; height: 22px; border: 1px solid #4CAF50; background: #E8F5E8; color: #2E7D32; text-align: center; line-height: 22px; margin: 1px; font-size: 12px; font-weight: bold; border-radius: 3px; vertical-align: top;">' + letter + '</span>';
                     }} else {{
                         // 未正解の単語は空白
@@ -1038,7 +1022,7 @@ elif st.session_state.game_state == 'game':
             
             targetWordsDiv.innerHTML = targetBoxesHtml.join('');
             
-            // ヒント機能のイベントリスナーを追加
+            // ヒント機能のイベントリスナーを再設定
             document.querySelectorAll('.word-hint-target').forEach(element => {{
                 element.addEventListener('click', function(e) {{
                     e.preventDefault();
@@ -1057,6 +1041,7 @@ elif st.session_state.game_state == 'game':
             }});
         }}
 
+        // ヒント表示機能
         function showHint(word) {{
             if (wordHints[word]) {{
                 hintWordDiv.textContent = word;
@@ -1074,40 +1059,47 @@ elif st.session_state.game_state == 'game':
             hintPopupDiv.classList.remove('show');
         }}
 
-        // Streamlitへの正解通知（改善版）
-        function notifyFoundWord(word) {{
-            const currentUrl = new URL(window.location);
-            currentUrl.searchParams.set('found_word', word);
-            window.location.href = currentUrl.toString();
+        // Streamlitに正解を通知（ページ遷移なし）
+        function notifyStreamlitCorrectWord(word) {{
+            // Streamlitのセッション状態を直接更新
+            if (window.parent && window.parent.postMessage) {{
+                window.parent.postMessage({{
+                    type: 'streamlit:setComponentValue',
+                    value: {{new_found_word: word}}
+                }}, '*');
+            }}
         }}
 
-        // 正解判定処理（永続化を確実に実装）
+        // 正解判定（表示の永続化を最優先）
         function checkCorrectWord() {{
             const currentWord = selectedLetters.join('');
-            if (currentWord && targetWords.includes(currentWord) && !foundWordsPersistent.has(currentWord)) {{
-                // JavaScript側で即座に永続化セットに追加
-                foundWordsPersistent.add(currentWord);
-                currentFoundWords.push(currentWord);
+            
+            if (currentWord && targetWords.includes(currentWord) && !foundWords.has(currentWord)) {{
+                // 1. まず内部状態を更新（絶対に消えない）
+                foundWords.add(currentWord);
                 
-                // 表示を即座に更新（絶対に消えない）
+                // 2. 表示を即座に更新
                 updateTargetWordsDisplay();
                 
-                // 成功メッセージを表示
+                // 3. 成功メッセージと効果音
                 showSuccessMessage();
                 playCorrectSound();
                 
-                // Streamlitに通知
-                setTimeout(() => {{
-                    notifyFoundWord(currentWord);
-                }}, 1000); // 表示更新後に通知
+                // 4. Streamlitに通知（ページ遷移なし）
+                try {{
+                    notifyStreamlitCorrectWord(currentWord);
+                }} catch (e) {{
+                    console.log('Streamlit notification failed:', e);
+                }}
                 
-                // ステージ完了チェック
-                if (foundWordsPersistent.size === targetWords.length) {{
+                // 5. ステージ完了チェック
+                if (foundWords.size === targetWords.length) {{
                     setTimeout(() => {{
                         showCompleteMessage();
                         playCompleteSound();
                     }}, 1500);
                 }}
+                
                 return true;
             }} else if (currentWord && currentWord.length >= 3) {{
                 playWrongSound();
@@ -1115,20 +1107,23 @@ elif st.session_state.game_state == 'game':
             return false;
         }}
 
+        // 成功メッセージ表示
         function showSuccessMessage() {{
             successMessageDiv.classList.add('show');
             setTimeout(() => {{
                 successMessageDiv.classList.remove('show');
-            }}, 3000); // 成功メッセージを3秒間表示
+            }}, 4000); // 4秒間表示
         }}
 
+        // 完了メッセージ表示
         function showCompleteMessage() {{
             completeMessageDiv.classList.add('show');
             setTimeout(() => {{
                 completeMessageDiv.classList.remove('show');
-            }}, 3000);
+            }}, 5000); // 5秒間表示
         }}
 
+        // ボタンの中心位置を取得
         function getButtonCenterPosition(button) {{
             const rect = button.getBoundingClientRect();
             const containerRect = container.getBoundingClientRect();
@@ -1138,6 +1133,7 @@ elif st.session_state.game_state == 'game':
             }};
         }}
 
+        // ボタンを選択
         function selectButton(button) {{
             if (!selectedButtons.includes(button)) {{
                 if (audioCtx && audioCtx.state === 'suspended') {{
@@ -1156,6 +1152,7 @@ elif st.session_state.game_state == 'game':
             }}
         }}
 
+        // 全選択をクリア（正解時は実行しない）
         function clearAllSelections() {{
             document.querySelectorAll('.circle-button').forEach(button => {{
                 button.classList.remove('selected');
@@ -1168,6 +1165,7 @@ elif st.session_state.game_state == 'game':
             drawLine();
         }}
 
+        // 位置からボタンを取得
         function getButtonAtPosition(clientX, clientY) {{
             const buttons = document.querySelectorAll('.circle-button');
             let closestButton = null;
@@ -1202,6 +1200,7 @@ elif st.session_state.game_state == 'game':
             return closestButton;
         }}
 
+        // 線を描画
         function drawLine() {{
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             if (points.length < 2) return;
@@ -1223,6 +1222,7 @@ elif st.session_state.game_state == 'game':
             }});
         }}
 
+        // マウスイベントハンドラー
         function handleMouseDown(event) {{
             event.preventDefault();
             const target = event.target;
@@ -1260,16 +1260,16 @@ elif st.session_state.game_state == 'game':
                 isDragging = false;
                 const isCorrect = checkCorrectWord();
                 
-                // 正解時は選択状態を維持、不正解時は少し遅延してクリア
+                // 正解時は選択をクリアしない（表示を維持するため）
                 if (!isCorrect) {{
                     setTimeout(() => {{
                         clearAllSelections();
                     }}, 300);
                 }} else {{
-                    // 正解時は少し遅延してクリア（表示更新を確実にするため）
+                    // 正解時は少し遅延してクリア（ユーザーが確認できる時間を確保）
                     setTimeout(() => {{
                         clearAllSelections();
-                    }}, 500);
+                    }}, 1500);
                 }}
             }}
             document.querySelectorAll('.circle-button').forEach(button => {{
@@ -1277,6 +1277,7 @@ elif st.session_state.game_state == 'game':
             }});
         }}
 
+        // タッチイベントハンドラー
         function handleTouchStart(event) {{
             event.preventDefault();
             const target = event.target;
@@ -1312,7 +1313,8 @@ elif st.session_state.game_state == 'game':
             if (isDragging) {{
                 isDragging = false;
                 const isCorrect = checkCorrectWord();
-                // 正解時は選択状態を維持、不正解時は少し遅延してクリア
+                
+                // 正解時は選択をクリアしない（表示を維持するため）
                 if (!isCorrect) {{
                     setTimeout(() => {{
                         clearAllSelections();
@@ -1321,12 +1323,12 @@ elif st.session_state.game_state == 'game':
                     // 正解時は少し遅延してクリア
                     setTimeout(() => {{
                         clearAllSelections();
-                    }}, 500);
+                    }}, 1500);
                 }}
             }}
         }}
 
-        // ヒント関連イベント
+        // イベントリスナーの設定
         hintPopupDiv.addEventListener('click', hideHint);
         hintPopupDiv.addEventListener('touchend', function(e) {{
             e.preventDefault();
@@ -1347,10 +1349,11 @@ elif st.session_state.game_state == 'game':
         document.addEventListener('touchmove', handleTouchMove, {{passive: false}});
         document.addEventListener('touchend', handleTouchEnd, {{passive: false}});
 
-        // 初期化時に必ず正解状態を表示（絶対に消えない）
+        // 初期化
         updateSelectedWord();
         updateTargetWordsDisplay();
 
+        // 右クリックメニューと選択を無効化
         document.addEventListener('contextmenu', e => e.preventDefault());
         document.addEventListener('selectstart', e => e.preventDefault());
         </script>
@@ -1360,8 +1363,15 @@ elif st.session_state.game_state == 'game':
 
     components.html(html_content, height=450)
     
-    # ステージクリア状態の確認（永続化セットを使用）
-    stage_completed = len(st.session_state.found_words_persistent) == len(st.session_state.target_words)
+    # セッション状態からの新しい正解単語の処理
+    if st.session_state.get('new_found_word'):
+        new_word = st.session_state.new_found_word
+        if new_word not in st.session_state.found_words:
+            st.session_state.found_words.append(new_word)
+        st.session_state.new_found_word = ''
+    
+    # ステージクリア状態の確認
+    stage_completed = len(st.session_state.found_words) == len(st.session_state.target_words)
     
     if stage_completed:
         st.success("ステージクリア！")
@@ -1371,7 +1381,6 @@ elif st.session_state.game_state == 'game':
                 next_stage_info = STAGES[st.session_state.current_stage]
                 st.session_state.target_words = next_stage_info['words']
                 st.session_state.found_words = []
-                st.session_state.found_words_persistent = set()
                 # 新しいステージの文字をシャッフル
                 stage_letters = next_stage_info['letters'].copy()
                 random.shuffle(stage_letters)
