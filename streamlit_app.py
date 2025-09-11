@@ -909,54 +909,103 @@ elif st.session_state.game_state == 'game':
 
         const audioCtx = createAudioContext();
 
-        // 各種効果音の再生関数
+        // 各種効果音の再生関数（改善版）
         function playSelectSound() {{
             if (!audioCtx) return;
             const oscillator = audioCtx.createOscillator();
             const gainNode = audioCtx.createGain();
-            oscillator.connect(gainNode);
+            const filterNode = audioCtx.createBiquadFilter();
+            
+            // フィルターでより滑らかな音に
+            filterNode.type = 'lowpass';
+            filterNode.frequency.value = 2000;
+            
+            oscillator.connect(filterNode);
+            filterNode.connect(gainNode);
             gainNode.connect(audioCtx.destination);
-            oscillator.frequency.value = 800;
-            oscillator.type = 'sine';
-            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+            
+            oscillator.frequency.value = 600;
+            oscillator.type = 'triangle'; // より柔らかい波形
+            
+            // より滑らかなエンベロープ
+            gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.15, audioCtx.currentTime + 0.02);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
+            
             oscillator.start(audioCtx.currentTime);
-            oscillator.stop(audioCtx.currentTime + 0.1);
+            oscillator.stop(audioCtx.currentTime + 0.15);
         }}
 
         function playCorrectSound() {{
             if (!audioCtx) return;
-            const frequencies = [523, 659, 784, 1047];
+            const frequencies = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6のメジャーコード
+            
             frequencies.forEach((freq, index) => {{
                 const oscillator = audioCtx.createOscillator();
                 const gainNode = audioCtx.createGain();
-                oscillator.connect(gainNode);
+                const filterNode = audioCtx.createBiquadFilter();
+                
+                // ローパスフィルターで柔らかく
+                filterNode.type = 'lowpass';
+                filterNode.frequency.value = 3000;
+                filterNode.Q.value = 0.5;
+                
+                oscillator.connect(filterNode);
+                filterNode.connect(gainNode);
                 gainNode.connect(audioCtx.destination);
+                
                 oscillator.frequency.value = freq;
-                oscillator.type = 'sine';
-                const startTime = audioCtx.currentTime + index * 0.1;
-                gainNode.gain.setValueAtTime(0.2, startTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.3);
+                oscillator.type = 'triangle';
+                
+                const startTime = audioCtx.currentTime + index * 0.08;
+                
+                // より自然なエンベロープ
+                gainNode.gain.setValueAtTime(0, startTime);
+                gainNode.gain.linearRampToValueAtTime(0.12, startTime + 0.05);
+                gainNode.gain.linearRampToValueAtTime(0.08, startTime + 0.15);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + 0.4);
+                
                 oscillator.start(startTime);
-                oscillator.stop(startTime + 0.3);
+                oscillator.stop(startTime + 0.4);
             }});
         }}
 
         function playCompleteSound() {{
             if (!audioCtx) return;
-            const melody = [523, 659, 784, 1047, 1319];
+            // より華やかな完了音（ペンタトニックスケール）
+            const melody = [523.25, 587.33, 659.25, 783.99, 880.00, 1046.50];
+            
             melody.forEach((freq, index) => {{
                 const oscillator = audioCtx.createOscillator();
                 const gainNode = audioCtx.createGain();
-                oscillator.connect(gainNode);
-                gainNode.connect(audioCtx.destination);
+                const filterNode = audioCtx.createBiquadFilter();
+                const reverbGain = audioCtx.createGain();
+                
+                // リバーブ効果のシミュレーション
+                filterNode.type = 'lowpass';
+                filterNode.frequency.value = 4000;
+                filterNode.Q.value = 0.7;
+                
+                oscillator.connect(filterNode);
+                filterNode.connect(gainNode);
+                gainNode.connect(reverbGain);
+                reverbGain.connect(audioCtx.destination);
+                
                 oscillator.frequency.value = freq;
                 oscillator.type = 'triangle';
-                const startTime = audioCtx.currentTime + index * 0.15;
-                gainNode.gain.setValueAtTime(0.3, startTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.4);
+                
+                const startTime = audioCtx.currentTime + index * 0.12;
+                
+                // 美しいエンベロープ
+                gainNode.gain.setValueAtTime(0, startTime);
+                gainNode.gain.linearRampToValueAtTime(0.15, startTime + 0.08);
+                gainNode.gain.linearRampToValueAtTime(0.1, startTime + 0.25);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + 0.6);
+                
+                reverbGain.gain.setValueAtTime(0.8, startTime);
+                
                 oscillator.start(startTime);
-                oscillator.stop(startTime + 0.4);
+                oscillator.stop(startTime + 0.6);
             }});
         }}
 
@@ -964,28 +1013,62 @@ elif st.session_state.game_state == 'game':
             if (!audioCtx) return;
             const oscillator = audioCtx.createOscillator();
             const gainNode = audioCtx.createGain();
-            oscillator.connect(gainNode);
+            const filterNode = audioCtx.createBiquadFilter();
+            
+            // 不協和音だが耳障りでない音
+            filterNode.type = 'lowpass';
+            filterNode.frequency.value = 800;
+            
+            oscillator.connect(filterNode);
+            filterNode.connect(gainNode);
             gainNode.connect(audioCtx.destination);
-            oscillator.frequency.value = 200;
-            oscillator.type = 'sawtooth';
-            gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            
+            oscillator.frequency.value = 180;
+            oscillator.type = 'square';
+            
+            // 短く、控えめに
+            gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.08, audioCtx.currentTime + 0.05);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
+            
+            // 周波数を少し下げて柔らかく
+            oscillator.frequency.linearRampToValueAtTime(160, audioCtx.currentTime + 0.25);
+            
             oscillator.start(audioCtx.currentTime);
-            oscillator.stop(audioCtx.currentTime + 0.3);
+            oscillator.stop(audioCtx.currentTime + 0.25);
         }}
 
         function playHintSound() {{
             if (!audioCtx) return;
-            const oscillator = audioCtx.createOscillator();
+            const oscillator1 = audioCtx.createOscillator();
+            const oscillator2 = audioCtx.createOscillator();
             const gainNode = audioCtx.createGain();
-            oscillator.connect(gainNode);
+            const filterNode = audioCtx.createBiquadFilter();
+            
+            // ベル風の音を作成（2つの音を重ねる）
+            filterNode.type = 'lowpass';
+            filterNode.frequency.value = 2500;
+            filterNode.Q.value = 1;
+            
+            oscillator1.connect(filterNode);
+            oscillator2.connect(filterNode);
+            filterNode.connect(gainNode);
             gainNode.connect(audioCtx.destination);
-            oscillator.frequency.value = 1000;
-            oscillator.type = 'sine';
-            gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
-            oscillator.start(audioCtx.currentTime);
-            oscillator.stop(audioCtx.currentTime + 0.2);
+            
+            oscillator1.frequency.value = 800;
+            oscillator2.frequency.value = 1200; // 5度上の音
+            oscillator1.type = 'sine';
+            oscillator2.type = 'sine';
+            
+            // 優しいベル音のエンベロープ
+            gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.1, audioCtx.currentTime + 0.02);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+            
+            oscillator1.start(audioCtx.currentTime);
+            oscillator2.start(audioCtx.currentTime);
+            oscillator1.stop(audioCtx.currentTime + 0.3);
+            oscillator2.stop(audioCtx.currentTime + 0.3);
         }}
 
         // 選択中の単語を表示
