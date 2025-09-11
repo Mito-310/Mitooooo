@@ -1119,7 +1119,7 @@ elif st.session_state.game_state == 'game':
             successMessageDiv.classList.add('show');
             setTimeout(() => {{
                 successMessageDiv.classList.remove('show');
-            }}, 2000);
+            }}, 3000); // 成功メッセージを3秒間表示
         }}
 
         function showCompleteMessage() {{
