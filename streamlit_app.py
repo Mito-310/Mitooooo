@@ -283,6 +283,9 @@ if 'found_words' not in st.session_state:
 if 'shuffled_letters' not in st.session_state:
     st.session_state.shuffled_letters = []
 
+if 'temp_found_words' not in st.session_state:
+    st.session_state.temp_found_words = []
+
 STAGES = DEFAULT_STAGES
 
 # ページロード時に自動的にトップにスクロール
@@ -390,6 +393,7 @@ if st.session_state.game_state == 'title':
         st.session_state.current_stage = 1
         st.session_state.target_words = STAGES[1]['words']
         st.session_state.found_words = []
+        st.session_state.temp_found_words = []
         # 文字をシャッフルして保存
         stage_letters = STAGES[1]['letters'].copy()
         random.shuffle(stage_letters)
@@ -421,6 +425,7 @@ if st.session_state.game_state == 'title':
                         st.session_state.current_stage = stage_num
                         st.session_state.target_words = stage_info['words']
                         st.session_state.found_words = []
+                        st.session_state.temp_found_words = []
                         # 文字をシャッフルして保存
                         stage_letters = stage_info['letters'].copy()
                         random.shuffle(stage_letters)
@@ -449,11 +454,12 @@ elif st.session_state.game_state == 'game':
     letters = st.session_state.shuffled_letters
     num_letters = len(letters)
     
-    # ヘッダー（2列レイアウト）
-    col1, col2 = st.columns([1, 3])
+    # ヘッダー（3列レイアウト、スマホ最適化）
+    col1, col2, col3 = st.columns([1, 2, 1])
     with col1:
         if st.button("戻る", key="back_to_title_header", use_container_width=True):
             st.session_state.game_state = 'title'
+            # ステージクリア状態は維持したままタイトルに戻る
             st.rerun()
     with col2:
         st.markdown(f"""
@@ -461,6 +467,23 @@ elif st.session_state.game_state == 'game':
             <h2 style="text-align: center; color: #333; margin: 0; line-height: 1.2; font-size: 1.2rem;">{current_stage_info['name']}</h2>
         </div>
         """, unsafe_allow_html=True)
+    with col3:
+        # 次のステージボタン（常に表示、最後のステージでは無効化）
+        if st.session_state.current_stage < len(STAGES):
+            if st.button("次へ", key="next_stage_header", use_container_width=True):
+                st.session_state.current_stage += 1
+                next_stage_info = STAGES[st.session_state.current_stage]
+                st.session_state.target_words = next_stage_info['words']
+                st.session_state.found_words = []
+                st.session_state.temp_found_words = []
+                # 新しいステージの文字をシャッフル
+                stage_letters = next_stage_info['letters'].copy()
+                random.shuffle(stage_letters)
+                st.session_state.shuffled_letters = stage_letters
+                st.rerun()
+        else:
+            # 最後のステージの場合は無効化されたボタンを表示
+            st.button("次へ", key="next_stage_disabled", use_container_width=True, disabled=True)
     
     # JavaScriptから送信された正解単語をチェック
     query_params = st.query_params
@@ -504,11 +527,7 @@ elif st.session_state.game_state == 'game':
         ''' for i, letter in enumerate(letters)
     ])
 
-    # ステージクリア状態の確認
-    stage_completed = len(st.session_state.found_words) == len(st.session_state.target_words)
-    is_final_stage = st.session_state.current_stage >= len(STAGES)
-
-    # HTMLコンテンツを生成（ヒント機能を完全にJavaScript内で処理）
+    # HTMLコンテンツを生成（トップスクロール機能を含む）
     html_content = f"""
     <!DOCTYPE html>
     <html>
@@ -671,13 +690,11 @@ elif st.session_state.game_state == 'game':
             max-width: 280px;
             text-align: center;
             box-shadow: 0 6px 12px rgba(0,0,0,0.2);
-            pointer-events: none;
         }}
         
         .hint-popup.show {{
             opacity: 1;
             transform: translate(-50%, -50%) scale(1.05);
-            pointer-events: auto;
         }}
         
         .hint-popup::before {{
@@ -698,10 +715,6 @@ elif st.session_state.game_state == 'game':
             transform: scale(1.05);
         }}
         
-        .word-hint-target:active {{
-            transform: scale(0.95);
-        }}
-        
         canvas {{
             position: absolute;
             top: 0;
@@ -715,7 +728,7 @@ elif st.session_state.game_state == 'game':
             .circle-container {{
                 width: 240px;
                 height: 240px;
-                margin: 160px auto 25px auto;
+                margin: 60px auto 25px auto;
             }}
             
             .circle-button {{
@@ -961,20 +974,19 @@ elif st.session_state.game_state == 'game':
         }}
 
         function notifyCorrectWord(word) {{
-            // Streamlitへの通知のみ行い、表示は更新しない
+            // 遅延してStreamlitに通知することで、表示効果を保持
             setTimeout(() => {{
                 const currentUrl = new URL(window.location);
                 currentUrl.searchParams.set('correct_word', word);
                 window.location.href = currentUrl.toString();
-            }}, 1500); // 表示効果を短縮
+            }}, 3000); // 3秒後に通知
         }}
 
         function checkCorrectWord() {{
             const currentWord = selectedLetters.join('');
             if (currentWord && targetWords.includes(currentWord) && !foundWords.includes(currentWord)) {{
-                // JavaScript内でfoundWordsを即座に更新
                 foundWords.push(currentWord);
-                updateTargetWordsDisplay(); // 表示を即座に更新
+                updateTargetWordsDisplay();
                 showSuccessMessage();
                 playCorrectSound();
                 
