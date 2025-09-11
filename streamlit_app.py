@@ -259,11 +259,11 @@ DEFAULT_STAGES = {
         'name': 'ステージ 8',
         'problem_text': 'attractive',
         'letters': ['A', 'T', 'T', 'R', 'A', 'C', 'T', 'I', 'V', 'E'],
-        'words': ['ACT', 'RATE', 'RARE', 'ACTIVE', 'ATTRACT', 'ATTRACTIVE'],
+        'words': ['ACT', 'RATE', 'AREA', 'ACTIVE', 'ATTRACT', 'ATTRACTIVE'],
         'hints': {
             'ACT': '行動する、演技する',
             'RATE': '率、割合',
-            'RARE': '珍しい、稀な',
+            'AREA': '地域、領域',
             'ACTIVE': '活発な、積極的',
             'ATTRACT': '引き付ける、魅力的',
             'ATTRACTIVE': '魅力的な、素敵な'
