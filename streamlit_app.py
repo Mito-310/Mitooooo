@@ -515,20 +515,26 @@ elif st.session_state.game_state == 'game':
     target_display = ''.join(target_boxes_html)
     
     # 円形ボタンのHTML生成（スマホサイズに調整）
-    button_html = ''.join([
-        f'''
-        <div class="circle-button" id="button_{i}"
-                data-letter="{letter}"
-                data-index="{i}"
-                style="left: {130 + 90 * math.cos(2 * math.pi * i / num_letters - math.pi/2) - 20}px;
-                       top:  {130 + 90 * math.sin(2 * math.pi * i / num_letters - math.pi/2) - 20}px;">
-            {letter}
-        </div>
-        ''' for i, letter in enumerate(letters)
-    ])
+   # 円の中心とボタンサイズを動的に計算
+container_size = 260
+button_size = 40
+radius = 90
+center = container_size // 2
+
+button_html = ''.join([
+    f'''
+    <div class="circle-button" id="button_{i}"
+            data-letter="{letter}"
+            data-index="{i}"
+            style="left: {center + radius * math.cos(2 * math.pi * i / num_letters - math.pi/2) - button_size/2}px;
+                   top:  {center + radius * math.sin(2 * math.pi * i / num_letters - math.pi/2) - button_size/2}px;">
+        {letter}
+    </div>
+    ''' for i, letter in enumerate(letters)
+])
 
     # HTMLコンテンツを生成（トップスクロール機能を含む）
-    html_content = f"""
+html_content = f"""
     <!DOCTYPE html>
     <html>
     <head>
@@ -1235,12 +1241,12 @@ elif st.session_state.game_state == 'game':
     </html>
     """
 
-    components.html(html_content, height=450)
+components.html(html_content, height=450)
     
     # ステージクリア状態の確認
-    stage_completed = len(st.session_state.found_words) == len(st.session_state.target_words)
+stage_completed = len(st.session_state.found_words) == len(st.session_state.target_words)
     
-    if stage_completed:
+if stage_completed:
         st.success("ステージクリア！")
         if st.session_state.current_stage < len(STAGES):
             if st.button("次のステージへ ", key="next_stage_main", use_container_width=True, type="primary"):
