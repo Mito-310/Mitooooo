@@ -566,7 +566,7 @@ elif st.session_state.game_state == 'game':
             position: relative;
             width: 260px;
             height: 260px;
-            margin: 80px auto 30px auto;
+            margin: 120px auto 30px auto; /* 上マージンを80pxから120pxに増加 */
             border: 2px solid #ddd;
             border-radius: 50%;
             background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
