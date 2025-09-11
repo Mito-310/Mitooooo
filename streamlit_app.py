@@ -283,9 +283,6 @@ if 'found_words' not in st.session_state:
 if 'shuffled_letters' not in st.session_state:
     st.session_state.shuffled_letters = []
 
-if 'temp_found_words' not in st.session_state:
-    st.session_state.temp_found_words = []
-
 STAGES = DEFAULT_STAGES
 
 # ページロード時に自動的にトップにスクロール
@@ -393,7 +390,6 @@ if st.session_state.game_state == 'title':
         st.session_state.current_stage = 1
         st.session_state.target_words = STAGES[1]['words']
         st.session_state.found_words = []
-        st.session_state.temp_found_words = []
         # 文字をシャッフルして保存
         stage_letters = STAGES[1]['letters'].copy()
         random.shuffle(stage_letters)
@@ -425,7 +421,6 @@ if st.session_state.game_state == 'title':
                         st.session_state.current_stage = stage_num
                         st.session_state.target_words = stage_info['words']
                         st.session_state.found_words = []
-                        st.session_state.temp_found_words = []
                         # 文字をシャッフルして保存
                         stage_letters = stage_info['letters'].copy()
                         random.shuffle(stage_letters)
@@ -459,7 +454,6 @@ elif st.session_state.game_state == 'game':
     with col1:
         if st.button("戻る", key="back_to_title_header", use_container_width=True):
             st.session_state.game_state = 'title'
-            # ステージクリア状態は維持したままタイトルに戻る
             st.rerun()
     with col2:
         st.markdown(f"""
@@ -475,7 +469,6 @@ elif st.session_state.game_state == 'game':
                 next_stage_info = STAGES[st.session_state.current_stage]
                 st.session_state.target_words = next_stage_info['words']
                 st.session_state.found_words = []
-                st.session_state.temp_found_words = []
                 # 新しいステージの文字をシャッフル
                 stage_letters = next_stage_info['letters'].copy()
                 random.shuffle(stage_letters)
@@ -485,12 +478,16 @@ elif st.session_state.game_state == 'game':
             # 最後のステージの場合は無効化されたボタンを表示
             st.button("次へ", key="next_stage_disabled", use_container_width=True, disabled=True)
     
-    # JavaScriptから送信された正解単語をチェック
+    # 正解単語の状態管理を強化
+    # JavaScriptから送信された正解単語をチェック（重複チェックを強化）
     query_params = st.query_params
     if "correct_word" in query_params:
         correct_word = query_params["correct_word"]
-        if correct_word not in st.session_state.found_words:
+        # 重複チェックを確実に行い、found_wordsに追加
+        if correct_word in st.session_state.target_words and correct_word not in st.session_state.found_words:
             st.session_state.found_words.append(correct_word)
+            # 永続化を確実にするため、session stateの値を明示的に保存
+            st.session_state.found_words = list(set(st.session_state.found_words))  # 重複除去
         # クエリパラメータをクリア
         st.query_params.clear()
         st.rerun()
@@ -500,11 +497,12 @@ elif st.session_state.game_state == 'game':
     target_boxes_html = []
     
     for word in sorted_words:
+        # 確実にfound_wordsの状態を確認
         is_found = word in st.session_state.found_words
         boxes_html = ""
         for i, letter in enumerate(word):
             if is_found:
-                # 正解済みの単語は全文字表示
+                # 正解済みの単語は全文字表示（永続化）
                 boxes_html += f'<span style="display: inline-block; width: 22px; height: 22px; border: 1px solid #333; background: white; color: #333; text-align: center; line-height: 22px; margin: 1px; font-size: 12px; font-weight: bold; border-radius: 3px; vertical-align: top;">{letter}</span>'
             else:
                 # 通常の空白枠
@@ -525,11 +523,11 @@ elif st.session_state.game_state == 'game':
     mobile_config = {
         'container_size': 240,
         'button_size': 35,
-        'radius': 80,  # 少し小さくして中央に配置
+        'radius': 80,
         'canvas_size': 240
     }
 
-    # 円形ボタンのHTML生成（修正版 - 正確な中心配置）
+    # 円形ボタンのHTML生成
     def generate_button_html(config, letters, num_letters):
         center = config['container_size'] / 2
         button_html_parts = []
@@ -555,7 +553,7 @@ elif st.session_state.game_state == 'game':
     # スマホ用ボタン
     mobile_buttons = generate_button_html(mobile_config, letters, num_letters)
 
-    # HTMLコンテンツを生成（修正版 - レスポンシブ対応強化）
+    # HTMLコンテンツを生成（正解表示の永続化を確実に実装）
     html_content = f"""
     <!DOCTYPE html>
     <html>
@@ -751,7 +749,7 @@ elif st.session_state.game_state == 'game':
             pointer-events: none;
         }}
         
-        /* スマホ専用の調整 - 位置ずれを完全に修正 */
+        /* スマホ専用の調整 */
         @media (max-width: 480px) {{
             .circle-container {{
                 width: 240px;
@@ -765,7 +763,6 @@ elif st.session_state.game_state == 'game':
                 font-size: 14px;
             }}
             
-            /* スマホ用ボタンの表示/非表示制御 */
             .desktop-buttons {{
                 display: none;
             }}
@@ -844,7 +841,7 @@ elif st.session_state.game_state == 'game':
         </div>
 
         <script>
-        // スマホサイズ検出とキャンバスサイズ調整
+        // 画面サイズ調整
         function adjustForScreenSize() {{
             const isMobile = window.innerWidth <= 480;
             const canvas = document.getElementById('lineCanvas');
@@ -867,7 +864,7 @@ elif st.session_state.game_state == 'game':
             }}
         }}
 
-        // ページ読み込み時に即座にトップにスクロール & サイズ調整
+        // ページロード時にトップスクロール & サイズ調整
         window.addEventListener('load', function() {{
             adjustForScreenSize();
             setTimeout(function() {{
@@ -877,15 +874,11 @@ elif st.session_state.game_state == 'game':
             }}, 50);
         }});
 
-        // DOMContentLoaded時にもスクロール & サイズ調整
         document.addEventListener('DOMContentLoaded', function() {{
             adjustForScreenSize();
             window.scrollTo(0, 0);
-            document.body.scrollTop = 0;
-            document.documentElement.scrollTop = 0;
         }});
 
-        // リサイズ時の調整
         window.addEventListener('resize', adjustForScreenSize);
 
         let isDragging = false;
@@ -1000,6 +993,7 @@ elif st.session_state.game_state == 'game':
             selectedWordDiv.textContent = selectedLetters.join('');
         }}
 
+        // 修正済み：正解表示の永続化を確実に実装
         function updateTargetWordsDisplay() {{
             let targetBoxesHtml = [];
             let sortedWords = targetWords.slice().sort((a, b) => {{
@@ -1010,11 +1004,13 @@ elif st.session_state.game_state == 'game':
             }});
             
             for (let word of sortedWords) {{
+                // foundWordsの状態を確実にチェック（重複除去も実行）
                 let isFound = foundWords.includes(word);
                 let boxesHtml = "";
                 for (let i = 0; i < word.length; i++) {{
                     let letter = word[i];
                     if (isFound) {{
+                        // 正解済みの単語は永続的に表示（消えない）
                         boxesHtml += '<span style="display: inline-block; width: 22px; height: 22px; border: 1px solid #333; background: white; color: #333; text-align: center; line-height: 22px; margin: 1px; font-size: 12px; font-weight: bold; border-radius: 3px; vertical-align: top;">' + letter + '</span>';
                     }} else {{
                         boxesHtml += '<span style="display: inline-block; width: 22px; height: 22px; border: 1px solid #ddd; background: white; text-align: center; line-height: 22px; margin: 1px; border-radius: 3px; vertical-align: top;"></span>';
@@ -1046,13 +1042,11 @@ elif st.session_state.game_state == 'game':
 
         function showHint(word) {{
             if (wordHints[word]) {{
-                // 英単語は表示せず、意味のみを表示
                 hintWordDiv.textContent = "";
                 hintMeaningDiv.textContent = wordHints[word];
                 hintPopupDiv.classList.add('show');
                 playHintSound();
                 
-                // 3秒後に自動的に隠す
                 setTimeout(() => {{
                     hideHint();
                 }}, 3000);
@@ -1063,24 +1057,29 @@ elif st.session_state.game_state == 'game':
             hintPopupDiv.classList.remove('show');
         }}
 
+        // 修正済み：Streamlitへの通知を即座に実行し、正解表示を永続化
         function notifyCorrectWord(word) {{
-            // 遅延してStreamlitに通知することで、表示効果を保持
-            setTimeout(() => {{
-                const currentUrl = new URL(window.location);
-                currentUrl.searchParams.set('correct_word', word);
-                window.location.href = currentUrl.toString();
-            }}, 3000); // 3秒後に通知
+            // 即座にStreamlitに通知（遅延なし）
+            const currentUrl = new URL(window.location);
+            currentUrl.searchParams.set('correct_word', word);
+            window.location.href = currentUrl.toString();
         }}
 
+        // 修正済み：正解判定と表示更新の強化
         function checkCorrectWord() {{
             const currentWord = selectedLetters.join('');
             if (currentWord && targetWords.includes(currentWord) && !foundWords.includes(currentWord)) {{
+                // 正解単語をfoundWordsに追加（重複防止）
                 foundWords.push(currentWord);
+                // 重複を除去して確実に保存
+                foundWords = [...new Set(foundWords)];
+                
+                // 表示を即座に更新（永続化）
                 updateTargetWordsDisplay();
                 showSuccessMessage();
                 playCorrectSound();
                 
-                // Streamlitへの通知を遅延実行
+                // Streamlitに即座に通知
                 notifyCorrectWord(currentWord);
                 
                 if (foundWords.length === targetWords.length) {{
@@ -1208,7 +1207,6 @@ elif st.session_state.game_state == 'game':
             event.preventDefault();
             const target = event.target;
             
-            // ヒントターゲットがクリックされた場合は、ゲーム操作を開始しない
             if (target.closest('.word-hint-target')) {{
                 return;
             }}
@@ -1242,9 +1240,12 @@ elif st.session_state.game_state == 'game':
                 isDragging = false;
                 const isCorrect = checkCorrectWord();
                 
+                // 正解時は表示を維持、不正解時のみクリア
                 setTimeout(() => {{
-                    clearAllSelections();
-                }}, isCorrect ? 1000 : 200);
+                    if (!isCorrect) {{
+                        clearAllSelections();
+                    }}
+                }}, isCorrect ? 0 : 200);
             }}
             document.querySelectorAll('.circle-button').forEach(button => {{
                 button.classList.remove('hover');
@@ -1255,7 +1256,6 @@ elif st.session_state.game_state == 'game':
             event.preventDefault();
             const target = event.target;
             
-            // ヒントターゲットがタッチされた場合は、ゲーム操作を開始しない
             if (target.closest('.word-hint-target')) {{
                 return;
             }}
@@ -1287,20 +1287,22 @@ elif st.session_state.game_state == 'game':
             if (isDragging) {{
                 isDragging = false;
                 const isCorrect = checkCorrectWord();
+                // 正解時は表示を維持、不正解時のみクリア
                 setTimeout(() => {{
-                    clearAllSelections();
-                }}, isCorrect ? 1000 : 200);
+                    if (!isCorrect) {{
+                        clearAllSelections();
+                    }}
+                }}, isCorrect ? 0 : 200);
             }}
         }}
 
-        // ヒントポップアップをクリックで隠す機能
+        // ヒント関連イベント
         hintPopupDiv.addEventListener('click', hideHint);
         hintPopupDiv.addEventListener('touchend', function(e) {{
             e.preventDefault();
             hideHint();
         }});
 
-        // メインのゲームエリアをクリックした時にヒントを隠す
         container.addEventListener('click', function(e) {{
             if (!e.target.closest('.word-hint-target') && !e.target.closest('.hint-popup')) {{
                 hideHint();
@@ -1338,7 +1340,6 @@ elif st.session_state.game_state == 'game':
                 next_stage_info = STAGES[st.session_state.current_stage]
                 st.session_state.target_words = next_stage_info['words']
                 st.session_state.found_words = []
-                st.session_state.temp_found_words = []
                 # 新しいステージの文字をシャッフル
                 stage_letters = next_stage_info['letters'].copy()
                 random.shuffle(stage_letters)
@@ -1349,5 +1350,4 @@ elif st.session_state.game_state == 'game':
             st.success("全ステージクリア！おめでとうございます！")
             if st.button("タイトルに戻る", key="back_to_title", use_container_width=True, type="primary"):
                 st.session_state.game_state = 'title'
-                # ステージクリア状態は維持したままタイトルに戻る
                 st.rerun()
