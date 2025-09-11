@@ -462,7 +462,7 @@ elif st.session_state.game_state == 'game':
         </div>
         """, unsafe_allow_html=True)
     
-    # JavaScriptから送信された正解単語をチェック（ヒント関連のクエリパラメータは無視）
+    # JavaScriptから送信された正解単語をチェック
     query_params = st.query_params
     if "correct_word" in query_params:
         correct_word = query_params["correct_word"]
@@ -941,39 +941,33 @@ elif st.session_state.game_state == 'game':
             }});
         }}
 
-        function showHint(word) {
-    if (wordHints[word]) {
-        // 英単語は表示せず、意味のみを表示
-        hintWordDiv.textContent = "";
-        hintMeaningDiv.textContent = wordHints[word];
-        hintPopupDiv.classList.add('show');
-        playHintSound();
-        
-        // 3秒後に自動的に隠す
-        setTimeout(() => {
-            hideHint();
-        }, 3000);
-    }
-}
+        function showHint(word) {{
+            if (wordHints[word]) {{
+                // 英単語は表示せず、意味のみを表示
+                hintWordDiv.textContent = "";
+                hintMeaningDiv.textContent = wordHints[word];
+                hintPopupDiv.classList.add('show');
+                playHintSound();
+                
+                // 3秒後に自動的に隠す
+                setTimeout(() => {{
+                    hideHint();
+                }}, 3000);
+            }}
+        }}
 
-function notifyCorrectWord(word) {
-    // ヒント関連のクエリパラメータをチェックして除外
-    const currentUrl = new URL(window.location);
-    
-    // ヒント関連のパラメータは送信しない
-    if (currentUrl.searchParams.has('hint')) {
-        return;
-    }
-    
-    // 遅延してStreamlitに通知することで、表示効果を保持
-    setTimeout(() => {
-        const newUrl = new URL(window.location);
-        // 他のパラメータをクリアしてから正解単語のみ設定
-        newUrl.search = '';
-        newUrl.searchParams.set('correct_word', word);
-        window.location.href = newUrl.toString();
-    }, 3000);
-}
+        function hideHint() {{
+            hintPopupDiv.classList.remove('show');
+        }}
+
+        function notifyCorrectWord(word) {{
+            // 遅延してStreamlitに通知することで、表示効果を保持
+            setTimeout(() => {{
+                const currentUrl = new URL(window.location);
+                currentUrl.searchParams.set('correct_word', word);
+                window.location.href = currentUrl.toString();
+            }}, 3000); // 3秒後に通知
+        }}
 
         function checkCorrectWord() {{
             const currentWord = selectedLetters.join('');
