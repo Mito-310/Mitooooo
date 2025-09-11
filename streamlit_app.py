@@ -454,8 +454,8 @@ elif st.session_state.game_state == 'game':
     letters = st.session_state.shuffled_letters
     num_letters = len(letters)
     
-    # ヘッダー（2列レイアウト、「次へ」ボタンを削除）
-    col1, col2 = st.columns([1, 3])
+    # ヘッダー（3列レイアウト、スマホ最適化）
+    col1, col2, col3 = st.columns([1, 2, 1])
     with col1:
         if st.button("戻る", key="back_to_title_header", use_container_width=True):
             st.session_state.game_state = 'title'
@@ -467,6 +467,23 @@ elif st.session_state.game_state == 'game':
             <h2 style="text-align: center; color: #333; margin: 0; line-height: 1.2; font-size: 1.2rem;">{current_stage_info['name']}</h2>
         </div>
         """, unsafe_allow_html=True)
+    with col3:
+        # 次のステージボタン（常に表示、最後のステージでは無効化）
+        if st.session_state.current_stage < len(STAGES):
+            if st.button("次へ", key="next_stage_header", use_container_width=True):
+                st.session_state.current_stage += 1
+                next_stage_info = STAGES[st.session_state.current_stage]
+                st.session_state.target_words = next_stage_info['words']
+                st.session_state.found_words = []
+                st.session_state.temp_found_words = []
+                # 新しいステージの文字をシャッフル
+                stage_letters = next_stage_info['letters'].copy()
+                random.shuffle(stage_letters)
+                st.session_state.shuffled_letters = stage_letters
+                st.rerun()
+        else:
+            # 最後のステージの場合は無効化されたボタンを表示
+            st.button("次へ", key="next_stage_disabled", use_container_width=True, disabled=True)
     
     # JavaScriptから送信された正解単語をチェック
     query_params = st.query_params
@@ -477,26 +494,6 @@ elif st.session_state.game_state == 'game':
         # クエリパラメータをクリア
         st.query_params.clear()
         st.rerun()
-    
-    # ステージクリア用のオーバーレイアクション処理
-    if "next_stage_action" in query_params:
-        action = query_params["next_stage_action"]
-        st.query_params.clear()
-        
-        if action == "next" and st.session_state.current_stage < len(STAGES):
-            st.session_state.current_stage += 1
-            next_stage_info = STAGES[st.session_state.current_stage]
-            st.session_state.target_words = next_stage_info['words']
-            st.session_state.found_words = []
-            st.session_state.temp_found_words = []
-            # 新しいステージの文字をシャッフル
-            stage_letters = next_stage_info['letters'].copy()
-            random.shuffle(stage_letters)
-            st.session_state.shuffled_letters = stage_letters
-            st.rerun()
-        elif action == "title":
-            st.session_state.game_state = 'title'
-            st.rerun()
     
     # 目標単語の表示（文字数→アルファベット順でソート）
     sorted_words = sorted(st.session_state.target_words, key=lambda x: (len(x), x))
@@ -529,10 +526,6 @@ elif st.session_state.game_state == 'game':
         </div>
         ''' for i, letter in enumerate(letters)
     ])
-
-    # ステージクリア状態の確認
-    stage_completed = len(st.session_state.found_words) == len(st.session_state.target_words)
-    is_final_stage = st.session_state.current_stage >= len(STAGES)
 
     # HTMLコンテンツを生成（トップスクロール機能を含む）
     html_content = f"""
@@ -655,53 +648,6 @@ elif st.session_state.game_state == 'game':
         .success-message.show {{
             opacity: 1;
             transform: translate(-50%, -50%) scale(1.1);
-        }}
-        
-        /* ステージクリアオーバーレイのスタイル */
-        .stage-clear-overlay {{
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            z-index: 2000;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            opacity: 0;
-            transition: all 0.5s ease;
-            pointer-events: none;
-        }}
-        
-        .stage-clear-overlay.show {{
-            opacity: 1;
-            pointer-events: auto;
-        }}
-        
-        .stage-clear-content {{
-            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-            border-radius: 15px;
-            padding: 40px 30px;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            max-width: 320px;
-            width: 90%;
-            transform: scale(0.8);
-            transition: all 0.5s ease;
-        }}
-        
-        .stage-clear-overlay.show .stage-clear-content {{
-            transform: scale(1);
-        }}
-        
-        .stage-clear-title {{
-            font-size: 24px;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 20px;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
         }}
         
         .complete-message {{
