@@ -1041,10 +1041,10 @@ elif st.session_state.game_state == 'game':
             }});
         }}
 
-        // ヒント表示機能
+        // ヒント表示機能（英単語は表示せず、意味のみ表示）
         function showHint(word) {{
             if (wordHints[word]) {{
-                hintWordDiv.textContent = word;
+                hintWordDiv.textContent = ""; // 英単語は表示しない
                 hintMeaningDiv.textContent = wordHints[word];
                 hintPopupDiv.classList.add('show');
                 playHintSound();
