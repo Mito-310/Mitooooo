@@ -1190,12 +1190,12 @@ elif st.session_state.game_state == 'game':
             return false;
         }}
 
-        // 成功メッセージ表示
+        // 成功メッセージ表示（短縮版）
         function showSuccessMessage() {{
             successMessageDiv.classList.add('show');
             setTimeout(() => {{
                 successMessageDiv.classList.remove('show');
-            }}, 4000); // 4秒間表示
+            }}, 1500); // 4秒から1.5秒に短縮
         }}
 
         // 完了メッセージ表示
