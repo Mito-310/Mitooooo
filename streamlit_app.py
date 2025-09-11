@@ -961,19 +961,20 @@ elif st.session_state.game_state == 'game':
         }}
 
         function notifyCorrectWord(word) {{
-            // 遅延してStreamlitに通知することで、表示効果を保持
+            // Streamlitへの通知のみ行い、表示は更新しない
             setTimeout(() => {{
                 const currentUrl = new URL(window.location);
                 currentUrl.searchParams.set('correct_word', word);
                 window.location.href = currentUrl.toString();
-            }}, 3000); // 3秒後に通知
+            }}, 1500); // 表示効果を短縮
         }}
 
         function checkCorrectWord() {{
             const currentWord = selectedLetters.join('');
             if (currentWord && targetWords.includes(currentWord) && !foundWords.includes(currentWord)) {{
+                // JavaScript内でfoundWordsを即座に更新
                 foundWords.push(currentWord);
-                updateTargetWordsDisplay();
+                updateTargetWordsDisplay(); // 表示を即座に更新
                 showSuccessMessage();
                 playCorrectSound();
                 
