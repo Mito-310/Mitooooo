@@ -283,9 +283,9 @@ if 'found_words' not in st.session_state:
 if 'shuffled_letters' not in st.session_state:
     st.session_state.shuffled_letters = []
 
-# 正解判定用キー
-if 'correct_answer_key' not in st.session_state:
-    st.session_state.correct_answer_key = ""
+# 正解判定用キー（削除）
+# if 'correct_answer_key' not in st.session_state:
+#     st.session_state.correct_answer_key = ""
 
 STAGES = DEFAULT_STAGES
 
@@ -482,19 +482,19 @@ elif st.session_state.game_state == 'game':
             # 最後のステージの場合は無効化されたボタンを表示
             st.button("次へ", key="next_stage_disabled", use_container_width=True, disabled=True)
     
-    # 正解された単語の処理（JavaScriptから送信）
+    # JavaScriptからの正解データを受信
     query_params = st.query_params
-    if "correct_word" in query_params:
-        correct_word = query_params["correct_word"]
-        # 新しい正解単語をfound_wordsに追加（重複チェック）
-        if correct_word in st.session_state.target_words and correct_word not in st.session_state.found_words:
-            st.session_state.found_words.append(correct_word)
-            # 正解表示のため即座に再描画フラグを設定
-            st.session_state.correct_answer_key = correct_word
-        # クエリパラメータをクリア
-        st.query_params.clear()
-        # ページの再読み込みをせずに状態を更新
-        st.rerun()
+    if "found_words" in query_params:
+        # JavaScriptから送信された全ての正解単語を受信
+        try:
+            received_found_words = json.loads(query_params["found_words"])
+            # session_stateを更新
+            st.session_state.found_words = received_found_words
+            # クエリパラメータをクリア
+            st.query_params.clear()
+            st.rerun()
+        except:
+            pass
     
     # 目標単語の表示（文字数→アルファベット順でソート、正解単語は永続的に表示）
     sorted_words = sorted(st.session_state.target_words, key=lambda x: (len(x), x))
@@ -557,7 +557,7 @@ elif st.session_state.game_state == 'game':
     # スマホ用ボタン
     mobile_buttons = generate_button_html(mobile_config, letters, num_letters)
 
-    # HTMLコンテンツを生成（正解状態の永続化を徹底的に実装）
+    # HTMLコンテンツを生成（状態の永続化を完全に実装）
     html_content = f"""
     <!DOCTYPE html>
     <html>
@@ -678,22 +678,6 @@ elif st.session_state.game_state == 'game':
         .success-message.show {{
             opacity: 1;
             transform: translate(-50%, -50%) scale(1.1);
-        }}
-        
-        .complete-message {{
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
-            color: white;
-            padding: 20px 30px;
-            border-radius: 8px;
-            font-size: 18px;
-            font-weight: bold;
-            z-index: 1001;
-            opacity: 0;
-            transition: all 0.3s ease;
         }}
         
         .complete-message.show {{
@@ -893,12 +877,6 @@ elif st.session_state.game_state == 'game':
         let foundWords = {json.dumps(st.session_state.found_words)};
         let wordHints = {json.dumps(current_stage_info['hints'])};
 
-        // Streamlit session stateからの正解単語を確実に反映
-        const correctAnswerKey = '{st.session_state.correct_answer_key}';
-        if (correctAnswerKey && !foundWords.includes(correctAnswerKey)) {{
-            foundWords.push(correctAnswerKey);
-        }}
-
         const selectedWordDiv = document.getElementById('selected-word');
         const targetWordsDiv = document.getElementById('target-words');
         const successMessageDiv = document.getElementById('success-message');
@@ -1003,7 +981,7 @@ elif st.session_state.game_state == 'game':
             selectedWordDiv.textContent = selectedLetters.join('');
         }}
 
-        // 重要：正解状態の表示を確実に保持する関数
+        // 正解状態の表示を確実に保持する関数（重要な修正部分）
         function updateTargetWordsDisplay() {{
             let targetBoxesHtml = [];
             let sortedWords = targetWords.slice().sort((a, b) => {{
@@ -1068,10 +1046,10 @@ elif st.session_state.game_state == 'game':
             hintPopupDiv.classList.remove('show');
         }}
 
-        // Streamlitへの正解通知（即座に実行）
-        function notifyCorrectWord(word) {{
+        // Streamlitへの状態送信（修正版）
+        function sendFoundWordsToStreamlit() {{
             const currentUrl = new URL(window.location);
-            currentUrl.searchParams.set('correct_word', word);
+            currentUrl.searchParams.set('found_words', JSON.stringify(foundWords));
             // 即座にページ遷移して状態を反映
             window.location.href = currentUrl.toString();
         }}
@@ -1091,8 +1069,10 @@ elif st.session_state.game_state == 'game':
                 showSuccessMessage();
                 playCorrectSound();
                 
-                // Streamlitに状態を送信
-                notifyCorrectWord(currentWord);
+                // 少し遅延してからStreamlitに状態を送信（表示が安定してから）
+                setTimeout(() => {{
+                    sendFoundWordsToStreamlit();
+                }}, 500);
                 
                 // ステージ完了チェック
                 if (foundWords.length === targetWords.length) {{
@@ -1258,6 +1238,11 @@ elif st.session_state.game_state == 'game':
                     setTimeout(() => {{
                         clearAllSelections();
                     }}, 200);
+                }} else {{
+                    // 正解時は少し遅延してから選択をクリア
+                    setTimeout(() => {{
+                        clearAllSelections();
+                    }}, 800);
                 }}
             }}
             document.querySelectorAll('.circle-button').forEach(button => {{
@@ -1305,6 +1290,11 @@ elif st.session_state.game_state == 'game':
                     setTimeout(() => {{
                         clearAllSelections();
                     }}, 200);
+                }} else {{
+                    // 正解時は少し遅延してから選択をクリア
+                    setTimeout(() => {{
+                        clearAllSelections();
+                    }}, 800);
                 }}
             }}
         }}
@@ -1343,12 +1333,17 @@ elif st.session_state.game_state == 'game':
 
     components.html(html_content, height=450)
     
+    # プログレスバーの表示
+    progress = len(st.session_state.found_words) / len(st.session_state.target_words)
+    st.progress(progress, text=f"進捗: {len(st.session_state.found_words)}/{len(st.session_state.target_words)} 単語")
+    
+    # 正解した単語のリスト表示
+    if st.session_state.found_words:
+        found_words_display = ", ".join(sorted(st.session_state.found_words, key=lambda x: (len(x), x)))
+        st.success(f"正解した単語: {found_words_display}")
+    
     # ステージクリア状態の確認
     stage_completed = len(st.session_state.found_words) == len(st.session_state.target_words)
-    
-    # 正解表示のフラグをクリア
-    if st.session_state.correct_answer_key:
-        st.session_state.correct_answer_key = ""
     
     if stage_completed:
         st.success("ステージクリア！")
@@ -1369,3 +1364,32 @@ elif st.session_state.game_state == 'game':
             if st.button("タイトルに戻る", key="back_to_title", use_container_width=True, type="primary"):
                 st.session_state.game_state = 'title'
                 st.rerun()
+    
+    # デバッグ情報（開発時のみ表示）
+    with st.expander("デバッグ情報", expanded=False):
+        st.write("現在のステージ:", st.session_state.current_stage)
+        st.write("目標単語:", st.session_state.target_words)
+        st.write("正解済み単語:", st.session_state.found_words)
+        st.write("シャッフルされた文字:", st.session_state.shuffled_letters)
+        
+        # リセットボタン（開発時のデバッグ用）
+        if st.button("ゲーム状態をリセット", key="debug_reset"):
+            for key in list(st.session_state.keys()):
+                del st.session_state[key]
+            st.rerun() {{
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            z-index: 1001;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }}
+        
+        .complete-message
