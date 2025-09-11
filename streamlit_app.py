@@ -514,27 +514,49 @@ elif st.session_state.game_state == 'game':
     
     target_display = ''.join(target_boxes_html)
     
-    # 円形ボタンのHTML生成（スマホサイズに調整）
-   # 円の中心とボタンサイズを動的に計算
-container_size = 260
-button_size = 40
-radius = 90
-center = container_size // 2
+    # デスクトップとスマホ用の異なる設定値
+    desktop_config = {
+        'container_size': 260,
+        'button_size': 40,
+        'radius': 90,
+        'canvas_size': 260
+    }
+    
+    mobile_config = {
+        'container_size': 240,
+        'button_size': 35,
+        'radius': 80,  # 少し小さくして中央に配置
+        'canvas_size': 240
+    }
 
-button_html = ''.join([
-    f'''
-    <div class="circle-button" id="button_{i}"
-            data-letter="{letter}"
-            data-index="{i}"
-            style="left: {center + radius * math.cos(2 * math.pi * i / num_letters - math.pi/2) - button_size/2}px;
-                   top:  {center + radius * math.sin(2 * math.pi * i / num_letters - math.pi/2) - button_size/2}px;">
-        {letter}
-    </div>
-    ''' for i, letter in enumerate(letters)
-])
+    # 円形ボタンのHTML生成（修正版 - 正確な中心配置）
+    def generate_button_html(config, letters, num_letters):
+        center = config['container_size'] / 2
+        button_html_parts = []
+        
+        for i, letter in enumerate(letters):
+            angle = 2 * math.pi * i / num_letters - math.pi/2
+            left = center + config['radius'] * math.cos(angle) - config['button_size']/2
+            top = center + config['radius'] * math.sin(angle) - config['button_size']/2
+            
+            button_html_parts.append(f'''
+                <div class="circle-button" id="button_{i}"
+                        data-letter="{letter}"
+                        data-index="{i}"
+                        style="left: {left}px; top: {top}px;">
+                    {letter}
+                </div>
+            ''')
+        
+        return ''.join(button_html_parts)
 
-    # HTMLコンテンツを生成（トップスクロール機能を含む）
-html_content = f"""
+    # デスクトップ用ボタン
+    desktop_buttons = generate_button_html(desktop_config, letters, num_letters)
+    # スマホ用ボタン
+    mobile_buttons = generate_button_html(mobile_config, letters, num_letters)
+
+    # HTMLコンテンツを生成（修正版 - レスポンシブ対応強化）
+    html_content = f"""
     <!DOCTYPE html>
     <html>
     <head>
@@ -729,7 +751,7 @@ html_content = f"""
             pointer-events: none;
         }}
         
-        /* スマホ専用の調整 */
+        /* スマホ専用の調整 - 位置ずれを完全に修正 */
         @media (max-width: 480px) {{
             .circle-container {{
                 width: 240px;
@@ -741,6 +763,15 @@ html_content = f"""
                 width: 35px;
                 height: 35px;
                 font-size: 14px;
+            }}
+            
+            /* スマホ用ボタンの表示/非表示制御 */
+            .desktop-buttons {{
+                display: none;
+            }}
+            
+            .mobile-buttons {{
+                display: block;
             }}
             
             #selected-word {{
@@ -769,6 +800,22 @@ html_content = f"""
             .hint-word {{
                 font-size: 16px;
             }}
+            
+            #lineCanvas {{
+                width: 240px !important;
+                height: 240px !important;
+            }}
+        }}
+        
+        /* デスクトップ用の設定 */
+        @media (min-width: 481px) {{
+            .desktop-buttons {{
+                display: block;
+            }}
+            
+            .mobile-buttons {{
+                display: none;
+            }}
         }}
         </style>
     </head>
@@ -784,12 +831,45 @@ html_content = f"""
 
         <div class="circle-container" id="circle-container">
             <canvas id="lineCanvas" width="260" height="260"></canvas>
-            {button_html}
+            
+            <!-- デスクトップ用ボタン -->
+            <div class="desktop-buttons">
+                {desktop_buttons}
+            </div>
+            
+            <!-- スマホ用ボタン -->
+            <div class="mobile-buttons">
+                {mobile_buttons}
+            </div>
         </div>
 
         <script>
-        // ページ読み込み時に即座にトップにスクロール
+        // スマホサイズ検出とキャンバスサイズ調整
+        function adjustForScreenSize() {{
+            const isMobile = window.innerWidth <= 480;
+            const canvas = document.getElementById('lineCanvas');
+            const container = document.getElementById('circle-container');
+            
+            if (isMobile) {{
+                canvas.width = 240;
+                canvas.height = 240;
+                canvas.style.width = '240px';
+                canvas.style.height = '240px';
+                container.style.width = '240px';
+                container.style.height = '240px';
+            }} else {{
+                canvas.width = 260;
+                canvas.height = 260;
+                canvas.style.width = '260px';
+                canvas.style.height = '260px';
+                container.style.width = '260px';
+                container.style.height = '260px';
+            }}
+        }}
+
+        // ページ読み込み時に即座にトップにスクロール & サイズ調整
         window.addEventListener('load', function() {{
+            adjustForScreenSize();
             setTimeout(function() {{
                 window.scrollTo(0, 0);
                 document.body.scrollTop = 0;
@@ -797,12 +877,16 @@ html_content = f"""
             }}, 50);
         }});
 
-        // DOMContentLoaded時にもスクロール
+        // DOMContentLoaded時にもスクロール & サイズ調整
         document.addEventListener('DOMContentLoaded', function() {{
+            adjustForScreenSize();
             window.scrollTo(0, 0);
             document.body.scrollTop = 0;
             document.documentElement.scrollTop = 0;
         }});
+
+        // リサイズ時の調整
+        window.addEventListener('resize', adjustForScreenSize);
 
         let isDragging = false;
         let selectedLetters = [];
@@ -1241,12 +1325,12 @@ html_content = f"""
     </html>
     """
 
-components.html(html_content, height=450)
+    components.html(html_content, height=450)
     
     # ステージクリア状態の確認
-stage_completed = len(st.session_state.found_words) == len(st.session_state.target_words)
+    stage_completed = len(st.session_state.found_words) == len(st.session_state.target_words)
     
-if stage_completed:
+    if stage_completed:
         st.success("ステージクリア！")
         if st.session_state.current_stage < len(STAGES):
             if st.button("次のステージへ ", key="next_stage_main", use_container_width=True, type="primary"):
