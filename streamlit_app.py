@@ -782,7 +782,7 @@ elif st.session_state.game_state == 'game':
             .circle-container {{
                 width: 240px;
                 height: 240px;
-                margin: 60px auto 25px auto;
+                margin: 160px auto 25px auto;
             }}
             
             .circle-button {{
