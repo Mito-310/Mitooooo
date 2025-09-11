@@ -555,7 +555,7 @@ elif st.session_state.game_state == 'game':
             margin: 0;
             font-family: Arial, sans-serif;
             user-select: none;
-            touch-action: none;
+            touch-action: pan-y; /* 縦スクロールを許可 */
             overflow-x: hidden;
             background: #fafafa;
             min-height: 100vh;
@@ -571,6 +571,7 @@ elif st.session_state.game_state == 'game':
             border-radius: 50%;
             background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            touch-action: none; /* ゲームエリアのみタッチ操作を制限 */
         }}
         
         .circle-button {{
@@ -588,7 +589,7 @@ elif st.session_state.game_state == 'game':
             justify-content: center;
             align-items: center;
             transition: all 0.2s ease;
-            touch-action: none;
+            touch-action: none; /* ボタンエリアのみタッチ操作を制限 */
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             z-index: 10;
         }}
