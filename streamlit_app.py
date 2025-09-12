@@ -232,12 +232,12 @@ DEFAULT_STAGES = {
         'name': 'ステージ 6',
         'problem_text': 'because',
         'letters': ['B', 'E', 'C', 'A', 'U', 'S', 'E'],
-        'words': ['CAUSE', 'USE', 'CASE', 'SEED', 'BECAUSE'],
+        'words': ['CAUSE', 'USE', 'CASE', 'BASE', 'BECAUSE'],
         'hints': {
             'CAUSE': '原因、引き起こす',
             'USE': '使う、利用する',
             'CASE': '場合、ケース',
-            'SEED': '種、種子',
+            'BASE': '基礎、土台',
             'BECAUSE': 'なぜなら、理由'
         }
     },
